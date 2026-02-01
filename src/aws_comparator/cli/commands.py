@@ -285,7 +285,10 @@ def compare(  # noqa: C901
                 )
         else:
             output = formatter.format(report)
-            output_console.print(output)
+            # Write directly to stdout to avoid Rich re-processing ANSI codes
+            sys.stdout.write(output)
+            sys.stdout.write("\n")
+            sys.stdout.flush()
 
         # Show summary
         if not quiet:
