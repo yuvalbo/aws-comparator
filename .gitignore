@@ -136,3 +136,7 @@ dmypy.json
 reports/
 output/
 *.log
+
+# AI assistant directories
+.claude/
+.serena/

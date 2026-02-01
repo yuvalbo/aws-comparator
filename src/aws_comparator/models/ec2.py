@@ -577,7 +577,7 @@ class NetworkAclEntry(BaseModel):
     """Network ACL rule entry."""
     model_config = ConfigDict(extra="ignore")
 
-    rule_number: int = Field(..., ge=1, le=32766, description="Rule number")
+    rule_number: int = Field(..., ge=1, le=32767, description="Rule number (32767 is default deny rule)")
     protocol: str = Field(..., description="Protocol number or '-1' for all")
     rule_action: str = Field(..., description="allow or deny")
     egress: bool = Field(..., description="Is egress rule")

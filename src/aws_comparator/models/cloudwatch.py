@@ -88,14 +88,14 @@ class CloudWatchAlarm(AWSResource):
     )
 
     # Evaluation configuration
-    period: int = Field(..., description="Evaluation period in seconds")
-    evaluation_periods: int = Field(..., description="Number of periods to evaluate")
+    period: Optional[int] = Field(None, description="Evaluation period in seconds (not present for composite alarms)")
+    evaluation_periods: Optional[int] = Field(None, description="Number of periods to evaluate (not present for composite alarms)")
     datapoints_to_alarm: Optional[int] = Field(
         None,
         description="Number of datapoints that must breach to trigger alarm"
     )
     threshold: Optional[float] = Field(None, description="Threshold value")
-    comparison_operator: str = Field(..., description="Comparison operator")
+    comparison_operator: Optional[str] = Field(None, description="Comparison operator (not present for composite alarms)")
     treat_missing_data: Optional[str] = Field(
         None,
         description="How to treat missing data"
@@ -175,11 +175,11 @@ class CloudWatchAlarm(AWSResource):
             'statistic': alarm_data.get('Statistic'),
             'extended_statistic': alarm_data.get('ExtendedStatistic'),
             'dimensions': dimensions,
-            'period': alarm_data['Period'],
-            'evaluation_periods': alarm_data['EvaluationPeriods'],
+            'period': alarm_data.get('Period'),
+            'evaluation_periods': alarm_data.get('EvaluationPeriods'),
             'datapoints_to_alarm': alarm_data.get('DatapointsToAlarm'),
             'threshold': alarm_data.get('Threshold'),
-            'comparison_operator': alarm_data['ComparisonOperator'],
+            'comparison_operator': alarm_data.get('ComparisonOperator'),
             'treat_missing_data': alarm_data.get('TreatMissingData'),
             'evaluate_low_sample_count_percentile': alarm_data.get('EvaluateLowSampleCountPercentile'),
             'state_value': alarm_data['StateValue'],
