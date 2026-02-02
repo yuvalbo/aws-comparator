@@ -134,7 +134,7 @@ dmypy.json
 *.bak
 .aws-comparator/
 reports/
-output/
+/output/
 *.log
 
 # AI assistant directories
