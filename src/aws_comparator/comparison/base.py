@@ -602,7 +602,7 @@ class BaseComparator(ABC):
         # Process dictionary items added
         dict_items_added = diff.get('dictionary_item_added', {})
         if isinstance(dict_items_added, set):
-            dict_items_added = {path: None for path in dict_items_added}
+            dict_items_added = dict.fromkeys(dict_items_added, None)
         for path in dict_items_added:
             field_path = self._normalize_field_path(path)
             severity = self._determine_severity(field_path)
@@ -621,13 +621,13 @@ class BaseComparator(ABC):
                 old_value=None,
                 new_value=new_value,
                 severity=severity,
-                description=f"Field '{field_path}' was added",
+                description=f"Field '{field_path}' exists only in Account 2",
             ))
 
         # Process dictionary items removed
         dict_items_removed = diff.get('dictionary_item_removed', {})
         if isinstance(dict_items_removed, set):
-            dict_items_removed = {path: None for path in dict_items_removed}
+            dict_items_removed = dict.fromkeys(dict_items_removed, None)
         for path in dict_items_removed:
             field_path = self._normalize_field_path(path)
             severity = self._determine_severity(field_path)
@@ -642,7 +642,7 @@ class BaseComparator(ABC):
                 old_value=old_value,
                 new_value=None,
                 severity=severity,
-                description=f"Field '{field_path}' was removed",
+                description=f"Field '{field_path}' exists only in Account 1",
             ))
 
         # Process iterable items added
@@ -731,10 +731,11 @@ class BaseComparator(ABC):
             change_type=ChangeType.ADDED,
             resource_id=resource_id,
             resource_type=resource_type,
+            field_path=None,
             old_value=None,
             new_value=self._resource_to_dict(resource),
             severity=severity,
-            description=f"Resource '{resource_id}' was added",
+            description="Resource exists only in Account 2",
         )
 
     def _create_removed_change(
@@ -759,10 +760,11 @@ class BaseComparator(ABC):
             change_type=ChangeType.REMOVED,
             resource_id=resource_id,
             resource_type=resource_type,
+            field_path=None,
             old_value=self._resource_to_dict(resource),
             new_value=None,
             severity=severity,
-            description=f"Resource '{resource_id}' was removed",
+            description="Resource exists only in Account 1",
         )
 
     def __str__(self) -> str:

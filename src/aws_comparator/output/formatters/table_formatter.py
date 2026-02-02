@@ -464,8 +464,10 @@ class TableFormatter(BaseFormatter):
         if value is not None:
             extra_info = self._extract_resource_info(value)
             for key, val in extra_info.items():
-                # Wrap long values
+                # Skip ARN-like fields if they match the resource_id already shown
                 val_str = str(val)
+                if key.lower() in ('arn', 'topicarn', 'clusterarn') and val_str == change.resource_id:
+                    continue
                 console.print(f"         {key}: {val_str}")
 
         # Show description if available
