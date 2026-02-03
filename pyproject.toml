@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aws-comparator"
-version = "0.1.0"
+version = "0.2.0"
 description = "Compare AWS resources across accounts and generate detailed diff reports"
 readme = "README.md"
 requires-python = ">=3.9"
