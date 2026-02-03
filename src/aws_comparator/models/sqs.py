@@ -4,9 +4,10 @@ Pydantic models for AWS SQS service resources.
 This module defines strongly-typed models for SQS queues and related resources.
 """
 
-from datetime import datetime
-from typing import Dict, List, Optional, Any
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+import json
+from typing import Any, Optional
+
+from pydantic import ConfigDict, Field, field_validator
 
 from aws_comparator.models.common import AWSResource
 
@@ -28,7 +29,7 @@ class SQSQueue(AWSResource):
     maximum_message_size: int = Field(
         default=262144,
         ge=1024,
-        le=262144,
+        le=2097152,  # 2MB max (SQS Extended Client Library supports up to 2GB via S3)
         description="Maximum message size in bytes"
     )
     message_retention_period: int = Field(
@@ -58,11 +59,11 @@ class SQSQueue(AWSResource):
     )
 
     # Dead letter queue
-    redrive_policy: Optional[Dict[str, Any]] = Field(
+    redrive_policy: Optional[dict[str, Any]] = Field(
         None,
         description="Dead letter queue redrive policy"
     )
-    redrive_allow_policy: Optional[Dict[str, Any]] = Field(
+    redrive_allow_policy: Optional[dict[str, Any]] = Field(
         None,
         description="Dead letter queue redrive allow policy"
     )
@@ -97,7 +98,7 @@ class SQSQueue(AWSResource):
     last_modified_timestamp: Optional[int] = Field(None, description="Last modified timestamp")
 
     # Policy
-    policy: Optional[Dict[str, Any]] = Field(None, description="Queue policy document")
+    policy: Optional[dict[str, Any]] = Field(None, description="Queue policy document")
 
     @field_validator('queue_name')
     @classmethod
@@ -124,8 +125,8 @@ class SQSQueue(AWSResource):
     def from_aws_response(
         cls,
         queue_url: str,
-        attributes: Dict[str, Any],
-        tags: Optional[Dict[str, str]] = None
+        attributes: dict[str, Any],
+        tags: Optional[dict[str, str]] = None
     ) -> "SQSQueue":
         """
         Create SQSQueue instance from AWS API response.
@@ -142,7 +143,7 @@ class SQSQueue(AWSResource):
         queue_name = queue_url.split('/')[-1]
 
         # Parse attributes
-        queue_dict = {
+        queue_dict: dict[str, Any] = {
             'queue_url': queue_url,
             'queue_name': queue_name,
             'arn': attributes.get('QueueArn'),
@@ -157,39 +158,48 @@ class SQSQueue(AWSResource):
         if 'MessageRetentionPeriod' in attributes:
             queue_dict['message_retention_period'] = int(attributes['MessageRetentionPeriod'])
         if 'ReceiveMessageWaitTimeSeconds' in attributes:
-            queue_dict['receive_message_wait_time_seconds'] = int(attributes['ReceiveMessageWaitTimeSeconds'])
+            queue_dict['receive_message_wait_time_seconds'] = int(
+                attributes['ReceiveMessageWaitTimeSeconds']
+            )
         if 'VisibilityTimeout' in attributes:
             queue_dict['visibility_timeout'] = int(attributes['VisibilityTimeout'])
 
         # Boolean attributes
         queue_dict['fifo_queue'] = attributes.get('FifoQueue') == 'true'
-        queue_dict['content_based_deduplication'] = attributes.get('ContentBasedDeduplication') == 'true'
+        queue_dict['content_based_deduplication'] = (
+            attributes.get('ContentBasedDeduplication') == 'true'
+        )
         queue_dict['sqs_managed_sse_enabled'] = attributes.get('SqsManagedSseEnabled') == 'true'
 
         # JSON attributes
         if 'RedrivePolicy' in attributes:
-            import json
             queue_dict['redrive_policy'] = json.loads(attributes['RedrivePolicy'])
         if 'RedriveAllowPolicy' in attributes:
-            import json
             queue_dict['redrive_allow_policy'] = json.loads(attributes['RedriveAllowPolicy'])
         if 'Policy' in attributes:
-            import json
             queue_dict['policy'] = json.loads(attributes['Policy'])
 
         # Encryption
         if 'KmsMasterKeyId' in attributes:
             queue_dict['kms_master_key_id'] = attributes['KmsMasterKeyId']
         if 'KmsDataKeyReusePeriodSeconds' in attributes:
-            queue_dict['kms_data_key_reuse_period_seconds'] = int(attributes['KmsDataKeyReusePeriodSeconds'])
+            queue_dict['kms_data_key_reuse_period_seconds'] = int(
+                attributes['KmsDataKeyReusePeriodSeconds']
+            )
 
         # Metrics
         if 'ApproximateNumberOfMessages' in attributes:
-            queue_dict['approximate_number_of_messages'] = int(attributes['ApproximateNumberOfMessages'])
+            queue_dict['approximate_number_of_messages'] = int(
+                attributes['ApproximateNumberOfMessages']
+            )
         if 'ApproximateNumberOfMessagesDelayed' in attributes:
-            queue_dict['approximate_number_of_messages_delayed'] = int(attributes['ApproximateNumberOfMessagesDelayed'])
+            queue_dict['approximate_number_of_messages_delayed'] = int(
+                attributes['ApproximateNumberOfMessagesDelayed']
+            )
         if 'ApproximateNumberOfMessagesNotVisible' in attributes:
-            queue_dict['approximate_number_of_messages_not_visible'] = int(attributes['ApproximateNumberOfMessagesNotVisible'])
+            queue_dict['approximate_number_of_messages_not_visible'] = int(
+                attributes['ApproximateNumberOfMessagesNotVisible']
+            )
 
         # Timestamps
         if 'CreatedTimestamp' in attributes:

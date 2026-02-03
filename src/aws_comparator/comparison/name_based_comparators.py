@@ -531,3 +531,63 @@ class ElasticBeanstalkComparator(ResourceComparator):
 
         # Fallback to parent implementation
         return super()._get_resource_identifier(resource)
+
+
+class SNSComparator(ResourceComparator):
+    """
+    Specialized comparator for SNS resources.
+
+    Matches topics by topic_name and subscriptions by
+    topic_name + protocol + endpoint combination.
+    """
+
+    def __init__(
+        self,
+        service_name: str = 'sns',
+        config: Optional[ComparisonConfig] = None,
+        **kwargs: Any
+    ) -> None:
+        """Initialize the SNS comparator."""
+        if config is None:
+            config = ComparisonConfig()
+
+        # Exclude ARN and account-specific fields
+        config.excluded_fields = config.excluded_fields | {
+            'arn',
+            'topic_arn',
+            'subscription_arn',
+            'owner',  # Account ID
+            # Exclude subscription counts as they're dynamic
+            'subscriptions_confirmed',
+            'subscriptions_pending',
+            'subscriptions_deleted',
+        }
+
+        super().__init__(service_name, config, **kwargs)
+        self.logger = logging.getLogger(
+            f"{self.__class__.__module__}.{self.__class__.__name__}"
+        )
+
+    def _get_resource_identifier(self, resource: AWSResource) -> str:
+        """
+        Extract unique identifier from an SNS resource.
+
+        Uses topic_name for topics and topic_name:protocol:endpoint
+        for subscriptions.
+        """
+        # SNS Topics - use topic_name
+        if hasattr(resource, 'topic_name') and not hasattr(resource, 'subscription_arn'):
+            topic_name = getattr(resource, 'topic_name', None)
+            if topic_name:
+                return str(topic_name)
+
+        # SNS Subscriptions - use topic_name:protocol:endpoint
+        if hasattr(resource, 'subscription_arn') and hasattr(resource, 'protocol'):
+            topic_name = getattr(resource, 'topic_name', '')
+            protocol = getattr(resource, 'protocol', '')
+            endpoint = getattr(resource, 'endpoint', '')
+            if topic_name and protocol:
+                return f"{topic_name}:{protocol}:{endpoint}"
+
+        # Fallback to parent implementation
+        return super()._get_resource_identifier(resource)

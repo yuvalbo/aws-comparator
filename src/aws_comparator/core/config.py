@@ -215,7 +215,7 @@ class ComparisonConfig(BaseModel):
 
         # Define supported services
         valid_services = {
-            'ec2', 's3', 'lambda', 'secrets-manager', 'sqs',
+            'ec2', 's3', 'lambda', 'secrets-manager', 'sns', 'sqs',
             'cloudwatch', 'bedrock', 'pinpoint', 'eventbridge',
             'elastic-beanstalk', 'service-quotas'
         }

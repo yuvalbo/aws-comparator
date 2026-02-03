@@ -40,6 +40,7 @@ from aws_comparator.comparison.name_based_comparators import (
     LambdaComparator,
     S3Comparator,
     SecretsManagerComparator,
+    SNSComparator,
     SQSComparator,
 )
 from aws_comparator.comparison.resource_comparator import ResourceComparator
@@ -59,5 +60,6 @@ __all__ = [
     "SecretsManagerComparator",
     "ServiceQuotasComparator",
     "SeverityConfig",
+    "SNSComparator",
     "SQSComparator",
 ]

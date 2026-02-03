@@ -25,6 +25,7 @@ import aws_comparator.services.pinpoint  # noqa: F401
 import aws_comparator.services.s3  # noqa: F401
 import aws_comparator.services.secretsmanager  # noqa: F401
 import aws_comparator.services.servicequotas  # noqa: F401
+import aws_comparator.services.sns  # noqa: F401
 import aws_comparator.services.sqs  # noqa: F401
 from aws_comparator.comparison import (
     BedrockComparator,
@@ -37,6 +38,7 @@ from aws_comparator.comparison import (
     S3Comparator,
     SecretsManagerComparator,
     ServiceQuotasComparator,
+    SNSComparator,
     SQSComparator,
 )
 from aws_comparator.core.config import AccountConfig, ComparisonConfig
@@ -308,6 +310,7 @@ class ComparisonOrchestrator:
             'lambda': LambdaComparator,
             's3': S3Comparator,
             'ec2': EC2Comparator,
+            'sns': SNSComparator,
             'sqs': SQSComparator,
             'bedrock': BedrockComparator,
             'elasticbeanstalk': ElasticBeanstalkComparator,
