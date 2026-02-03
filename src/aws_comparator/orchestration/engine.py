@@ -26,7 +26,7 @@ import aws_comparator.services.s3  # noqa: F401
 import aws_comparator.services.secretsmanager  # noqa: F401
 import aws_comparator.services.servicequotas  # noqa: F401
 import aws_comparator.services.sqs  # noqa: F401
-from aws_comparator.comparison import ResourceComparator
+from aws_comparator.comparison import ResourceComparator, ServiceQuotasComparator
 from aws_comparator.core.config import AccountConfig, ComparisonConfig
 from aws_comparator.core.exceptions import (
     AssumeRoleError,
@@ -274,6 +274,9 @@ class ComparisonOrchestrator:
         """
         Compare resources from a single service between two accounts.
 
+        Uses service-specific comparators when available (e.g., ServiceQuotasComparator
+        for service-quotas), otherwise falls back to the generic ResourceComparator.
+
         Args:
             service_name: Name of the service.
             account1_data: Resources from first account.
@@ -282,7 +285,11 @@ class ComparisonOrchestrator:
         Returns:
             ServiceComparisonResult for the service.
         """
-        comparator = ResourceComparator(service_name)
+        # Use service-specific comparators when available
+        if service_name == 'service-quotas':
+            comparator = ServiceQuotasComparator(service_name)
+        else:
+            comparator = ResourceComparator(service_name)
         return comparator.compare(account1_data, account2_data)
 
     def _calculate_summary(

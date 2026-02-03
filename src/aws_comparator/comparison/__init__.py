@@ -7,6 +7,7 @@ differences between AWS resources across accounts.
 Classes:
     BaseComparator: Abstract base class for resource comparators.
     ResourceComparator: Generic comparator for any AWS resource type.
+    ServiceQuotasComparator: Specialized comparator for Service Quotas.
     ComparisonConfig: Configuration options for comparison behavior.
     SeverityConfig: Configuration for severity level assignment.
 
@@ -22,10 +23,12 @@ from aws_comparator.comparison.base import (
     SeverityConfig,
 )
 from aws_comparator.comparison.resource_comparator import ResourceComparator
+from aws_comparator.comparison.servicequotas_comparator import ServiceQuotasComparator
 
 __all__ = [
     "BaseComparator",
     "ComparisonConfig",
     "ResourceComparator",
+    "ServiceQuotasComparator",
     "SeverityConfig",
 ]
