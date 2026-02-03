@@ -26,7 +26,19 @@ import aws_comparator.services.s3  # noqa: F401
 import aws_comparator.services.secretsmanager  # noqa: F401
 import aws_comparator.services.servicequotas  # noqa: F401
 import aws_comparator.services.sqs  # noqa: F401
-from aws_comparator.comparison import ResourceComparator, ServiceQuotasComparator
+from aws_comparator.comparison import (
+    BedrockComparator,
+    CloudWatchComparator,
+    EC2Comparator,
+    ElasticBeanstalkComparator,
+    EventBridgeComparator,
+    LambdaComparator,
+    ResourceComparator,
+    S3Comparator,
+    SecretsManagerComparator,
+    ServiceQuotasComparator,
+    SQSComparator,
+)
 from aws_comparator.core.config import AccountConfig, ComparisonConfig
 from aws_comparator.core.exceptions import (
     AssumeRoleError,
@@ -285,11 +297,25 @@ class ComparisonOrchestrator:
         Returns:
             ServiceComparisonResult for the service.
         """
-        # Use service-specific comparators when available
-        if service_name == 'service-quotas':
-            comparator = ServiceQuotasComparator(service_name)
-        else:
-            comparator = ResourceComparator(service_name)
+        # Map service names to their specialized comparators
+        # These comparators use name-based matching instead of ARN-based matching
+        # which is essential for cross-account comparison
+        comparator_map = {
+            'service-quotas': ServiceQuotasComparator,
+            'cloudwatch': CloudWatchComparator,
+            'eventbridge': EventBridgeComparator,
+            'secretsmanager': SecretsManagerComparator,
+            'lambda': LambdaComparator,
+            's3': S3Comparator,
+            'ec2': EC2Comparator,
+            'sqs': SQSComparator,
+            'bedrock': BedrockComparator,
+            'elasticbeanstalk': ElasticBeanstalkComparator,
+        }
+
+        # Use service-specific comparator if available, otherwise use generic
+        comparator_class = comparator_map.get(service_name, ResourceComparator)
+        comparator = comparator_class(service_name)
         return comparator.compare(account1_data, account2_data)
 
     def _calculate_summary(

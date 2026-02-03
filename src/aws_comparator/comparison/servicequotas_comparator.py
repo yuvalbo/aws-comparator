@@ -62,29 +62,38 @@ class ServiceQuotasComparator(ResourceComparator):
 
         For Service Quotas, we use service_code/quota_code as the identifier
         instead of ARN, since ARNs contain account IDs which are always
-        different between accounts.
+        different between accounts. The identifier includes human-readable
+        service and quota names for better usability.
 
         Args:
             resource: AWS resource (expected to be a ServiceQuota).
 
         Returns:
-            Unique identifier string in format "service_code/quota_code".
+            Unique identifier string in format "service_code/quota_code (service_name - quota_name)".
 
         Example:
-            >>> quota = ServiceQuota(service_code='ec2', quota_code='L-1234', ...)
+            >>> quota = ServiceQuota(service_code='ec2', quota_code='L-1234',
+            ...                      service_name='Amazon EC2', quota_name='Running instances', ...)
             >>> identifier = comparator._get_resource_identifier(quota)
-            >>> print(identifier)  # 'ec2/L-1234'
+            >>> print(identifier)  # 'ec2/L-1234 (Amazon EC2 - Running instances)'
         """
-        # For ServiceQuota objects, use service_code/quota_code
+        # For ServiceQuota objects, use service_code/quota_code with human-readable names
         if isinstance(resource, ServiceQuota):
-            return f"{resource.service_code}/{resource.quota_code}"
+            base_id = f"{resource.service_code}/{resource.quota_code}"
+            return f"{base_id} ({resource.service_name} - {resource.quota_name})"
 
         # Check if resource has service_code and quota_code attributes
         if hasattr(resource, 'service_code') and hasattr(resource, 'quota_code'):
             service_code = resource.service_code  # type: ignore[attr-defined]
             quota_code = resource.quota_code  # type: ignore[attr-defined]
             if service_code and quota_code:
-                return f"{service_code}/{quota_code}"
+                base_id = f"{service_code}/{quota_code}"
+                # Try to get human-readable names if available
+                service_name = getattr(resource, 'service_name', None)
+                quota_name = getattr(resource, 'quota_name', None)
+                if service_name and quota_name:
+                    return f"{base_id} ({service_name} - {quota_name})"
+                return base_id
 
         # Fallback to parent implementation for non-quota resources
         return super()._get_resource_identifier(resource)
