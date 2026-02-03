@@ -163,6 +163,11 @@ class SecretMetadata(AWSResource):
                 "actual secret values. Only metadata is allowed."
             )
 
+        # Parse tags from AWS response if not provided directly
+        if tags is None:
+            tags_list = secret_data.get('Tags', [])
+            tags = {tag['Key']: tag['Value'] for tag in tags_list}
+
         secret_dict = {
             'name': secret_data.get('Name'),
             'arn': secret_data.get('ARN'),
@@ -171,7 +176,7 @@ class SecretMetadata(AWSResource):
             'rotation_enabled': secret_data.get('RotationEnabled', False),
             'rotation_lambda_arn': secret_data.get('RotationLambdaARN'),
             'owning_service': secret_data.get('OwningService'),
-            'tags': tags or {},
+            'tags': tags,
         }
 
         # Rotation rules

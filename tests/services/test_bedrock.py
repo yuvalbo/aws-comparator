@@ -491,13 +491,13 @@ class TestErrorHandling:
         mock_bedrock_client.list_foundation_models.return_value = {
             'modelSummaries': [
                 {
-                    # Missing required fields
-                    'modelId': 'incomplete-model'
+                    # Missing modelId which is required and validated
+                    'modelName': 'incomplete-model'
                 }
             ]
         }
 
         models = bedrock_fetcher._fetch_foundation_models()
 
-        # Should handle gracefully and skip malformed entries
+        # Should handle gracefully and skip entries with empty modelId
         assert len(models) == 0

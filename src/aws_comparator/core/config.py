@@ -8,9 +8,10 @@ multiple sources: files, environment variables, and CLI arguments.
 import os
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
+
 import yaml
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from aws_comparator.core.exceptions import (
     ConfigFileNotFoundError,
@@ -104,15 +105,15 @@ class ServiceFilterConfig(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     enabled: bool = Field(default=True, description="Whether service is enabled")
-    resource_types: Optional[List[str]] = Field(
+    resource_types: Optional[list[str]] = Field(
         None,
         description="Specific resource types to include (None = all)"
     )
-    exclude_tags: Dict[str, str] = Field(
+    exclude_tags: dict[str, str] = Field(
         default_factory=dict,
         description="Exclude resources with these tags"
     )
-    include_tags: Optional[Dict[str, str]] = Field(
+    include_tags: Optional[dict[str, str]] = Field(
         None,
         description="Only include resources with these tags"
     )
@@ -145,11 +146,11 @@ class ComparisonConfig(BaseModel):
     account2: AccountConfig = Field(..., description="Second account configuration")
 
     # Service selection
-    services: Optional[List[str]] = Field(
+    services: Optional[list[str]] = Field(
         None,
         description="Services to compare (None = all supported services)"
     )
-    service_filters: Dict[str, ServiceFilterConfig] = Field(
+    service_filters: dict[str, ServiceFilterConfig] = Field(
         default_factory=dict,
         description="Per-service filter configurations"
     )
@@ -180,7 +181,7 @@ class ComparisonConfig(BaseModel):
     quiet: bool = Field(default=False, description="Suppress non-error output")
 
     # Comparison filters
-    ignore_fields: List[str] = Field(
+    ignore_fields: list[str] = Field(
         default_factory=lambda: [
             "LastModifiedDate",
             "CreationDate",
@@ -190,14 +191,14 @@ class ComparisonConfig(BaseModel):
         ],
         description="Fields to ignore in comparisons"
     )
-    ignore_tags: List[str] = Field(
+    ignore_tags: list[str] = Field(
         default_factory=list,
         description="Tag keys to ignore (supports wildcards)"
     )
 
     @field_validator('services')
     @classmethod
-    def validate_services(cls, v: Optional[List[str]]) -> Optional[List[str]]:
+    def validate_services(cls, v: Optional[list[str]]) -> Optional[list[str]]:
         """
         Validate service names.
 
@@ -240,7 +241,7 @@ class ComparisonConfig(BaseModel):
         """
         return self.service_filters.get(
             service_name,
-            ServiceFilterConfig()
+            ServiceFilterConfig()  # type: ignore[call-arg]
         )
 
     @classmethod
@@ -262,7 +263,7 @@ class ComparisonConfig(BaseModel):
             raise ConfigFileNotFoundError(str(config_path))
 
         try:
-            with open(config_path, 'r', encoding='utf-8') as f:
+            with open(config_path, encoding='utf-8') as f:
                 data = yaml.safe_load(f)
 
             if data is None:
@@ -271,12 +272,12 @@ class ComparisonConfig(BaseModel):
             return cls(**data)
 
         except yaml.YAMLError as e:
-            raise ConfigParseError(str(config_path), str(e))
+            raise ConfigParseError(str(config_path), str(e)) from e
         except Exception as e:
-            raise ConfigParseError(str(config_path), str(e))
+            raise ConfigParseError(str(config_path), str(e)) from e
 
     @classmethod
-    def from_env(cls, prefix: str = "AWS_COMPARATOR_") -> Dict[str, Any]:
+    def from_env(cls, prefix: str = "AWS_COMPARATOR_") -> dict[str, Any]:
         """
         Load configuration values from environment variables.
 
@@ -290,7 +291,7 @@ class ComparisonConfig(BaseModel):
             AWS_COMPARATOR_REGION=us-west-2
             AWS_COMPARATOR_OUTPUT_FORMAT=json
         """
-        config_dict: Dict[str, Any] = {}
+        config_dict: dict[str, Any] = {}
 
         # Map environment variables to config fields
         env_mappings = {
@@ -313,14 +314,14 @@ class ComparisonConfig(BaseModel):
 
         return config_dict
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Export configuration as dictionary.
 
         Returns:
             Dictionary representation of configuration
         """
-        return self.model_dump(exclude_none=True)
+        return self.model_dump(exclude_none=True, mode='json')
 
     def to_yaml(self) -> str:
         """
@@ -399,7 +400,7 @@ def load_config(
     Raises:
         InvalidConfigError: If configuration is invalid
     """
-    config_dict: Dict[str, Any] = {}
+    config_dict: dict[str, Any] = {}
 
     # 1. Load from default config file if it exists
     default_config_path = get_default_config_path()
@@ -452,4 +453,4 @@ def load_config(
         raise InvalidConfigError(
             str(config_file or "command line"),
             [str(e)]
-        )
+        ) from e

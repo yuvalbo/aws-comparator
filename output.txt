@@ -1,0 +1,780 @@
+========================================================================================================================
+                                                 AWS COMPARATOR REPORT
+========================================================================================================================
+Account 1: 321332739735
+Account 2: 772056226699
+Region: us-east-1
+Timestamp: 2026-02-03 15:03:29
+
+SUMMARY
+------------------------------------------------------------------------------------------------------------------------
+Total Changes: 315
+  HIGH: 315
+
+  ADDED: 20  |  REMOVED: 295  |  MODIFIED: 0
+
+========================================================================================================================
+SERVICE: S3
+========================================================================================================================
+
+ONLY IN ACCOUNT 2 (772056226699) (exists only in Account 2):
+
+  [HIGH] buckets: droxi-frontend-extension-dev
+         name: droxi-frontend-extension-dev
+         Note: Resource exists only in Account 2
+  [HIGH] buckets: dev-patient-notes20251203104403633400000001
+         name: dev-patient-notes20251203104403633400000001
+         Note: Resource exists only in Account 2
+  [HIGH] buckets: dev-inbox-sync20250704122724200400000001
+         name: dev-inbox-sync20250704122724200400000001
+         Note: Resource exists only in Account 2
+  [HIGH] buckets: 772056226699-aws-shared-us-east-2-terragrunt-states
+         name: 772056226699-aws-shared-us-east-2-terragrunt-states
+         Note: Resource exists only in Account 2
+  [HIGH] buckets: dev-sms-templates20250624114018825600000001
+         name: dev-sms-templates20250624114018825600000001
+         Note: Resource exists only in Account 2
+  [HIGH] buckets: dev-newcrop-db-cache20250612131029639900000002
+         name: dev-newcrop-db-cache20250612131029639900000002
+         Note: Resource exists only in Account 2
+  [HIGH] buckets: 772056226699-mongodb-atlas-dev-us-east-2-terragrunt-states
+         name: 772056226699-mongodb-atlas-dev-us-east-2-terragrunt-states
+         Note: Resource exists only in Account 2
+  [HIGH] buckets: droxi-practice-manager-dev
+         name: droxi-practice-manager-dev
+         Note: Resource exists only in Account 2
+  [HIGH] buckets: droxi-ehr-login
+         name: droxi-ehr-login
+         Note: Resource exists only in Account 2
+  [HIGH] buckets: dev-clinical-documents20251114120254298700000001
+         name: dev-clinical-documents20251114120254298700000001
+         Note: Resource exists only in Account 2
+  [HIGH] buckets: 772056226699-mongodb-atlas-dev-us-east-1-terragrunt-states
+         name: 772056226699-mongodb-atlas-dev-us-east-1-terragrunt-states
+         Note: Resource exists only in Account 2
+  [HIGH] buckets: 772056226699-aws-dev-us-east-1-terragrunt-states
+         name: 772056226699-aws-dev-us-east-1-terragrunt-states
+         Note: Resource exists only in Account 2
+  [HIGH] buckets: 772056226699-openvpn-prod-us-east-1-terragrunt-states
+         name: 772056226699-openvpn-prod-us-east-1-terragrunt-states
+         Note: Resource exists only in Account 2
+  [HIGH] buckets: 772056226699-aws-dev-us-east-2-terragrunt-states
+         name: 772056226699-aws-dev-us-east-2-terragrunt-states
+         Note: Resource exists only in Account 2
+  [HIGH] buckets: dev-videos20250619103718427500000001
+         name: dev-videos20250619103718427500000001
+         Note: Resource exists only in Account 2
+  [HIGH] buckets: 772056226699-aws-shared-us-east-1-terragrunt-states
+         name: 772056226699-aws-shared-us-east-1-terragrunt-states
+         Note: Resource exists only in Account 2
+  [HIGH] buckets: dev-newcrop-errors20250612131029639900000001
+         name: dev-newcrop-errors20250612131029639900000001
+         Note: Resource exists only in Account 2
+  [HIGH] buckets: dev-lab-analysis20260122145505124600000001
+         name: dev-lab-analysis20260122145505124600000001
+         Note: Resource exists only in Account 2
+  [HIGH] buckets: droxi-frontend-dev-new
+         name: droxi-frontend-dev-new
+         Note: Resource exists only in Account 2
+  [HIGH] buckets: dev-inbox-attachments20250612130642617600000001
+         name: dev-inbox-attachments20250612130642617600000001
+         Note: Resource exists only in Account 2
+
+ONLY IN ACCOUNT 1 (321332739735) (exists only in Account 1):
+
+  [HIGH] buckets: sagemaker-studio-321332739735-k22vic1trt
+         name: sagemaker-studio-321332739735-k22vic1trt
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: newcrop-errors-prod
+         name: newcrop-errors-prod
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-deploy-bucket
+         name: droxi-deploy-bucket
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: amazon-connect-5d30e2e56c31
+         name: amazon-connect-5d30e2e56c31
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-extension
+         name: droxi-extension
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: 321332739735-aws-dev-us-east-1-terragrunt-states
+         name: 321332739735-aws-dev-us-east-1-terragrunt-states
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-editor
+         name: droxi-editor
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: 321332739735-aws-demo-prep-us-east-1-terragrunt-states
+         name: 321332739735-aws-demo-prep-us-east-1-terragrunt-states
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: freetext-training-data
+         name: freetext-training-data
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: datadogintegration-forwarderstack--forwarderbucket-z9elklxfgy4v
+         name: datadogintegration-forwarderstack--forwarderbucket-z9elklxfgy4v
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: sagemaker-studio-a9ht5z49zdj
+         name: sagemaker-studio-a9ht5z49zdj
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: sagemaker-studio-qa4lt6b1p3
+         name: sagemaker-studio-qa4lt6b1p3
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: medicaldatastorage
+         name: medicaldatastorage
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-s3-access-logs
+         name: droxi-s3-access-logs
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-clinical-documents-prod
+         name: droxi-clinical-documents-prod
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: elasticbeanstalk-us-west-2-321332739735
+         name: elasticbeanstalk-us-west-2-321332739735
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: sagemaker-us-east-1-321332739735
+         name: sagemaker-us-east-1-321332739735
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: prod-practice-manager
+         name: prod-practice-manager
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-sms-templates-dev
+         name: droxi-sms-templates-dev
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: aws-sam-cli-managed-default-samclisourcebucket-12a3gnwwqpf6n
+         name: aws-sam-cli-managed-default-samclisourcebucket-12a3gnwwqpf6n
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: sagemaker-studio-321332739735-kwmxe5vjsn
+         name: sagemaker-studio-321332739735-kwmxe5vjsn
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: 321332739735-openvpn-prod-us-east-1-terragrunt-states
+         name: 321332739735-openvpn-prod-us-east-1-terragrunt-states
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-app-updates
+         name: droxi-app-updates
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: smsquickstartstack-44ed06-smsconfigurationsetbucke-ihbh7hmzs5cw
+         name: smsquickstartstack-44ed06-smsconfigurationsetbucke-ihbh7hmzs5cw
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: newcrop-db-cache-demo
+         name: newcrop-db-cache-demo
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-inbox-attachments-prod
+         name: droxi-inbox-attachments-prod
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: 321332739735-aws-prod-us-east-1-terragrunt-states
+         name: 321332739735-aws-prod-us-east-1-terragrunt-states
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: sagemaker-studio-gk1ri4vhk5
+         name: sagemaker-studio-gk1ri4vhk5
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-videos-prod
+         name: droxi-videos-prod
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-inbox-attachments-demo
+         name: droxi-inbox-attachments-demo
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: 321332739735-aws-demo-us-east-1-terragrunt-states
+         name: 321332739735-aws-demo-us-east-1-terragrunt-states
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-extension-dolev
+         name: droxi-extension-dolev
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-inbox-sync-prod
+         name: droxi-inbox-sync-prod
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: sagemaker-studio-321332739735-dld0b2wwy2t
+         name: sagemaker-studio-321332739735-dld0b2wwy2t
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: newcrop-errors-dev
+         name: newcrop-errors-dev
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: dev-practice-manager
+         name: dev-practice-manager
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: 321332739735-mongodb-atlas-demo-us-east-1-terragrunt-states
+         name: 321332739735-mongodb-atlas-demo-us-east-1-terragrunt-states
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: newcrop-db-cache-dev
+         name: newcrop-db-cache-dev
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: prod-lab-analysis
+         name: prod-lab-analysis
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-test-bucket-for-developers
+         name: droxi-test-bucket-for-developers
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: sagemaker-studio-321332739735-o5hxj06357r
+         name: sagemaker-studio-321332739735-o5hxj06357r
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-app-data
+         name: droxi-app-data
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: aws-cloudtrail-logs-321332739735-3f6b00d5
+         name: aws-cloudtrail-logs-321332739735-3f6b00d5
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-login
+         name: droxi-login
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-inbox-attachments-dev
+         name: droxi-inbox-attachments-dev
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: sagemaker-studio-321332739735-6qacqahktuo
+         name: sagemaker-studio-321332739735-6qacqahktuo
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: test-cors-pdf-files
+         name: test-cors-pdf-files
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: sagemaker-studio-55wnpku1qha
+         name: sagemaker-studio-55wnpku1qha
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: sagemaker-studio-321332739735-5t45km58ly9
+         name: sagemaker-studio-321332739735-5t45km58ly9
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-dev-app-data
+         name: droxi-dev-app-data
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-editor-login-handler
+         name: droxi-editor-login-handler
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-extension-demo-prep
+         name: droxi-extension-demo-prep
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-dev-site
+         name: droxi-dev-site
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: prod-patient-notes
+         name: prod-patient-notes
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-billing
+         name: droxi-billing
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: dt-cur-reports-payer-droxi
+         name: dt-cur-reports-payer-droxi
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: 321332739735-mongodb-atlas-dev-us-east-1-terragrunt-states
+         name: 321332739735-mongodb-atlas-dev-us-east-1-terragrunt-states
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: sagemaker-studio-321332739735-il8gbyz5kk
+         name: sagemaker-studio-321332739735-il8gbyz5kk
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: newcrop-db-cache-prod
+         name: newcrop-db-cache-prod
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: elasticbeanstalk-us-east-1-321332739735
+         name: elasticbeanstalk-us-east-1-321332739735
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: sagemaker-studio-321332739735-xd194umc8p
+         name: sagemaker-studio-321332739735-xd194umc8p
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-videos-dev
+         name: droxi-videos-dev
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: cf-templates-cweevnqqeo02-us-east-1
+         name: cf-templates-cweevnqqeo02-us-east-1
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-inbox-sync-dev
+         name: droxi-inbox-sync-dev
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: qa-automation-dev-bucket
+         name: qa-automation-dev-bucket
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: dev-lab-analysis
+         name: dev-lab-analysis
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: sagemaker-eu-north-1-321332739735
+         name: sagemaker-eu-north-1-321332739735
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-extension-demo
+         name: droxi-extension-demo
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: cdk-hnb659fds-assets-321332739735-us-east-1
+         name: cdk-hnb659fds-assets-321332739735-us-east-1
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-frontend-dev
+         name: droxi-frontend-dev
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-frontend-prod
+         name: droxi-frontend-prod
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: 321332739735-aws-prod-il-central-1-terragrunt-states
+         name: 321332739735-aws-prod-il-central-1-terragrunt-states
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-extension-dev
+         name: droxi-extension-dev
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: new-pileus-bucket
+         name: new-pileus-bucket
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: sagemaker-studio-321332739735-q6hnj4zgql
+         name: sagemaker-studio-321332739735-q6hnj4zgql
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-frontend-demo
+         name: droxi-frontend-demo
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: sagemaker-mongo-data
+         name: sagemaker-mongo-data
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-sms-templates
+         name: droxi-sms-templates
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-public-site
+         name: droxi-public-site
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxy-devops-terraform-states
+         name: droxy-devops-terraform-states
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: medical-attachments
+         name: medical-attachments
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: newcrop-errors-demo
+         name: newcrop-errors-demo
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: sagemaker-studio-321332739735-94eje4s6c1
+         name: sagemaker-studio-321332739735-94eje4s6c1
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: dev-patient-notes
+         name: dev-patient-notes
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: hoag-sftp
+         name: hoag-sftp
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-frontend-demo-prep
+         name: droxi-frontend-demo-prep
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-athena-sync-monitor-results
+         name: droxi-athena-sync-monitor-results
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-clinical-documents-dev
+         name: droxi-clinical-documents-dev
+         Note: Resource exists only in Account 1
+  [HIGH] buckets: droxi-pendo-test
+         name: droxi-pendo-test
+         Note: Resource exists only in Account 1
+
+========================================================================================================================
+SERVICE: SQS
+========================================================================================================================
+
+ONLY IN ACCOUNT 1 (321332739735) (exists only in Account 1):
+
+  [HIGH] queues: fhir-client-periodic-tasks-dolev.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: datafilter-input-dev-maayan.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: SmsQuickStartStack-44ed06ff-SmsSQSQueue-tvHeOFkSOJZP
+         Note: Resource exists only in Account 1
+  [HIGH] queues: datafilter-input-dev-dolev.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: maor-test-queue-inbox.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: changed-orders-dev
+         Note: Resource exists only in Account 1
+  [HIGH] queues: maayan-test-queue-inbox-dlq.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: fhir-client-periodic-tasks-prod.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: inbox-manager-dev-niels
+         Note: Resource exists only in Account 1
+  [HIGH] queues: hanging-user-actions-rollback-timer-dev.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: fhir-client-periodic-tasks-demo-prep.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: inbox-manager-test-dlq
+         Note: Resource exists only in Account 1
+  [HIGH] queues: datafilter-input-dev-niels_2.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: test-queue-yuri-periodic
+         Note: Resource exists only in Account 1
+  [HIGH] queues: data-processor-input-prod
+         Note: Resource exists only in Account 1
+  [HIGH] queues: dataprocessor-demo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: awseb-e-nb2bfr4cka-stack-AWSEBWorkerQueue-nV7Fka97n98d
+         Note: Resource exists only in Account 1
+  [HIGH] queues: prescriptions-report-dev
+         Note: Resource exists only in Account 1
+  [HIGH] queues: inbox-manager-dev-shira.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: app-periodic-tasks-demo-prep
+         Note: Resource exists only in Account 1
+  [HIGH] queues: app-periodic-tasks-demo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: inbox-manager-dev
+         Note: Resource exists only in Account 1
+  [HIGH] queues: datafilter-input-dev-shira.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: datafilter-input-dev-niels.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: inbox-manager-dev-stabile-dlq
+         Note: Resource exists only in Account 1
+  [HIGH] queues: dataprocessor-input-dev-shira.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: inbox-manager-prod-dlq
+         Note: Resource exists only in Account 1
+  [HIGH] queues: awseb-e-h6c6d4q388-stack-AWSEBWorkerDeadLetterQueue-HUTWgkiJVw4n
+         Note: Resource exists only in Account 1
+  [HIGH] queues: inbox-manager-dev-maor
+         Note: Resource exists only in Account 1
+  [HIGH] queues: discarded-inbox-items-prod
+         Note: Resource exists only in Account 1
+  [HIGH] queues: fhir-client-periodic-tasks-dev.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: prescriptions-report-demo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: sqsd-worker-phaseout-queue-dev.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: app-periodic-tasks-maayan
+         Note: Resource exists only in Account 1
+  [HIGH] queues: dataprocessor-input-dev-dima.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: clinical-documents-output-prod-20251210103942534700000004.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: dataprocessor-input-dev-maorsulima.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: datafilter-input-dev-nastia.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: datafilter-input-dev.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: changed-orders-dev.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: dataprocessor-demo-prep
+         Note: Resource exists only in Account 1
+  [HIGH] queues: inbox-manager-dev-dima
+         Note: Resource exists only in Account 1
+  [HIGH] queues: dataprocessor-input-dev-dolev.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: backend-services-py-periodic-tasks-demo-prep.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: clinical-documents-output-prod-20251214154323490600000006.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: inbox-manager-test
+         Note: Resource exists only in Account 1
+  [HIGH] queues: backend-py-input-dev-maor.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: dataprocessor-input-dev-ksenia.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: boris-test-inbox-manager
+         Note: Resource exists only in Account 1
+  [HIGH] queues: clinical-documents-input-dev-20251218164017222600000004.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: test-queue-nadav-datafilter.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: practice-poller-queue-prod
+         Note: Resource exists only in Account 1
+  [HIGH] queues: changed-orders-queue-dev-dlq.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: sqsd-worker-phaseout-queue-prod.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: inbox-items-patient-data
+         Note: Resource exists only in Account 1
+  [HIGH] queues: inbox-manager-prod
+         Note: Resource exists only in Account 1
+  [HIGH] queues: test-queue-yuri-datafilter.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: hanging-user-actions-rollback-timer-prod.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: prescriptions-report-dev-dlq
+         Note: Resource exists only in Account 1
+  [HIGH] queues: inbox-manager-dev-nastia.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: inbar-test-backend-services-py
+         Note: Resource exists only in Account 1
+  [HIGH] queues: ksenia-test-data-filter-queue.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: app-periodic-tasks-prod
+         Note: Resource exists only in Account 1
+  [HIGH] queues: app-periodic-tasks-prod-dlq
+         Note: Resource exists only in Account 1
+  [HIGH] queues: matan-test-inbox-manager
+         Note: Resource exists only in Account 1
+  [HIGH] queues: app-periodic-be-dima
+         Note: Resource exists only in Account 1
+  [HIGH] queues: inbox-manager-dev-stabile
+         Note: Resource exists only in Account 1
+  [HIGH] queues: data-processor-input-dev-dlq
+         Note: Resource exists only in Account 1
+  [HIGH] queues: data-processor-input-dev-matan
+         Note: Resource exists only in Account 1
+  [HIGH] queues: clinical-documents-output-prod-20251210105625248300000005.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: backend-services-py-periodic-tasks-dev.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: maayan-test-queue-inbox.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: fhir-client-periodic-tasks-demo.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: backend-services-py-periodic-tasks-demo.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: app-periodic-tasks-dima
+         Note: Resource exists only in Account 1
+  [HIGH] queues: datafilter-input-dev-dlq.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: inbox-manager-dev-dlq
+         Note: Resource exists only in Account 1
+  [HIGH] queues: app-periodic-tasks-dev
+         Note: Resource exists only in Account 1
+  [HIGH] queues: test-queue-yuri-fhir-periodic.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: datafilter-input-dev-ido.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: hanging-user-actions-rollback-timer-demo.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: clinical-documents-input-dev-dev-dlq-20251214172420796500000004.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: datafilter-demo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: test-queue-nadav-inbox.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: clinical-documents-input-prod-20251210111536764700000006.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: datafilter-input-dev-maayan-dlq.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: inbox-manager-dev-itsik
+         Note: Resource exists only in Account 1
+  [HIGH] queues: tomer-test-df-queue.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: test-queue-dolev-inbox.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: awseb-e-nb2bfr4cka-stack-AWSEBWorkerDeadLetterQueue-xyOB6sjZguIh
+         Note: Resource exists only in Account 1
+  [HIGH] queues: practice-poller-queue-dev
+         Note: Resource exists only in Account 1
+  [HIGH] queues: ksenia-test-queue-inbox.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: test-queue-yuri
+         Note: Resource exists only in Account 1
+  [HIGH] queues: test-inbox-manager-dima.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: test-queue-itsik-inbox.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: yuri-test-queue.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: prescriptions-report-test
+         Note: Resource exists only in Account 1
+  [HIGH] queues: discarded-inbox-items-dev
+         Note: Resource exists only in Account 1
+  [HIGH] queues: inbox-manager-demo-prep
+         Note: Resource exists only in Account 1
+  [HIGH] queues: prescriptions-report-prod-dlq
+         Note: Resource exists only in Account 1
+  [HIGH] queues: app-periodic-tasks-dev-dlq
+         Note: Resource exists only in Account 1
+  [HIGH] queues: data-processor-input-prod-dlq
+         Note: Resource exists only in Account 1
+  [HIGH] queues: dataprocessor-input-dev-maayan.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: data-processor-input-dev
+         Note: Resource exists only in Account 1
+  [HIGH] queues: backend-services-py-periodic-tasks-shira.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: datafilter-input-dev-itsik.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: tomer-test-inbox-queue.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: backend-services-py-periodic-tasks-prod.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: discarded-inbox-items-deadletter-prod
+         Note: Resource exists only in Account 1
+  [HIGH] queues: prescriptions-report-prod
+         Note: Resource exists only in Account 1
+  [HIGH] queues: clinical-documents-input-prod-20251210110750243200000006.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: test-queue-yuri-dataprocessor.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: app-periodic-tasks-dev-dolev
+         Note: Resource exists only in Account 1
+  [HIGH] queues: datafilter-input-dev-dima.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: tomer-test-backend-services-py.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: clinical-documents-input-dev-dlq-20251218164017223000000006.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: datafilter-input-prod-dlq.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: clinical-documents-output-dev-20251218164017222700000005.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: dataprocessor-input-dev-matan.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: maor-test-queue-datafilter.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: test-queue-boris-datafilter.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: inbox-manager-dev-ksenia
+         Note: Resource exists only in Account 1
+  [HIGH] queues: request-watchers-dev
+         Note: Resource exists only in Account 1
+  [HIGH] queues: test-queue-nadav-dataprocessor.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: inbox-manager-demo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: clinical-documents-input-dev-dev-20251214172420796300000003.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: changed-orders-dev-dlq
+         Note: Resource exists only in Account 1
+  [HIGH] queues: yuri-clinical-documents-input-dev.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: dataprocessor-input-dev-niels.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: dataprocessor-input-dev-itsik.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: fhir-demo-prep-sqs
+         Note: Resource exists only in Account 1
+  [HIGH] queues: changed-orders-queue-dev.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: test-queue-yuri-inbox.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: awseb-e-h6c6d4q388-stack-AWSEBWorkerQueue-5WWCbQp9yi5o
+         Note: Resource exists only in Account 1
+  [HIGH] queues: backend-services-py-periodic-tasks-ksenia.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: inbar-datafilter-input-dev.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: test-queue-yuri-DLQ.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: dima-test-inbox-manager
+         Note: Resource exists only in Account 1
+  [HIGH] queues: backend-services-py-periodic-tasks-dolev.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: clinical-documents-input-prod-20251210115325579200000004.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: test-queue-yuri.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: changed-orders-dev-dlq.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: datafilter-input-prod.fifo
+         Note: Resource exists only in Account 1
+  [HIGH] queues: inbar-datafilter-input-dev
+         Note: Resource exists only in Account 1
+  [HIGH] queues: test_queue.fifo
+         Note: Resource exists only in Account 1
+
+========================================================================================================================
+SERVICE: SNS
+========================================================================================================================
+
+ONLY IN ACCOUNT 1 (321332739735) (exists only in Account 1):
+
+  [HIGH] topics: ElasticBeanstalkNotifications-Environment-dataprocessor-droxi-prod
+         Note: Resource exists only in Account 1
+  [HIGH] topics: support-alerts-topic
+         Note: Resource exists only in Account 1
+  [HIGH] topics: llm_evaluation_test
+         Note: Resource exists only in Account 1
+  [HIGH] topics: LLM_PROD_freetext_renewal
+         Note: Resource exists only in Account 1
+  [HIGH] topics: Discarded-Write-To-DB
+         Note: Resource exists only in Account 1
+  [HIGH] topics: LLM_Expecting_value_JSONDecodeError
+         Note: Resource exists only in Account 1
+  [HIGH] topics: boris-topic-test
+         Note: Resource exists only in Account 1
+  [HIGH] topics: Failed_to_get_response_from_backend
+         Note: Resource exists only in Account 1
+  [HIGH] topics: ElasticBeanstalkNotifications-Environment-datafilter-droxi-prod
+         Note: Resource exists only in Account 1
+  [HIGH] topics: ElasticBeanstalkNotifications-Environment-app-demo
+         Note: Resource exists only in Account 1
+  [HIGH] topics: ROOT-AWS-Console-Sign-In-via-CloudTrail-droxi
+         Note: Resource exists only in Account 1
+  [HIGH] topics: Prod_Expecting_value_JSONDecodeError_updated
+         Note: Resource exists only in Account 1
+  [HIGH] topics: ElasticBeanstalkNotifications-Environment-app-droxi-prod
+         Note: Resource exists only in Account 1
+  [HIGH] topics: SmsQuickStartSnsDestination-44ed06ff
+         Note: Resource exists only in Account 1
+  [HIGH] topics: incoming-sms-test-topic
+         Note: Resource exists only in Account 1
+  [HIGH] topics: ElasticBeanstalkNotifications-Environment-app-droxi-dev
+         Note: Resource exists only in Account 1
+  [HIGH] topics: ksenia-test-athena-sync
+         Note: Resource exists only in Account 1
+  [HIGH] topics: test-email-sending
+         Note: Resource exists only in Account 1
+  [HIGH] topics: ElasticBeanstalkNotifications-Environment-backend-services-py-droxi-prod
+         Note: Resource exists only in Account 1
+  [HIGH] topics: dev-env-alerts
+         Note: Resource exists only in Account 1
+  [HIGH] topics: QA
+         Note: Resource exists only in Account 1
+  [HIGH] topics: ElasticBeanstalkNotifications-Environment-droxi-editor
+         Note: Resource exists only in Account 1
+  [HIGH] topics: aws-cloudtrail-logs-321332739735-a3b08a47
+         Note: Resource exists only in Account 1
+  [HIGH] topics: ElasticBeanstalkNotifications-Environment-fhir-droxi-prod
+         Note: Resource exists only in Account 1
+  [HIGH] topics: Prod_LLM_An_unexpected_error_occurred
+         Note: Resource exists only in Account 1
+  [HIGH] topics: Free_text_renewal_failure
+         Note: Resource exists only in Account 1
+  [HIGH] topics: Prod_Expecting_value_JSONDecodeError
+         Note: Resource exists only in Account 1
+  [HIGH] topics: LLM_invalid_json_returned_from_model
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: Prod_Expecting_value_JSONDecodeError✉ido@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: Failed_to_get_response_from_backend✉raveh@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: ElasticBeanstalkNotifications-Environment-app-dev✉dolev@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: dev-env-alerts✉yuri@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: ElasticBeanstalkNotifications-Environment-droxi-editor✉dolev@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: dev-env-alerts✉techsupport@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: ROOT-AWS-Console-Sign-In-via-CloudTrail-droxi✉devops@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: ElasticBeanstalkNotifications-Environment-datafilter-droxi-prod✉techsupport@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: Prod_Expecting_value_JSONDecodeError✉tanya@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: llm_evaluation_test✉ido@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: droxi-new-requests-dev:sqs:arn:aws:sqs:us-east-1:321332739735:droxi-new-requests-dev
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: ksenia-test-athena-sync✉ksenia@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: ElasticBeanstalkNotifications-Environment-app-demo✉dolev@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: LLM_invalid_json_returned_from_model✉raveh@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: LLM_invalid_json_returned_from_model✉ido@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: LLM_PROD_freetext_renewal✉ido@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: ElasticBeanstalkNotifications-Environment-app-droxi-dev✉dolev@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: Failed_to_get_response_from_backend✉ido@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: ElasticBeanstalkNotifications-Environment-backend-services-py-droxi-prod✉techsupport@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: Free_text_renewal_failure✉ido@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: Prod_Expecting_value_JSONDecodeError_updated✉ido@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: ElasticBeanstalkNotifications-Environment-datafilter-dev✉yuri@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: Prod_Expecting_value_JSONDecodeError_updated✉raveh@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: dev-env-alerts✉noha@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: support-alerts-topic✉techsupport@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: 
+SmsQuickStartSnsDestination-44ed06ff:sqs:arn:aws:sqs:us-east-1:321332739735:SmsQuickStartStack-44ed06ff-SmsSQSQueue-tvHe
+OFkSOJZP
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: test-email-sending✉yuri@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: LLM_invalid_json_returned_from_model✉tanya@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: ROOT-AWS-Console-Sign-In-via-CloudTrail-droxi✉security-alerts@directeam.io
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: boris-topic-test✉boris@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: Prod_LLM_An_unexpected_error_occurred✉ido@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: LLM_Expecting_value_JSONDecodeError✉ido@droxi.ai
+         Note: Resource exists only in Account 1
+  [HIGH] subscriptions: Discarded-Write-To-DB✉tanya@droxi.ai
+         Note: Resource exists only in Account 1
+

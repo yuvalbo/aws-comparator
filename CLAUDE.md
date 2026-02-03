@@ -1,5 +1,14 @@
 # CLAUDE.md
 
+## Git Commit Guidelines
+
+**IMPORTANT: Do NOT add Co-Authored-By lines to commits.**
+
+When making git commits:
+- Use only the configured git user (yuvalbo)
+- Do NOT add "Co-Authored-By: Claude" or any similar attribution
+- Keep commit messages simple and descriptive without co-author trailers
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview

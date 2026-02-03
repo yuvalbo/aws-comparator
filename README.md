@@ -50,6 +50,60 @@ pip install -e .
 aws-comparator --version
 ```
 
+### Using Docker
+
+Run aws-comparator without installing Python or any dependencies:
+
+```bash
+# Build the image
+docker build -t aws-comparator .
+
+# Check image size (should be < 100MB)
+docker images aws-comparator
+```
+
+**Run with AWS credentials mounted:**
+```bash
+docker run --rm \
+  -v ~/.aws:/home/appuser/.aws:ro \
+  aws-comparator compare -a1 111111111111 -a2 222222222222 \
+  -p1 profile1 -p2 profile2
+```
+
+**Run with environment variables:**
+```bash
+docker run --rm \
+  -e AWS_ACCESS_KEY_ID=your-access-key \
+  -e AWS_SECRET_ACCESS_KEY=your-secret-key \
+  -e AWS_DEFAULT_REGION=us-east-1 \
+  aws-comparator list-services
+```
+
+**Run with specific region:**
+```bash
+docker run --rm \
+  -v ~/.aws:/home/appuser/.aws:ro \
+  -e AWS_DEFAULT_REGION=us-west-2 \
+  aws-comparator compare -a1 111111111111 -a2 222222222222 \
+  -p1 profile1 -p2 profile2
+```
+
+**Check version:**
+```bash
+docker run --rm aws-comparator version
+```
+
+**Save output to file:**
+```bash
+docker run --rm \
+  -v ~/.aws:/home/appuser/.aws:ro \
+  -v $(pwd)/output:/output \
+  aws-comparator compare -a1 111111111111 -a2 222222222222 \
+  -p1 profile1 -p2 profile2 \
+  --output-format json \
+  --output-file /output/report.json
+```
+
 ## Quick Start
 
 ### Basic Usage

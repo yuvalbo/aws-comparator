@@ -3,17 +3,17 @@ Unit tests for configuration management.
 """
 
 import pytest
-from pathlib import Path
+from pydantic import ValidationError
 
 from aws_comparator.core.config import (
     AccountConfig,
-    ServiceFilterConfig,
     ComparisonConfig,
-    OutputFormat,
     LogLevel,
+    OutputFormat,
+    ServiceFilterConfig,
     load_config,
 )
-from aws_comparator.core.exceptions import InvalidAccountIdError, InvalidConfigError
+from aws_comparator.core.exceptions import InvalidConfigError
 
 
 class TestAccountConfig:
@@ -21,7 +21,7 @@ class TestAccountConfig:
 
     def test_valid_account_config(self):
         """Test creating valid account configuration."""
-        config = AccountConfig(
+        config = AccountConfig(  # type: ignore[call-arg]
             account_id="123456789012",
             profile="test-profile",
             region="us-east-1"
@@ -32,21 +32,25 @@ class TestAccountConfig:
         assert config.region == "us-east-1"
 
     def test_invalid_account_id(self):
-        """Test validation of account ID."""
-        with pytest.raises(InvalidAccountIdError):
-            AccountConfig(
-                account_id="123",  # Too short
+        """Test validation of account ID.
+
+        Note: The Field pattern validator runs before the custom field_validator,
+        so pydantic raises ValidationError for pattern mismatch.
+        """
+        with pytest.raises(ValidationError):
+            AccountConfig(  # type: ignore[call-arg]
+                account_id="123",  # Too short - doesn't match r'^\d{12}$' pattern
                 region="us-east-1"
             )
 
     def test_default_region(self):
         """Test default region is set."""
-        config = AccountConfig(account_id="123456789012")
+        config = AccountConfig(account_id="123456789012")  # type: ignore[call-arg]
         assert config.region == "us-east-1"
 
     def test_str_representation(self):
         """Test string representation."""
-        config = AccountConfig(
+        config = AccountConfig(  # type: ignore[call-arg]
             account_id="123456789012",
             profile="test"
         )
@@ -58,7 +62,7 @@ class TestServiceFilterConfig:
 
     def test_default_filter_config(self):
         """Test default filter configuration."""
-        config = ServiceFilterConfig()
+        config = ServiceFilterConfig()  # type: ignore[call-arg]
 
         assert config.enabled is True
         assert config.resource_types is None
@@ -66,14 +70,14 @@ class TestServiceFilterConfig:
 
     def test_custom_filter_config(self):
         """Test custom filter configuration."""
-        config = ServiceFilterConfig(
+        config = ServiceFilterConfig(  # type: ignore[call-arg]
             enabled=True,
             resource_types=["instances", "volumes"],
             exclude_tags={"temporary": "true"}
         )
 
         assert config.enabled is True
-        assert len(config.resource_types) == 2
+        assert config.resource_types is not None and len(config.resource_types) == 2
         assert config.exclude_tags["temporary"] == "true"
 
 
@@ -82,7 +86,7 @@ class TestComparisonConfig:
 
     def test_valid_comparison_config(self, account1_config, account2_config):
         """Test creating valid comparison configuration."""
-        config = ComparisonConfig(
+        config = ComparisonConfig(  # type: ignore[call-arg]
             account1=account1_config,
             account2=account2_config,
             services=["ec2", "s3"]
@@ -90,11 +94,11 @@ class TestComparisonConfig:
 
         assert config.account1.account_id == "123456789012"
         assert config.account2.account_id == "987654321098"
-        assert len(config.services) == 2
+        assert config.services is not None and len(config.services) == 2
 
     def test_default_values(self, account1_config, account2_config):
         """Test default configuration values."""
-        config = ComparisonConfig(
+        config = ComparisonConfig(  # type: ignore[call-arg]
             account1=account1_config,
             account2=account2_config
         )
@@ -107,7 +111,7 @@ class TestComparisonConfig:
     def test_invalid_service_names(self, account1_config, account2_config):
         """Test validation of service names."""
         with pytest.raises(ValueError) as exc_info:
-            ComparisonConfig(
+            ComparisonConfig(  # type: ignore[call-arg]
                 account1=account1_config,
                 account2=account2_config,
                 services=["ec2", "invalid-service"]

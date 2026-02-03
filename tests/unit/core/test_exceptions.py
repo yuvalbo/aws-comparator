@@ -2,31 +2,23 @@
 Unit tests for exception hierarchy.
 """
 
-import pytest
-
 from aws_comparator.core.exceptions import (
-    AWSComparatorError,
-    AuthenticationError,
-    CredentialsNotFoundError,
-    InvalidCredentialsError,
     AssumeRoleError,
-    PermissionError,
+    AWSComparatorError,
+    ComparisonFailedError,
+    ConfigFileNotFoundError,
+    CredentialsNotFoundError,
+    DataFetchError,
     InsufficientPermissionsError,
-    ServiceError,
+    InvalidAccountIdError,
+    InvalidConfigError,
+    InvalidCredentialsError,
+    InvalidRegionError,
+    OutputFormatError,
+    OutputWriteError,
     ServiceNotAvailableError,
     ServiceNotSupportedError,
     ServiceThrottlingError,
-    ValidationError,
-    InvalidAccountIdError,
-    InvalidConfigError,
-    InvalidRegionError,
-    ComparisonError,
-    DataFetchError,
-    ComparisonFailedError,
-    ConfigurationError,
-    ConfigFileNotFoundError,
-    OutputError,
-    OutputFormatError,
 )
 
 

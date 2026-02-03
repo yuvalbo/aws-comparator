@@ -1,0 +1,84 @@
+# =============================================================================
+# Docker Ignore File
+# =============================================================================
+# Excludes files and directories from the Docker build context to:
+# - Reduce build time
+# - Minimize image size
+# - Prevent sensitive data from being included
+# =============================================================================
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Git
+.git/
+.gitignore
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyc
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.tox/
+.nox/
+
+# Type checking and linting cache
+.mypy_cache/
+.ruff_cache/
+.dmypy.json
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+*.egg
+.eggs/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# AI assistant directories
+.claude/
+.serena/
+
+# Documentation (except README.md which is needed for pyproject.toml)
+docs/
+*.md
+!README.md
+
+# Tests (not needed in production image)
+tests/
+
+# Development and configuration files
+.env
+.env.*
+*.bak
+*.log
+
+# Reports and output
+reports/
+output/
+.aws-comparator/
+
+# Scripts not needed in container
+generate_services.py
+Makefile
