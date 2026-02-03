@@ -4,7 +4,7 @@ A powerful Python CLI tool for comparing AWS resources across two accounts and g
 
 [![Python Version](https://img.shields.io/badge/python-3.9%2B-blue)]
 [![License](https://img.shields.io/badge/license-MIT-green)]
-[![Development Status](https://img.shields.io/badge/status-alpha-orange)]
+[![Version](https://img.shields.io/badge/version-0.1.0-blue)]
 
 ## Overview
 
@@ -16,21 +16,13 @@ AWS Account Comparator helps you identify configuration differences between AWS 
 - **Cost Analysis**: Identify resource discrepancies that may impact costs
 - **Security Review**: Compare security configurations across accounts
 
-### Supported AWS Services
+### Key Features
 
-Currently supports 11 AWS services:
-
-- **EC2**: Instances, Security Groups, VPCs, Subnets, Route Tables, Network ACLs
-- **S3**: Buckets, Policies, Lifecycle Rules, Encryption, Versioning
-- **Lambda**: Functions, Layers, Event Source Mappings, Aliases
-- **Secrets Manager**: Secret metadata (values never fetched)
-- **SQS**: Queues and attributes
-- **CloudWatch**: Alarms, Log Groups, Dashboards
-- **Bedrock**: Model access and custom models
-- **Pinpoint**: Applications, Campaigns, Segments
-- **EventBridge**: Event buses, Rules, Targets
-- **Elastic Beanstalk**: Applications and Environments
-- **Service Quotas**: Service limits across all services
+- **Smart Comparison by Name**: Compares resources by logical names (not ARNs) for meaningful cross-account analysis
+- **Human-Readable Output**: Clear table format with service quota names and descriptions
+- **Multiple Output Formats**: Table, JSON, and YAML output options
+- **Severity-Based Classification**: Differences are categorized by severity level
+- **Flexible Authentication**: Support for AWS profiles and IAM role assumption
 
 ## Installation
 
@@ -40,187 +32,226 @@ Currently supports 11 AWS services:
 - AWS credentials configured
 - Appropriate IAM permissions (read-only access to services)
 
-### From Source (Development)
+### From Source
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/aws-comparator.git
+git clone https://github.com/yuvalbo/aws-comparator.git
 cd aws-comparator
 
 # Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 # Install in development mode
-pip install -e ".[dev]"
+pip install -e .
 
 # Verify installation
 aws-comparator --version
-```
-
-### From PyPI (Future Release)
-
-```bash
-pip install aws-comparator
 ```
 
 ## Quick Start
 
 ### Basic Usage
 
-Compare all services between two accounts:
+Compare all services between two accounts using AWS profiles:
 
 ```bash
-aws-comparator compare 123456789012 987654321098
+aws-comparator compare -a1 123456789012 -a2 987654321098 -p1 prod-profile -p2 staging-profile
 ```
 
 ### Common Use Cases
 
-**Compare specific services:**
+**Compare specific services only:**
 ```bash
-aws-comparator compare 123456789012 987654321098 --services ec2,s3,lambda
-```
-
-**Use specific AWS profiles:**
-```bash
-aws-comparator compare 123456789012 987654321098 \\
-  --profile prod-account \\
-  --region us-east-1
+aws-comparator compare -a1 123456789012 -a2 987654321098 \
+  -p1 prod-profile -p2 staging-profile \
+  --services ec2,s3,sqs
 ```
 
 **Output to JSON file:**
 ```bash
-aws-comparator compare 123456789012 987654321098 \\
-  --output-format json \\
+aws-comparator compare -a1 123456789012 -a2 987654321098 \
+  -p1 prod-profile -p2 staging-profile \
+  --output-format json \
   --output-file comparison-report.json
 ```
 
-**Filter by severity:**
+**Output to YAML:**
 ```bash
-aws-comparator compare 123456789012 987654321098 \\
-  --filter-severity high  # Only show high/critical changes
+aws-comparator compare -a1 123456789012 -a2 987654321098 \
+  -p1 prod-profile -p2 staging-profile \
+  --output-format yaml
+```
+
+**Machine-parseable output (no colors):**
+```bash
+aws-comparator compare -a1 123456789012 -a2 987654321098 \
+  -p1 prod-profile -p2 staging-profile \
+  --no-color
+```
+
+**Using IAM role assumption:**
+```bash
+aws-comparator compare -a1 123456789012 -a2 987654321098 \
+  --role1 arn:aws:iam::123456789012:role/ComparisonRole \
+  --role2 arn:aws:iam::987654321098:role/ComparisonRole
 ```
 
 **Verbose output for debugging:**
 ```bash
-aws-comparator compare 123456789012 987654321098 -vv
+aws-comparator compare -a1 123456789012 -a2 987654321098 \
+  -p1 prod-profile -p2 staging-profile -vv
 ```
 
-## Configuration
-
-### Configuration File
-
-Create `~/.aws-comparator/config.yaml` for persistent settings:
-
-```yaml
-defaults:
-  region: us-east-1
-  output_format: table
-  parallel_execution: true
-  max_workers: 10
-  log_level: INFO
-
-services:
-  ec2:
-    enabled: true
-    exclude_tags:
-      temporary: "*"
-
-  s3:
-    enabled: true
-    check_policies: true
-
-filters:
-  ignore_fields:
-    - LastModifiedDate
-    - CreationDate
-    - LaunchTime
-
-  ignore_tags:
-    - temporary
-    - "automation:*"  # Wildcard pattern
-
-output:
-  colors: true
-  verbose: false
-```
-
-### Environment Variables
-
-Configure via environment variables:
-
+**Compare in a specific region:**
 ```bash
-export AWS_COMPARATOR_REGION=us-east-1
-export AWS_COMPARATOR_OUTPUT_FORMAT=json
-export AWS_COMPARATOR_LOG_LEVEL=DEBUG
-export AWS_COMPARATOR_MAX_WORKERS=20
+aws-comparator compare -a1 123456789012 -a2 987654321098 \
+  -p1 prod-profile -p2 staging-profile \
+  --region eu-west-1
 ```
 
-### AWS Authentication
+## Supported Services
 
-The tool uses the standard AWS credential chain:
+The following 11 AWS services are currently supported:
 
-1. Explicit `--profile` argument
-2. `AWS_PROFILE` environment variable
-3. Assume role if `--role-arn` provided
-4. Default AWS credentials (`~/.aws/credentials`)
-5. IAM instance profile (if running on EC2)
+| Service | Description |
+|---------|-------------|
+| `bedrock` | Amazon Bedrock (Foundation Models) |
+| `cloudwatch` | Amazon CloudWatch - Monitoring and Observability |
+| `ec2` | Amazon EC2 (Elastic Compute Cloud) |
+| `elasticbeanstalk` | AWS Elastic Beanstalk |
+| `eventbridge` | Amazon EventBridge |
+| `pinpoint` | Amazon Pinpoint (Customer Engagement) |
+| `s3` | Amazon S3 (Simple Storage Service) |
+| `secretsmanager` | AWS Secrets Manager (metadata only, values never fetched) |
+| `service-quotas` | AWS Service Quotas |
+| `sns` | Amazon SNS (Simple Notification Service) |
+| `sqs` | Amazon SQS (Simple Queue Service) |
 
-**Example with assume role:**
+To see all supported services:
 ```bash
-aws-comparator compare 123456789012 987654321098 \\
-  --role-arn arn:aws:iam::123456789012:role/ComparisonRole \\
-  --external-id my-external-id
+aws-comparator list-services
 ```
 
 ## CLI Reference
 
-### Main Commands
+### Commands
 
-#### `compare`
+```
+aws-comparator [OPTIONS] COMMAND [ARGS]...
+
+Commands:
+  compare        Compare resources between two AWS accounts
+  list-services  List all supported AWS services
+  version        Show version information
+```
+
+### `compare` Command
 
 Compare resources between two AWS accounts.
 
-```bash
-aws-comparator compare [OPTIONS] ACCOUNT1 ACCOUNT2
+```
+aws-comparator compare [OPTIONS]
 ```
 
-**Arguments:**
-- `ACCOUNT1`: First AWS account ID (12 digits)
-- `ACCOUNT2`: Second AWS account ID (12 digits)
+**Required Options:**
 
-**Options:**
-- `--services TEXT`: Comma-separated list of services
-- `--profile TEXT`: AWS profile name
-- `--region TEXT`: AWS region (default: us-east-1)
-- `--output-format CHOICE`: json, yaml, or table
-- `--output-file PATH`: Write output to file
-- `--parallel/--sequential`: Parallel execution (default: parallel)
-- `--max-workers INTEGER`: Maximum parallel workers (1-50)
-- `--filter-severity CHOICE`: Minimum severity (info, low, medium, high, critical)
-- `--verbose, -v`: Increase verbosity (-v, -vv, -vvv)
-- `--quiet, -q`: Suppress non-error output
-- `--no-color`: Disable colored output
+| Option | Description |
+|--------|-------------|
+| `-a1, --account1 TEXT` | First AWS account ID (12 digits) |
+| `-a2, --account2 TEXT` | Second AWS account ID (12 digits) |
 
-#### `list-services`
+**Authentication Options:**
 
-List all supported AWS services.
+| Option | Description |
+|--------|-------------|
+| `-p1, --profile1 TEXT` | AWS profile name for account1 |
+| `-p2, --profile2 TEXT` | AWS profile name for account2 |
+| `--role1 TEXT` | IAM role ARN to assume for account1 |
+| `--role2 TEXT` | IAM role ARN to assume for account2 |
+
+**Filtering and Region Options:**
+
+| Option | Description |
+|--------|-------------|
+| `-r, --region TEXT` | AWS region to compare (default: us-east-1) |
+| `-s, --services TEXT` | Comma-separated list of services to compare (default: all) |
+
+**Output Options:**
+
+| Option | Description |
+|--------|-------------|
+| `-f, --output-format` | Output format: `json`, `yaml`, or `table` (default: table) |
+| `-o, --output-file FILE` | Output file path (default: stdout) |
+| `--no-color` | Disable colored output |
+
+**Other Options:**
+
+| Option | Description |
+|--------|-------------|
+| `-c, --config FILE` | Path to configuration file |
+| `-v, --verbose` | Increase verbosity (can be used multiple times: -v, -vv, -vvv) |
+| `-q, --quiet` | Suppress non-error output |
+
+### `list-services` Command
+
+List all supported AWS services:
 
 ```bash
-aws-comparator list-services [--detailed]
+aws-comparator list-services
 ```
 
-#### `validate`
+### `version` Command
 
-Validate AWS credentials and permissions.
+Show version information:
 
 ```bash
-aws-comparator validate ACCOUNT_ID [OPTIONS]
+aws-comparator version
+```
+
+## Output Formats
+
+### Table (Default)
+
+Human-readable table format with colored output:
+
+```bash
+aws-comparator compare -a1 123456789012 -a2 987654321098 -p1 prod -p2 staging
+```
+
+### JSON
+
+Machine-readable JSON format, ideal for automation:
+
+```bash
+aws-comparator compare -a1 123456789012 -a2 987654321098 \
+  -p1 prod -p2 staging \
+  --output-format json \
+  --output-file report.json
+```
+
+### YAML
+
+YAML format for configuration management tools:
+
+```bash
+aws-comparator compare -a1 123456789012 -a2 987654321098 \
+  -p1 prod -p2 staging \
+  --output-format yaml
+```
+
+### Grep-Friendly Output
+
+Disable colors for piping and grepping:
+
+```bash
+aws-comparator compare -a1 123456789012 -a2 987654321098 \
+  -p1 prod -p2 staging \
+  --no-color | grep "s3"
 ```
 
 ## IAM Permissions
-
-### Minimum Required Permissions
 
 The tool requires read-only permissions for the services being compared:
 
@@ -234,12 +265,13 @@ The tool requires read-only permissions for the services being compared:
         "ec2:Describe*",
         "s3:Get*",
         "s3:List*",
-        "lambda:Get*",
-        "lambda:List*",
         "secretsmanager:DescribeSecret",
         "secretsmanager:ListSecrets",
         "sqs:GetQueueAttributes",
         "sqs:ListQueues",
+        "sns:GetTopicAttributes",
+        "sns:ListTopics",
+        "sns:ListSubscriptions",
         "cloudwatch:Describe*",
         "logs:Describe*",
         "bedrock:Get*",
@@ -265,18 +297,15 @@ The tool requires read-only permissions for the services being compared:
 
 ```bash
 # Clone and setup
-git clone https://github.com/yourusername/aws-comparator.git
+git clone https://github.com/yuvalbo/aws-comparator.git
 cd aws-comparator
 
 # Create virtual environment
-python -m venv venv
-source venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 
 # Install with dev dependencies
 pip install -e ".[dev]"
-
-# Install pre-commit hooks
-pre-commit install
 ```
 
 ### Running Tests
@@ -287,11 +316,6 @@ pytest
 
 # Run with coverage
 pytest --cov=aws_comparator --cov-report=html
-
-# Run specific test categories
-pytest -m unit           # Unit tests only
-pytest -m integration    # Integration tests only
-pytest -m "not slow"     # Skip slow tests
 
 # Run with verbose output
 pytest -v
@@ -311,142 +335,42 @@ ruff check src/ tests/
 mypy src/
 ```
 
-### Project Structure
-
-```
-aws-comparator/
-├── src/aws_comparator/
-│   ├── cli/              # CLI commands
-│   ├── core/             # Core business logic
-│   │   ├── config.py     # Configuration management
-│   │   ├── exceptions.py # Custom exceptions
-│   │   ├── logging.py    # Logging setup
-│   │   └── registry.py   # Service registry
-│   ├── services/         # Service fetchers
-│   │   ├── base.py       # Base fetcher class
-│   │   ├── ec2/          # EC2 fetcher
-│   │   ├── s3/           # S3 fetcher
-│   │   └── ...
-│   ├── comparison/       # Comparison engine
-│   ├── output/           # Output formatters
-│   ├── models/           # Pydantic models
-│   └── orchestration/    # Orchestration layer
-├── tests/
-│   ├── unit/             # Unit tests
-│   ├── integration/      # Integration tests
-│   └── conftest.py       # Pytest fixtures
-├── docs/                 # Documentation
-└── examples/             # Example configurations
-```
-
-## Implementation Status
-
-**Current Phase: Phase 3 - Core Infrastructure** ✅
-
-### Completed Components
-
-- ✅ Project structure and build configuration
-- ✅ Exception hierarchy with 50+ error codes
-- ✅ Pydantic models for all data structures
-- ✅ Configuration management (file, env, CLI)
-- ✅ Service registry pattern
-- ✅ Logging infrastructure with Rich
-- ✅ Base classes for fetchers, comparators, formatters
-- ✅ Unit tests with >80% coverage
-
-### Upcoming Phases
-
-- 🔄 Phase 4: Service Fetchers (11 AWS services)
-- 🔄 Phase 5: Comparison Engine
-- 🔄 Phase 6: Output Formatters
-- 🔄 Phase 7: Orchestration Layer
-- 🔄 Phase 8: CLI Implementation
-
-## Contributing
-
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-### Adding a New Service
-
-1. Create a new fetcher in `src/aws_comparator/services/your_service/`
-2. Implement `BaseServiceFetcher` interface
-3. Register with `@ServiceRegistry.register('your-service')`
-4. Add Pydantic models for resources
-5. Write unit and integration tests
-
-Example:
-
-```python
-from aws_comparator.core.registry import ServiceRegistry
-from aws_comparator.services.base import BaseServiceFetcher
-
-@ServiceRegistry.register('dynamodb', description='DynamoDB Tables')
-class DynamoDBFetcher(BaseServiceFetcher):
-    SERVICE_NAME = 'dynamodb'
-
-    def _create_client(self):
-        return self.session.client('dynamodb', region_name=self.region)
-
-    def fetch_resources(self):
-        return {'tables': self._fetch_tables()}
-
-    def get_resource_types(self):
-        return ['tables']
-
-    def _fetch_tables(self):
-        # Implementation
-        pass
-```
-
 ## Troubleshooting
 
 ### Common Issues
 
 **1. Credentials not found**
 ```
-Error: [AUTH-001] AWS credentials not found
+Error: AWS credentials not found
 ```
 - Solution: Configure AWS credentials via `aws configure` or set environment variables
 
 **2. Permission denied**
 ```
-Error: [PERM-001] Permission denied: ec2.DescribeInstances
+Error: Permission denied for ec2.DescribeInstances
 ```
 - Solution: Ensure IAM user/role has required read permissions
 
-**3. Service not available**
+**3. Invalid account ID**
 ```
-Error: [SERV-001] Service bedrock not available in region us-east-1
+Error: Account ID must be 12 digits
 ```
-- Solution: Use a region where the service is available, or exclude the service
-
-**4. Throttling errors**
-```
-Error: [SERV-003] Throttling error for s3.ListBuckets
-```
-- Solution: Reduce `--max-workers` or retry after a delay
+- Solution: Verify account IDs are exactly 12 digits
 
 ### Debug Mode
 
 Enable debug logging for detailed troubleshooting:
 
 ```bash
-aws-comparator compare 123456789012 987654321098 -vvv
+aws-comparator compare -a1 123456789012 -a2 987654321098 -p1 prod -p2 staging -vvv
 ```
 
 ## Security
 
-### Security Best Practices
-
-1. **Least Privilege**: Use read-only IAM policies
-2. **Secrets Protection**: Tool never fetches secret values
-3. **Credential Management**: Use AWS profiles or IAM roles
-4. **Audit Logging**: Enable CloudTrail for API calls
-5. **Network Security**: Use VPC endpoints if running on EC2
-
-### Reporting Security Issues
-
-Please report security vulnerabilities to security@example.com
+- **Least Privilege**: Use read-only IAM policies
+- **Secrets Protection**: Tool never fetches secret values, only metadata
+- **Credential Management**: Use AWS profiles or IAM roles
+- **Audit Logging**: Enable CloudTrail for API calls
 
 ## License
 
@@ -458,15 +382,9 @@ Built with:
 - [boto3](https://github.com/boto/boto3) - AWS SDK for Python
 - [Click](https://github.com/pallets/click) - CLI framework
 - [Rich](https://github.com/Textualize/rich) - Terminal formatting
-- [DeepDiff](https://github.com/seperman/deepdiff) - Deep comparison
 - [Pydantic](https://github.com/pydantic/pydantic) - Data validation
 
 ## Support
 
-- Documentation: [https://github.com/yourusername/aws-comparator](https://github.com/yourusername/aws-comparator)
-- Issues: [https://github.com/yourusername/aws-comparator/issues](https://github.com/yourusername/aws-comparator/issues)
-- Discussions: [https://github.com/yourusername/aws-comparator/discussions](https://github.com/yourusername/aws-comparator/discussions)
-
----
-
-**Status**: Alpha - Core infrastructure complete, service implementations in progress
+- Issues: [https://github.com/yuvalbo/aws-comparator/issues](https://github.com/yuvalbo/aws-comparator/issues)
+- Discussions: [https://github.com/yuvalbo/aws-comparator/discussions](https://github.com/yuvalbo/aws-comparator/discussions)
