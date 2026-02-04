@@ -252,6 +252,7 @@ dependencies = [
 
 ### Coverage Requirements
 - Minimum 85% overall coverage
+- Minimum 85% coverage per top-level module (cli, comparison, core, models, orchestration, output, services)
 - 100% coverage for core business logic
 - Run: `pytest --cov=aws_comparator --cov-report=html`
 

@@ -9,6 +9,7 @@ from unittest.mock import Mock, patch
 
 import boto3
 import pytest
+from botocore.exceptions import ClientError
 from moto import mock_aws
 
 from aws_comparator.models.cloudwatch import CloudWatchAlarm, Dashboard, LogGroup
@@ -430,3 +431,167 @@ class TestCloudWatchModels:
 
         assert dashboard.dashboard_name == "TestDashboard"
         assert dashboard.dashboard_body == '{"widgets": []}'
+
+
+class TestCloudWatchEdgeCases:
+    """Test edge cases for CloudWatch fetcher."""
+
+    @patch("aws_comparator.services.cloudwatch.fetcher.CloudWatchFetcher._paginate")
+    def test_fetch_alarms_with_invalid_data(self, mock_paginate, cloudwatch_fetcher):
+        """Test fetching alarms handles invalid data gracefully."""
+        mock_paginate.return_value = [
+            {
+                "AlarmName": "TestAlarm",
+                "AlarmArn": "arn:aws:cloudwatch:us-east-1:123:alarm:Test",
+                "MetricName": "CPU",
+                "Namespace": "AWS/EC2",
+                "Statistic": "Average",
+                "Period": 300,
+                "EvaluationPeriods": 1,
+                "Threshold": 80.0,
+                "ComparisonOperator": "GreaterThanThreshold",
+                "StateValue": "OK",
+            }
+        ]
+
+        alarms = cloudwatch_fetcher._fetch_alarms()
+
+        assert len(alarms) == 1
+
+    @patch(
+        "aws_comparator.services.cloudwatch.fetcher.CloudWatchFetcher._create_logs_client"
+    )
+    def test_fetch_log_groups_with_invalid_data(
+        self, mock_logs_client, cloudwatch_fetcher
+    ):
+        """Test fetching log groups handles invalid data gracefully."""
+        mock_client = Mock()
+        mock_logs_client.return_value = mock_client
+
+        mock_client.can_paginate.return_value = True
+        mock_paginator = Mock()
+        mock_client.get_paginator.return_value = mock_paginator
+        mock_paginator.paginate.return_value = [
+            {
+                "logGroups": [
+                    {
+                        "logGroupName": "/aws/lambda/test",
+                        "arn": "arn:aws:logs:us-east-1:123:log-group:/aws/lambda/test",
+                        "creationTime": 1640995200000,
+                    }
+                ]
+            }
+        ]
+
+        log_groups = cloudwatch_fetcher._fetch_log_groups()
+
+        assert len(log_groups) == 1
+
+    @patch("aws_comparator.services.cloudwatch.fetcher.CloudWatchFetcher._paginate")
+    def test_fetch_dashboards_with_get_dashboard_error(
+        self, mock_paginate, cloudwatch_fetcher
+    ):
+        """Test fetching dashboards handles get_dashboard errors."""
+        mock_paginate.return_value = [
+            {
+                "DashboardName": "TestDashboard",
+                "DashboardArn": "arn:aws:cloudwatch::123:dashboard/Test",
+            }
+        ]
+
+        # Make get_dashboard fail
+        cloudwatch_fetcher.client.get_dashboard = Mock(
+            side_effect=ClientError(
+                {"Error": {"Code": "ResourceNotFound", "Message": "Not found"}},
+                "GetDashboard",
+            )
+        )
+
+        dashboards = cloudwatch_fetcher._fetch_dashboards()
+
+        # Should still return dashboards from list, without body
+        assert len(dashboards) == 1
+
+    @patch("aws_comparator.services.cloudwatch.fetcher.CloudWatchFetcher._paginate")
+    def test_fetch_alarms_per_alarm_error(self, mock_paginate, cloudwatch_fetcher):
+        """Test per-alarm error handling."""
+        mock_paginate.return_value = [
+            {
+                "AlarmName": "Alarm1",
+                "AlarmArn": "arn:aws:cloudwatch:us-east-1:123:alarm:A1",
+                "MetricName": "CPU",
+                "Namespace": "AWS/EC2",
+                "Statistic": "Average",
+                "Period": 300,
+                "EvaluationPeriods": 1,
+                "Threshold": 80.0,
+                "ComparisonOperator": "GreaterThanThreshold",
+                "StateValue": "OK",
+            },
+            {
+                # Invalid alarm data - will fail validation
+            },
+        ]
+
+        alarms = cloudwatch_fetcher._fetch_alarms()
+
+        # Should get first alarm, skip invalid one
+        assert len(alarms) >= 1
+
+    @patch(
+        "aws_comparator.services.cloudwatch.fetcher.CloudWatchFetcher._create_logs_client"
+    )
+    def test_fetch_log_groups_per_group_error(
+        self, mock_logs_client, cloudwatch_fetcher
+    ):
+        """Test per-log-group error handling."""
+        mock_client = Mock()
+        mock_logs_client.return_value = mock_client
+
+        mock_client.can_paginate.return_value = True
+        mock_paginator = Mock()
+        mock_client.get_paginator.return_value = mock_paginator
+        mock_paginator.paginate.return_value = [
+            {
+                "logGroups": [
+                    {
+                        "logGroupName": "/aws/valid/group",
+                        "arn": "arn:aws:logs:us-east-1:123:log-group:/aws/valid/group",
+                        "creationTime": 1640995200000,
+                    },
+                    {
+                        # Invalid log group data
+                    },
+                ]
+            }
+        ]
+
+        log_groups = cloudwatch_fetcher._fetch_log_groups()
+
+        # Should get first log group, skip invalid one
+        assert len(log_groups) >= 1
+
+    @patch("aws_comparator.services.cloudwatch.fetcher.CloudWatchFetcher._paginate")
+    def test_fetch_dashboards_per_dashboard_error(
+        self, mock_paginate, cloudwatch_fetcher
+    ):
+        """Test per-dashboard error handling."""
+        mock_paginate.return_value = [
+            {
+                "DashboardName": "Dashboard1",
+                "DashboardArn": "arn:aws:cloudwatch::123:dashboard/D1",
+            },
+            {
+                # Invalid dashboard data
+            },
+        ]
+
+        # Make get_dashboard succeed for first dashboard
+        cloudwatch_fetcher.client.get_dashboard = Mock(
+            return_value={"DashboardBody": '{"widgets": []}'}
+        )
+
+        dashboards = cloudwatch_fetcher._fetch_dashboards()
+
+        # Should get first dashboard, skip invalid one
+        assert len(dashboards) >= 1

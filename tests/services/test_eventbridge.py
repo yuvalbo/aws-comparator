@@ -544,5 +544,206 @@ class TestModels:
         assert connection.authorization_type == AuthorizationType.API_KEY
 
 
+class TestEventBridgeEdgeCases:
+    """Tests for edge cases and error handling."""
+
+    def test_fetch_event_buses_with_policy_parsing(self, eventbridge_fetcher):
+        """Test event bus fetching with policy as string."""
+        with patch.object(eventbridge_fetcher, "_paginate") as mock_paginate:
+            mock_paginate.return_value = [
+                {
+                    "Name": "test-bus",
+                    "Arn": "arn:aws:events:us-east-1:123456789012:event-bus/test-bus",
+                }
+            ]
+
+            with patch.object(
+                eventbridge_fetcher.client, "describe_event_bus"
+            ) as mock_describe:
+                # Return policy as JSON string
+                mock_describe.return_value = {
+                    "Name": "test-bus",
+                    "Arn": "arn:aws:events:us-east-1:123456789012:event-bus/test-bus",
+                    "Policy": '{"Version": "2012-10-17", "Statement": []}',
+                }
+
+                with patch.object(
+                    eventbridge_fetcher.client, "list_tags_for_resource"
+                ) as mock_tags:
+                    mock_tags.return_value = {"Tags": [{"Key": "env", "Value": "test"}]}
+
+                    buses = eventbridge_fetcher._fetch_event_buses()
+
+                    assert len(buses) == 1
+                    assert buses[0].name == "test-bus"
+
+    def test_fetch_rules_with_describe_error(self, eventbridge_fetcher):
+        """Test rule fetching handles describe_rule errors gracefully."""
+        from botocore.exceptions import ClientError
+
+        with patch.object(eventbridge_fetcher, "_paginate") as mock_paginate:
+            # First for buses, second for rules
+            mock_paginate.side_effect = [
+                [
+                    {
+                        "Name": "default",
+                        "Arn": "arn:aws:events:us-east-1:123456789012:event-bus/default",
+                    }
+                ],
+                [
+                    {
+                        "Name": "test-rule",
+                        "Arn": "arn:aws:events:us-east-1:123456789012:rule/test-rule",
+                        "State": "ENABLED",
+                    }
+                ],
+            ]
+
+            with patch.object(
+                eventbridge_fetcher.client, "describe_rule"
+            ) as mock_describe:
+                mock_describe.side_effect = ClientError(
+                    {"Error": {"Code": "InternalError", "Message": "Error"}},
+                    "DescribeRule",
+                )
+
+                with patch.object(
+                    eventbridge_fetcher.client, "list_targets_by_rule"
+                ) as mock_targets:
+                    mock_targets.return_value = {"Targets": []}
+
+                    rules = eventbridge_fetcher._fetch_rules()
+
+                    # Should still return rule with data from list
+                    assert len(rules) == 1
+
+    def test_fetch_archives_with_describe_error(self, eventbridge_fetcher):
+        """Test archive fetching handles describe_archive errors gracefully."""
+        from botocore.exceptions import ClientError
+
+        with patch.object(eventbridge_fetcher, "_paginate") as mock_paginate:
+            mock_paginate.return_value = [
+                {
+                    "ArchiveName": "test-archive",
+                    "EventSourceArn": "arn:aws:events:us-east-1:123456789012:event-bus/default",
+                    "State": "ENABLED",
+                    "ArchiveArn": "arn:aws:events:us-east-1:123456789012:archive/test-archive",
+                }
+            ]
+
+            with patch.object(
+                eventbridge_fetcher.client, "describe_archive"
+            ) as mock_describe:
+                mock_describe.side_effect = ClientError(
+                    {"Error": {"Code": "InternalError", "Message": "Error"}},
+                    "DescribeArchive",
+                )
+
+                archives = eventbridge_fetcher._fetch_archives()
+
+                # Should still return archive with data from list
+                assert len(archives) == 1
+
+    def test_fetch_connections_with_describe_error(self, eventbridge_fetcher):
+        """Test connection fetching handles describe_connection errors gracefully."""
+        from botocore.exceptions import ClientError
+
+        with patch.object(eventbridge_fetcher, "_paginate") as mock_paginate:
+            mock_paginate.return_value = [
+                {
+                    "Name": "test-connection",
+                    "ConnectionArn": "arn:aws:events:us-east-1:123456789012:connection/test-connection",
+                    "ConnectionState": "AUTHORIZED",
+                    "AuthorizationType": "API_KEY",
+                }
+            ]
+
+            with patch.object(
+                eventbridge_fetcher.client, "describe_connection"
+            ) as mock_describe:
+                mock_describe.side_effect = ClientError(
+                    {"Error": {"Code": "InternalError", "Message": "Error"}},
+                    "DescribeConnection",
+                )
+
+                connections = eventbridge_fetcher._fetch_connections()
+
+                # Should still return connection with data from list
+                assert len(connections) == 1
+
+    def test_fetch_rules_per_item_error(self, eventbridge_fetcher):
+        """Test handling of per-rule errors in rule fetching."""
+        from botocore.exceptions import ClientError
+
+        with patch.object(eventbridge_fetcher, "_paginate") as mock_paginate:
+            mock_paginate.side_effect = [
+                [
+                    {
+                        "Name": "default",
+                        "Arn": "arn:aws:events:us-east-1:123456789012:event-bus/default",
+                    }
+                ],
+                [
+                    {
+                        "Name": "rule1",
+                        "Arn": "arn:aws:events:us-east-1:123456789012:rule/rule1",
+                        "State": "ENABLED",
+                    },
+                    {
+                        "Name": "rule2",
+                        "Arn": "arn:aws:events:us-east-1:123456789012:rule/rule2",
+                        "State": "ENABLED",
+                    },
+                ],
+            ]
+
+            def describe_side_effect(**kwargs):
+                if kwargs.get("Name") == "rule1":
+                    raise ClientError(
+                        {"Error": {"Code": "AccessDenied", "Message": "Denied"}},
+                        "DescribeRule",
+                    )
+                return {
+                    "Name": "rule2",
+                    "Arn": "arn:aws:events:us-east-1:123456789012:rule/rule2",
+                    "State": "ENABLED",
+                    "EventBusName": "default",
+                }
+
+            with patch.object(
+                eventbridge_fetcher.client,
+                "describe_rule",
+                side_effect=describe_side_effect,
+            ):
+                with patch.object(
+                    eventbridge_fetcher.client, "list_targets_by_rule"
+                ) as mock_targets:
+                    mock_targets.return_value = {"Targets": []}
+
+                    rules = eventbridge_fetcher._fetch_rules()
+
+                    # Should get at least one rule (both should work since we have
+                    # ARN in list data)
+                    assert len(rules) >= 1
+
+    def test_fetch_general_exception(self, eventbridge_fetcher):
+        """Test handling of general exceptions."""
+        with patch.object(eventbridge_fetcher, "_paginate") as mock_paginate:
+            mock_paginate.side_effect = Exception("Unexpected error")
+
+            # Should handle gracefully
+            buses = eventbridge_fetcher._fetch_event_buses()
+            assert buses == []
+
+            rules = eventbridge_fetcher._fetch_rules()
+            assert rules == []
+
+            archives = eventbridge_fetcher._fetch_archives()
+            assert archives == []
+
+            connections = eventbridge_fetcher._fetch_connections()
+            assert connections == []
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

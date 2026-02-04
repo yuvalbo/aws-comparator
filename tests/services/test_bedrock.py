@@ -471,3 +471,193 @@ class TestErrorHandling:
 
         # Should handle gracefully and skip entries with empty modelId
         assert len(models) == 0
+
+
+class TestBedrockEdgeCases:
+    """Test edge cases for Bedrock fetcher."""
+
+    def test_fetch_custom_models_with_error(
+        self, bedrock_fetcher: BedrockFetcher, mock_bedrock_client: Mock
+    ) -> None:
+        """Test custom model fetching with pagination error."""
+        mock_paginator = Mock()
+        mock_bedrock_client.get_paginator.return_value = mock_paginator
+        mock_paginator.paginate.side_effect = ClientError(
+            {"Error": {"Code": "AccessDenied", "Message": "Denied"}},
+            "ListCustomModels",
+        )
+
+        models = bedrock_fetcher._fetch_custom_models()
+
+        assert len(models) == 0
+
+    def test_fetch_provisioned_throughput_with_error(
+        self, bedrock_fetcher: BedrockFetcher, mock_bedrock_client: Mock
+    ) -> None:
+        """Test provisioned throughput fetching with error."""
+        mock_paginator = Mock()
+        mock_bedrock_client.get_paginator.return_value = mock_paginator
+        mock_paginator.paginate.side_effect = ClientError(
+            {"Error": {"Code": "AccessDenied", "Message": "Denied"}},
+            "ListProvisionedModelThroughputs",
+        )
+
+        throughputs = bedrock_fetcher._fetch_provisioned_throughput()
+
+        assert len(throughputs) == 0
+
+    def test_fetch_guardrails_with_error(
+        self, bedrock_fetcher: BedrockFetcher, mock_bedrock_client: Mock
+    ) -> None:
+        """Test guardrails fetching with error."""
+        mock_paginator = Mock()
+        mock_bedrock_client.get_paginator.return_value = mock_paginator
+        mock_paginator.paginate.side_effect = ClientError(
+            {"Error": {"Code": "AccessDenied", "Message": "Denied"}},
+            "ListGuardrails",
+        )
+
+        guardrails = bedrock_fetcher._fetch_guardrails()
+
+        assert len(guardrails) == 0
+
+    def test_fetch_custom_models_invalid_data(
+        self, bedrock_fetcher: BedrockFetcher, mock_bedrock_client: Mock
+    ) -> None:
+        """Test custom model fetching with invalid model data."""
+        mock_paginator = Mock()
+        mock_bedrock_client.get_paginator.return_value = mock_paginator
+        mock_paginator.paginate.return_value = [
+            {
+                "modelSummaries": [
+                    {
+                        # Missing required fields
+                        "modelArn": "arn:aws:bedrock:us-east-1:123:custom-model/m",
+                    }
+                ]
+            }
+        ]
+
+        models = bedrock_fetcher._fetch_custom_models()
+
+        # Should handle gracefully
+        assert len(models) == 0
+
+    def test_fetch_provisioned_throughput_invalid_data(
+        self, bedrock_fetcher: BedrockFetcher, mock_bedrock_client: Mock
+    ) -> None:
+        """Test provisioned throughput fetching with invalid data."""
+        mock_paginator = Mock()
+        mock_bedrock_client.get_paginator.return_value = mock_paginator
+        mock_paginator.paginate.return_value = [
+            {
+                "provisionedModelSummaries": [
+                    {
+                        # Missing required fields
+                        "provisionedModelArn": "arn",
+                    }
+                ]
+            }
+        ]
+
+        throughputs = bedrock_fetcher._fetch_provisioned_throughput()
+
+        # Should handle gracefully
+        assert len(throughputs) == 0
+
+    def test_fetch_guardrails_invalid_data(
+        self, bedrock_fetcher: BedrockFetcher, mock_bedrock_client: Mock
+    ) -> None:
+        """Test guardrails fetching with invalid data."""
+        mock_paginator = Mock()
+        mock_bedrock_client.get_paginator.return_value = mock_paginator
+        mock_paginator.paginate.return_value = [
+            {
+                "guardrails": [
+                    {
+                        # Missing required fields
+                        "id": "g1",
+                    }
+                ]
+            }
+        ]
+
+        guardrails = bedrock_fetcher._fetch_guardrails()
+
+        # Should handle gracefully
+        assert len(guardrails) == 0
+
+    def test_fetch_custom_models_per_item_exception(
+        self, bedrock_fetcher: BedrockFetcher, mock_bedrock_client: Mock
+    ) -> None:
+        """Test custom model fetching handles per-item exceptions."""
+        mock_paginator = Mock()
+        mock_bedrock_client.get_paginator.return_value = mock_paginator
+        mock_paginator.paginate.return_value = [
+            {
+                "modelSummaries": [
+                    {
+                        "modelArn": "arn:aws:bedrock:us-east-1:123:custom-model/m1",
+                        "modelName": "model-1",
+                        "baseModelArn": "arn:aws:bedrock:::foundation-model/base",
+                        "creationTime": datetime(2024, 1, 1, tzinfo=timezone.utc),
+                    },
+                ]
+            }
+        ]
+
+        models = bedrock_fetcher._fetch_custom_models()
+
+        assert len(models) == 1
+
+    def test_fetch_provisioned_throughput_per_item_exception(
+        self, bedrock_fetcher: BedrockFetcher, mock_bedrock_client: Mock
+    ) -> None:
+        """Test provisioned throughput handles per-item exceptions."""
+        mock_paginator = Mock()
+        mock_bedrock_client.get_paginator.return_value = mock_paginator
+        mock_paginator.paginate.return_value = [
+            {
+                "provisionedModelSummaries": [
+                    {
+                        "provisionedModelArn": "arn:aws:bedrock:us-east-1:123:pm/m",
+                        "provisionedModelName": "model-1",
+                        "modelArn": "arn:aws:bedrock:::foundation-model/base",
+                        "desiredModelUnits": 1,
+                        "modelUnits": 1,
+                        "status": "InService",
+                        "creationTime": datetime(2024, 1, 1, tzinfo=timezone.utc),
+                    }
+                ]
+            }
+        ]
+
+        throughputs = bedrock_fetcher._fetch_provisioned_throughput()
+
+        assert len(throughputs) == 1
+
+    def test_fetch_guardrails_per_item_exception(
+        self, bedrock_fetcher: BedrockFetcher, mock_bedrock_client: Mock
+    ) -> None:
+        """Test guardrails handles per-item exceptions."""
+        mock_paginator = Mock()
+        mock_bedrock_client.get_paginator.return_value = mock_paginator
+        mock_paginator.paginate.return_value = [
+            {
+                "guardrails": [
+                    {
+                        "id": "g1",
+                        "arn": "arn:aws:bedrock:us-east-1:123:guardrail/g1",
+                        "name": "guardrail-1",
+                        "status": "READY",
+                        "version": "1",
+                        "createdAt": datetime(2024, 1, 1, tzinfo=timezone.utc),
+                        "updatedAt": datetime(2024, 1, 2, tzinfo=timezone.utc),
+                    }
+                ]
+            }
+        ]
+
+        guardrails = bedrock_fetcher._fetch_guardrails()
+
+        assert len(guardrails) == 1

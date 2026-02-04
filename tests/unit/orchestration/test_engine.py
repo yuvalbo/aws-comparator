@@ -651,3 +651,328 @@ class TestFetchServiceDataWithError:
         assert resources == {}
         assert error is not None
         assert "Unexpected error" in error
+
+
+class TestCompareServicesParallel:
+    """Tests for _compare_services_parallel method."""
+
+    @patch("aws_comparator.orchestration.engine.ServiceRegistry")
+    def test_compare_services_parallel_basic(self, mock_registry, orchestrator):
+        """Test parallel comparison of services."""
+        # Setup sessions
+        orchestrator._session1 = MagicMock()
+        orchestrator._session2 = MagicMock()
+
+        # Setup fetcher
+        mock_fetcher = MagicMock()
+        mock_fetcher.fetch_resources.return_value = {"buckets": []}
+        mock_registry.get_fetcher.return_value = mock_fetcher
+
+        results, errors, services_compared = orchestrator._compare_services_parallel(
+            services=["s3"],
+            region1="us-east-1",
+            region2="us-east-1",
+            total_services=1,
+        )
+
+        assert len(results) == 1
+        assert results[0].service_name == "s3"
+        assert "s3" in services_compared
+
+    @patch("aws_comparator.orchestration.engine.ServiceRegistry")
+    def test_compare_services_parallel_with_fetch_error(
+        self, mock_registry, orchestrator
+    ):
+        """Test parallel comparison handles fetch errors."""
+        orchestrator._session1 = MagicMock()
+        orchestrator._session2 = MagicMock()
+
+        # First call succeeds, second call fails
+        mock_fetcher = MagicMock()
+        mock_fetcher.fetch_resources.side_effect = [
+            {"buckets": []},
+            Exception("Fetch failed"),
+        ]
+        mock_registry.get_fetcher.return_value = mock_fetcher
+
+        results, errors, services_compared = orchestrator._compare_services_parallel(
+            services=["s3"],
+            region1="us-east-1",
+            region2="us-east-1",
+            total_services=1,
+        )
+
+        # Should still return a result even with partial errors
+        assert "s3" in services_compared
+
+    @patch("aws_comparator.orchestration.engine.ServiceRegistry")
+    def test_compare_services_parallel_with_progress_callback(
+        self, mock_registry, comparison_config
+    ):
+        """Test parallel comparison calls progress callback."""
+        callback = Mock()
+        orch = ComparisonOrchestrator(
+            config=comparison_config, progress_callback=callback
+        )
+        orch._session1 = MagicMock()
+        orch._session2 = MagicMock()
+
+        mock_fetcher = MagicMock()
+        mock_fetcher.fetch_resources.return_value = {}
+        mock_registry.get_fetcher.return_value = mock_fetcher
+
+        orch._compare_services_parallel(
+            services=["s3"],
+            region1="us-east-1",
+            region2="us-east-1",
+            total_services=1,
+        )
+
+        callback.assert_called()
+
+    @patch("aws_comparator.orchestration.engine.ServiceRegistry")
+    def test_compare_services_parallel_comparison_exception(
+        self, mock_registry, orchestrator
+    ):
+        """Test parallel comparison handles comparison exceptions."""
+        orchestrator._session1 = MagicMock()
+        orchestrator._session2 = MagicMock()
+
+        mock_fetcher = MagicMock()
+        mock_fetcher.fetch_resources.return_value = {"buckets": []}
+        mock_registry.get_fetcher.return_value = mock_fetcher
+
+        # Mock _compare_service to raise exception
+        with patch.object(
+            orchestrator, "_compare_service", side_effect=RuntimeError("Compare failed")
+        ):
+            results, errors, services_compared = (
+                orchestrator._compare_services_parallel(
+                    services=["s3"],
+                    region1="us-east-1",
+                    region2="us-east-1",
+                    total_services=1,
+                )
+            )
+
+        # Should record the error
+        assert len(errors) == 1
+        assert errors[0].service_name == "s3"
+        assert "Compare failed" in errors[0].error_message
+
+
+class TestCompareServicesSequential:
+    """Tests for _compare_services_sequential method."""
+
+    @patch("aws_comparator.orchestration.engine.ServiceRegistry")
+    def test_compare_services_sequential_basic(self, mock_registry, orchestrator):
+        """Test sequential comparison of services."""
+        orchestrator._session1 = MagicMock()
+        orchestrator._session2 = MagicMock()
+
+        mock_fetcher = MagicMock()
+        mock_fetcher.fetch_resources.return_value = {"buckets": []}
+        mock_registry.get_fetcher.return_value = mock_fetcher
+
+        results, errors, services_compared = orchestrator._compare_services_sequential(
+            services=["s3"],
+            region1="us-east-1",
+            region2="us-east-1",
+            total_services=1,
+        )
+
+        assert len(results) == 1
+        assert results[0].service_name == "s3"
+        assert "s3" in services_compared
+
+    @patch("aws_comparator.orchestration.engine.ServiceRegistry")
+    def test_compare_services_sequential_with_fetch_errors(
+        self, mock_registry, orchestrator
+    ):
+        """Test sequential comparison handles fetch errors."""
+        orchestrator._session1 = MagicMock()
+        orchestrator._session2 = MagicMock()
+
+        mock_fetcher = MagicMock()
+        mock_fetcher.fetch_resources.return_value = {"buckets": []}
+        mock_registry.get_fetcher.return_value = mock_fetcher
+
+        # Mock _fetch_service_data to return errors
+        with patch.object(
+            orchestrator,
+            "_fetch_service_data",
+            return_value=("s3", {}, "Fetch error occurred"),
+        ):
+            results, errors, services_compared = (
+                orchestrator._compare_services_sequential(
+                    services=["s3"],
+                    region1="us-east-1",
+                    region2="us-east-1",
+                    total_services=1,
+                )
+            )
+
+        assert len(results) == 1
+        # The errors should be in the result
+        assert "s3" in services_compared
+
+    @patch("aws_comparator.orchestration.engine.ServiceRegistry")
+    def test_compare_services_sequential_with_exception(
+        self, mock_registry, orchestrator
+    ):
+        """Test sequential comparison handles exceptions."""
+        orchestrator._session1 = MagicMock()
+        orchestrator._session2 = MagicMock()
+
+        mock_fetcher = MagicMock()
+        mock_fetcher.fetch_resources.return_value = {}
+        mock_registry.get_fetcher.return_value = mock_fetcher
+
+        # Mock _compare_service to raise exception
+        with patch.object(
+            orchestrator, "_compare_service", side_effect=RuntimeError("Compare error")
+        ):
+            results, errors, services_compared = (
+                orchestrator._compare_services_sequential(
+                    services=["s3"],
+                    region1="us-east-1",
+                    region2="us-east-1",
+                    total_services=1,
+                )
+            )
+
+        assert len(errors) == 1
+        assert errors[0].service_name == "s3"
+
+    @patch("aws_comparator.orchestration.engine.ServiceRegistry")
+    def test_compare_services_sequential_with_progress_callback(
+        self, mock_registry, comparison_config
+    ):
+        """Test sequential comparison calls progress callback."""
+        callback = Mock()
+        orch = ComparisonOrchestrator(
+            config=comparison_config, progress_callback=callback
+        )
+        orch._session1 = MagicMock()
+        orch._session2 = MagicMock()
+
+        mock_fetcher = MagicMock()
+        mock_fetcher.fetch_resources.return_value = {}
+        mock_registry.get_fetcher.return_value = mock_fetcher
+
+        orch._compare_services_sequential(
+            services=["s3"],
+            region1="us-east-1",
+            region2="us-east-1",
+            total_services=1,
+        )
+
+        callback.assert_called_with("s3", 1, 1)
+
+
+class TestCalculateSummaryWithChanges:
+    """Additional tests for _calculate_summary with changes."""
+
+    def test_calculate_summary_with_service_changes(self, orchestrator):
+        """Test calculating summary with services that have changes."""
+        from aws_comparator.models.comparison import (
+            ChangeSeverity,
+            ChangeType,
+            ResourceChange,
+            ResourceTypeComparison,
+            ServiceComparisonResult,
+        )
+
+        # Create a result with changes
+        change = ResourceChange(
+            change_type=ChangeType.ADDED,
+            resource_id="bucket-1",
+            resource_type="bucket",
+            severity=ChangeSeverity.HIGH,
+        )
+        resource_comp = ResourceTypeComparison(
+            resource_type="buckets",
+            account1_count=5,
+            account2_count=6,
+            added=[change],
+            removed=[],
+            modified=[],
+        )
+        result = ServiceComparisonResult(
+            service_name="s3",
+            resource_comparisons={"buckets": resource_comp},
+            execution_time_seconds=1.0,
+        )
+
+        summary = orchestrator._calculate_summary([result], [], 2.5)
+
+        assert summary.total_services_compared == 1
+        assert summary.total_services_with_changes == 1
+        assert summary.total_changes == 1
+        assert summary.total_resources_account1 == 5
+        assert summary.total_resources_account2 == 6
+        assert summary.execution_time_seconds == 2.5
+        assert summary.changes_by_severity["high"] == 1
+
+
+class TestCreateSessionWithRoleArn:
+    """Tests for _create_session with role ARN."""
+
+    @patch("aws_comparator.orchestration.engine.boto3.Session")
+    def test_create_session_with_role_arn(self, mock_session_class, orchestrator):
+        """Test creating session with role ARN triggers assume_role."""
+        mock_session = MagicMock()
+        mock_session_class.return_value = mock_session
+        mock_sts = MagicMock()
+        mock_session.client.return_value = mock_sts
+        mock_sts.get_caller_identity.return_value = {"Account": "123456789012"}
+        mock_sts.assume_role.return_value = {
+            "Credentials": {
+                "AccessKeyId": "AKIA123",
+                "SecretAccessKey": "secret",
+                "SessionToken": "token",
+            }
+        }
+
+        config = AccountConfig(
+            account_id="123456789012",
+            profile="test-profile",
+            role_arn="arn:aws:iam::123456789012:role/TestRole",
+            external_id=None,
+            session_name=None,
+            region="us-east-1",
+        )
+
+        orchestrator._create_session(config)
+
+        mock_sts.assume_role.assert_called_once()
+
+
+class TestValidateSessionAccessDenied:
+    """Tests for _validate_session with AccessDenied error."""
+
+    def test_validate_session_access_denied(self, orchestrator):
+        """Test session validation with AccessDenied raises error."""
+        mock_session = MagicMock()
+        mock_sts = MagicMock()
+        mock_session.client.return_value = mock_sts
+        mock_sts.get_caller_identity.side_effect = ClientError(
+            {"Error": {"Code": "AccessDenied", "Message": "Access denied"}},
+            "GetCallerIdentity",
+        )
+
+        with pytest.raises(InvalidCredentialsError):
+            orchestrator._validate_session(mock_session, "123456789012")
+
+    def test_validate_session_other_client_error_reraises(self, orchestrator):
+        """Test session validation re-raises non-credential errors."""
+        mock_session = MagicMock()
+        mock_sts = MagicMock()
+        mock_session.client.return_value = mock_sts
+        mock_sts.get_caller_identity.side_effect = ClientError(
+            {"Error": {"Code": "ServiceUnavailable", "Message": "Service unavailable"}},
+            "GetCallerIdentity",
+        )
+
+        with pytest.raises(ClientError):
+            orchestrator._validate_session(mock_session, "123456789012")
