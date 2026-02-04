@@ -10,13 +10,13 @@ from typing import Any
 from aws_comparator.core.registry import ServiceRegistry
 from aws_comparator.models.common import AWSResource
 from aws_comparator.models.ec2 import (
+    VPC,
     EC2Instance,
     KeyPair,
     NetworkAcl,
     RouteTable,
     SecurityGroup,
     Subnet,
-    VPC,
 )
 from aws_comparator.services.base import BaseServiceFetcher
 

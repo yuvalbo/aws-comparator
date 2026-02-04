@@ -4,8 +4,8 @@ Unit tests for service registry.
 
 import pytest
 
-from aws_comparator.core.registry import ServiceRegistry
 from aws_comparator.core.exceptions import ServiceNotSupportedError
+from aws_comparator.core.registry import ServiceRegistry
 from aws_comparator.services.base import BaseServiceFetcher
 
 

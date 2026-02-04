@@ -8,7 +8,7 @@ and generate detailed diff reports.
 __version__ = "0.1.0"
 __author__ = "AWS Comparator Team"
 
-from aws_comparator.core.config import ComparisonConfig, AccountConfig
+from aws_comparator.core.config import AccountConfig, ComparisonConfig
 from aws_comparator.core.exceptions import AWSComparatorError
 
 __all__ = [

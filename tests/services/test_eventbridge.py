@@ -129,7 +129,7 @@ class TestEventBusFetching:
     def test_fetch_event_bus_with_tags(self, eventbridge_fetcher, events_client):
         """Test fetching event bus with tags."""
         # Create event bus with tags
-        response = events_client.create_event_bus(
+        events_client.create_event_bus(
             Name='tagged-bus',
             Tags=[
                 {'Key': 'Environment', 'Value': 'test'},
@@ -229,7 +229,7 @@ class TestRuleFetching:
         rule = next((r for r in rules if r.name == rule_name), None)
         assert rule is not None
         assert len(rule.targets) >= 1
-        
+
         target = rule.targets[0]
         assert isinstance(target, Target)
         assert target.id == '1'
@@ -367,7 +367,7 @@ class TestErrorHandling:
         """Test handling of access denied error."""
         with patch.object(eventbridge_fetcher, '_paginate') as mock_paginate:
             from botocore.exceptions import ClientError
-            
+
             mock_paginate.side_effect = ClientError(
                 {'Error': {'Code': 'AccessDenied', 'Message': 'Access Denied'}},
                 'ListEventBuses'
@@ -383,7 +383,7 @@ class TestErrorHandling:
             # First call for event buses succeeds
             # Second call for rules fails
             from botocore.exceptions import ClientError
-            
+
             mock_paginate.side_effect = [
                 [{'Name': 'default', 'Arn': 'arn:aws:events:us-east-1:123456789012:event-bus/default'}],
                 ClientError(
@@ -414,11 +414,11 @@ class TestPagination:
         with patch.object(eventbridge_fetcher.client, 'can_paginate') as mock_can_paginate:
             with patch.object(eventbridge_fetcher.client, 'get_paginator') as mock_get_paginator:
                 mock_can_paginate.return_value = True
-                
+
                 # Mock paginator
                 mock_paginator = MagicMock()
                 mock_get_paginator.return_value = mock_paginator
-                
+
                 # Mock pages
                 mock_paginator.paginate.return_value = [
                     {'EventBuses': [
@@ -430,7 +430,7 @@ class TestPagination:
                 ]
 
                 results = eventbridge_fetcher._paginate('list_event_buses', 'EventBuses')
-                
+
                 assert len(results) == 2
                 assert results[0]['Name'] == 'bus1'
                 assert results[1]['Name'] == 'bus2'
@@ -448,7 +448,7 @@ class TestModels:
         }
 
         event_bus = EventBus.from_aws_response(bus_data)
-        
+
         assert event_bus.name == 'test-bus'
         assert event_bus.arn == bus_data['Arn']
         assert event_bus.policy is not None
@@ -462,7 +462,7 @@ class TestModels:
             'State': 'ENABLED',
             'EventBusName': 'default'
         }
-        
+
         targets_data = [
             {
                 'Id': '1',
@@ -472,7 +472,7 @@ class TestModels:
         ]
 
         rule = Rule.from_aws_response(rule_data, targets_data)
-        
+
         assert rule.name == 'test-rule'
         assert rule.state == RuleState.ENABLED
         assert len(rule.targets) == 1
@@ -489,7 +489,7 @@ class TestModels:
         }
 
         archive = Archive.from_aws_response(archive_data)
-        
+
         assert archive.archive_name == 'test-archive'
         assert archive.state == ArchiveState.ENABLED
         assert archive.retention_days == 7
@@ -504,7 +504,7 @@ class TestModels:
         }
 
         connection = Connection.from_aws_response(connection_data)
-        
+
         assert connection.name == 'test-connection'
         assert connection.connection_state == ConnectionState.AUTHORIZED
         assert connection.authorization_type == AuthorizationType.API_KEY

@@ -100,7 +100,7 @@ class EventBridgeFetcher(BaseServiceFetcher):
                             policy_text = describe_response['Policy']
                             if isinstance(policy_text, str):
                                 describe_response['Policy'] = json.loads(policy_text)
-                        
+
                         # Merge with list data
                         bus_data.update(describe_response)
                     except ClientError:
@@ -123,7 +123,7 @@ class EventBridgeFetcher(BaseServiceFetcher):
                     event_bus = EventBus.from_aws_response(bus_data)
                     if hasattr(event_bus, 'tags') and 'Tags' in bus_data:
                         event_bus.tags = bus_data['Tags']
-                    
+
                     event_buses.append(event_bus)
 
                     self.logger.debug(f"Fetched event bus: {bus_name}")
@@ -216,7 +216,7 @@ class EventBridgeFetcher(BaseServiceFetcher):
                             rule = Rule.from_aws_response(rule_data, targets)
                             if hasattr(rule, 'tags') and 'Tags' in rule_data:
                                 rule.tags = rule_data['Tags']
-                            
+
                             rules.append(rule)
 
                             self.logger.debug(f"Fetched rule: {rule_name} from bus {bus_name}")
@@ -298,7 +298,7 @@ class EventBridgeFetcher(BaseServiceFetcher):
                     archive = Archive.from_aws_response(archive_data)
                     if hasattr(archive, 'tags') and 'Tags' in archive_data:
                         archive.tags = archive_data['Tags']
-                    
+
                     archives.append(archive)
 
                     self.logger.debug(f"Fetched archive: {archive_name}")
@@ -366,7 +366,7 @@ class EventBridgeFetcher(BaseServiceFetcher):
                     connection = Connection.from_aws_response(connection_data)
                     if hasattr(connection, 'tags') and 'Tags' in connection_data:
                         connection.tags = connection_data['Tags']
-                    
+
                     connections.append(connection)
 
                     self.logger.debug(f"Fetched connection: {connection_name}")
