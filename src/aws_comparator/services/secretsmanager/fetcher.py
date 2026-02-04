@@ -8,7 +8,7 @@ It only fetches metadata using list_secrets() and describe_secret().
 
 from typing import Any
 
-from botocore.exceptions import ClientError  # type: ignore[import-untyped]
+from botocore.exceptions import ClientError
 
 from aws_comparator.core.registry import ServiceRegistry
 from aws_comparator.models.common import AWSResource

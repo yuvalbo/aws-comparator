@@ -9,8 +9,8 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Optional
 
-import boto3  # type: ignore[import-untyped]
-from botocore.exceptions import (  # type: ignore[import-untyped]
+import boto3
+from botocore.exceptions import (
     ClientError,
     NoCredentialsError,
 )

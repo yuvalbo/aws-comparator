@@ -159,7 +159,6 @@ jobs:
 
       - name: Run mypy
         run: mypy src/
-        continue-on-error: true  # Don't fail the build on type errors (remove once all types are fixed)
 
   # ---------------------------------------------------------------------------
   # Build verification job - ensures package can be built

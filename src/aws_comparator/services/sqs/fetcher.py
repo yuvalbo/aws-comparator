@@ -6,7 +6,7 @@ This module implements fetching of SQS queue resources and their configurations.
 
 from typing import Any
 
-from botocore.exceptions import ClientError  # type: ignore[import-untyped]
+from botocore.exceptions import ClientError
 
 from aws_comparator.core.registry import ServiceRegistry
 from aws_comparator.models.common import AWSResource

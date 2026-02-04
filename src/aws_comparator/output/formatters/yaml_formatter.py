@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Union
 
-import yaml  # type: ignore[import-untyped]
+import yaml
 
 from aws_comparator.models.comparison import (
     ComparisonReport,

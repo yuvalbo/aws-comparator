@@ -12,8 +12,8 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from typing import Any, Callable, Optional
 
-import boto3  # type: ignore[import-untyped]
-from botocore.exceptions import (  # type: ignore[import-untyped]
+import boto3
+from botocore.exceptions import (
     ClientError,
     NoCredentialsError,
     ProfileNotFound,
