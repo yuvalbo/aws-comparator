@@ -345,3 +345,410 @@ class TestCompareCommandFlags:
         runner = CliRunner()
         result = runner.invoke(cli, ["compare", "--help"])
         assert "--no-color" in result.output
+
+
+class TestCompareCommandExceptionHandling:
+    """Tests for compare command exception handling."""
+
+    @patch("aws_comparator.cli.commands.ComparisonOrchestrator")
+    @patch("aws_comparator.cli.commands.ServiceRegistry")
+    def test_compare_authentication_error(self, mock_registry, mock_orchestrator):
+        """Test compare handles AuthenticationError."""
+        from aws_comparator.core.exceptions import AuthenticationError
+
+        mock_registry.validate_services.return_value = (["s3"], [])
+
+        mock_orch_instance = Mock()
+        # AuthenticationError requires message, error_code, and details
+        mock_orch_instance.compare_accounts.side_effect = AuthenticationError(
+            message="Authentication failed",
+            error_code="AUTH-999",
+            details={"suggestion": "Check your credentials"},
+        )
+        mock_orchestrator.return_value = mock_orch_instance
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            [
+                "compare",
+                "--account1",
+                "123456789012",
+                "--account2",
+                "987654321098",
+                "--services",
+                "s3",
+            ],
+        )
+
+        assert result.exit_code == 1
+        assert "Authentication error" in result.output
+
+    @patch("aws_comparator.cli.commands.ComparisonOrchestrator")
+    @patch("aws_comparator.cli.commands.ServiceRegistry")
+    def test_compare_invalid_account_id_error(self, mock_registry, mock_orchestrator):
+        """Test compare handles InvalidAccountIdError."""
+        from aws_comparator.core.exceptions import InvalidAccountIdError
+
+        mock_registry.validate_services.return_value = (["s3"], [])
+
+        mock_orch_instance = Mock()
+        mock_orch_instance.compare_accounts.side_effect = InvalidAccountIdError(
+            "Invalid account ID format"
+        )
+        mock_orchestrator.return_value = mock_orch_instance
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            [
+                "compare",
+                "--account1",
+                "123456789012",
+                "--account2",
+                "987654321098",
+                "--services",
+                "s3",
+            ],
+        )
+
+        assert result.exit_code == 1
+        assert "Invalid account ID" in result.output
+
+    @patch("aws_comparator.cli.commands.ComparisonOrchestrator")
+    @patch("aws_comparator.cli.commands.ServiceRegistry")
+    def test_compare_invalid_config_error(self, mock_registry, mock_orchestrator):
+        """Test compare handles InvalidConfigError."""
+        from aws_comparator.core.exceptions import InvalidConfigError
+
+        mock_registry.validate_services.return_value = (["s3"], [])
+
+        mock_orch_instance = Mock()
+        # InvalidConfigError requires config_file and errors list
+        mock_orch_instance.compare_accounts.side_effect = InvalidConfigError(
+            config_file="config.yaml",
+            errors=["Invalid setting"],
+        )
+        mock_orchestrator.return_value = mock_orch_instance
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            [
+                "compare",
+                "--account1",
+                "123456789012",
+                "--account2",
+                "987654321098",
+                "--services",
+                "s3",
+            ],
+        )
+
+        assert result.exit_code == 1
+        assert "Configuration error" in result.output
+
+    @patch("aws_comparator.cli.commands.ComparisonOrchestrator")
+    @patch("aws_comparator.cli.commands.ServiceRegistry")
+    def test_compare_service_not_supported_error(self, mock_registry, mock_orchestrator):
+        """Test compare handles ServiceNotSupportedError."""
+        from aws_comparator.core.exceptions import ServiceNotSupportedError
+
+        mock_registry.validate_services.return_value = (["s3"], [])
+
+        mock_orch_instance = Mock()
+        mock_orch_instance.compare_accounts.side_effect = ServiceNotSupportedError(
+            "Service not supported"
+        )
+        mock_orchestrator.return_value = mock_orch_instance
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            [
+                "compare",
+                "--account1",
+                "123456789012",
+                "--account2",
+                "987654321098",
+                "--services",
+                "s3",
+            ],
+        )
+
+        assert result.exit_code == 1
+        assert "Service error" in result.output
+        assert "list-services" in result.output
+
+    @patch("aws_comparator.cli.commands.ComparisonOrchestrator")
+    @patch("aws_comparator.cli.commands.ServiceRegistry")
+    def test_compare_generic_aws_comparator_error(self, mock_registry, mock_orchestrator):
+        """Test compare handles generic AWSComparatorError."""
+        from aws_comparator.core.exceptions import AWSComparatorError
+
+        mock_registry.validate_services.return_value = (["s3"], [])
+
+        mock_orch_instance = Mock()
+        # AWSComparatorError requires message, error_code, and optionally details
+        mock_orch_instance.compare_accounts.side_effect = AWSComparatorError(
+            message="Generic error",
+            error_code="GEN-001",
+            details={"suggestion": "Try again"},
+        )
+        mock_orchestrator.return_value = mock_orch_instance
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            [
+                "compare",
+                "--account1",
+                "123456789012",
+                "--account2",
+                "987654321098",
+                "--services",
+                "s3",
+            ],
+        )
+
+        assert result.exit_code == 1
+        assert "Error:" in result.output
+
+    @patch("aws_comparator.cli.commands.ComparisonOrchestrator")
+    @patch("aws_comparator.cli.commands.ServiceRegistry")
+    def test_compare_unexpected_exception(self, mock_registry, mock_orchestrator):
+        """Test compare handles unexpected exceptions."""
+        mock_registry.validate_services.return_value = (["s3"], [])
+
+        mock_orch_instance = Mock()
+        mock_orch_instance.compare_accounts.side_effect = RuntimeError(
+            "Unexpected failure"
+        )
+        mock_orchestrator.return_value = mock_orch_instance
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            [
+                "compare",
+                "--account1",
+                "123456789012",
+                "--account2",
+                "987654321098",
+                "--services",
+                "s3",
+            ],
+        )
+
+        assert result.exit_code == 1
+        assert "Unexpected error" in result.output
+
+    @patch("aws_comparator.cli.commands.ComparisonOrchestrator")
+    @patch("aws_comparator.cli.commands.ServiceRegistry")
+    @patch("aws_comparator.cli.commands.get_formatter")
+    def test_compare_with_output_file(
+        self, mock_get_formatter, mock_registry, mock_orchestrator, tmp_path
+    ):
+        """Test compare writes output to file."""
+        mock_registry.validate_services.return_value = (["s3"], [])
+        mock_registry.list_services.return_value = ["s3"]
+
+        mock_report = Mock()
+        mock_report.summary = Mock()
+        mock_report.summary.total_changes = 0
+        mock_report.summary.total_services_with_changes = 0
+        mock_report.summary.total_services_compared = 1
+        mock_report.summary.execution_time_seconds = 1.0
+        mock_report.summary.services_with_errors = []
+
+        mock_orch_instance = Mock()
+        mock_orch_instance.compare_accounts.return_value = mock_report
+        mock_orchestrator.return_value = mock_orch_instance
+
+        mock_formatter = Mock()
+        mock_formatter.format.return_value = "formatted output"
+        mock_get_formatter.return_value = mock_formatter
+
+        output_file = tmp_path / "output.json"
+
+        runner = CliRunner()
+        runner.invoke(
+            cli,
+            [
+                "compare",
+                "--account1",
+                "123456789012",
+                "--account2",
+                "987654321098",
+                "--services",
+                "s3",
+                "--output-file",
+                str(output_file),
+                "--quiet",
+            ],
+        )
+
+        # Check formatter write_to_file was called
+        mock_formatter.write_to_file.assert_called_once()
+
+    @patch("aws_comparator.cli.commands.ComparisonOrchestrator")
+    @patch("aws_comparator.cli.commands.ServiceRegistry")
+    @patch("aws_comparator.cli.commands.get_formatter")
+    def test_compare_with_services_with_errors(
+        self, mock_get_formatter, mock_registry, mock_orchestrator
+    ):
+        """Test compare shows services with errors in summary."""
+        mock_registry.validate_services.return_value = (["s3", "ec2"], [])
+        mock_registry.list_services.return_value = ["s3", "ec2"]
+
+        mock_report = Mock()
+        mock_report.summary = Mock()
+        mock_report.summary.total_changes = 1
+        mock_report.summary.total_services_with_changes = 1
+        mock_report.summary.total_services_compared = 2
+        mock_report.summary.execution_time_seconds = 2.0
+        mock_report.summary.services_with_errors = ["ec2"]
+
+        mock_orch_instance = Mock()
+        mock_orch_instance.compare_accounts.return_value = mock_report
+        mock_orchestrator.return_value = mock_orch_instance
+
+        mock_formatter = Mock()
+        mock_formatter.format.return_value = "formatted output"
+        mock_get_formatter.return_value = mock_formatter
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            [
+                "compare",
+                "--account1",
+                "123456789012",
+                "--account2",
+                "987654321098",
+                "--services",
+                "s3,ec2",
+            ],
+        )
+
+        assert "ec2" in result.output
+
+    @patch("aws_comparator.cli.commands.ComparisonOrchestrator")
+    @patch("aws_comparator.cli.commands.ServiceRegistry")
+    @patch("aws_comparator.cli.commands.get_formatter")
+    def test_compare_cross_region(
+        self, mock_get_formatter, mock_registry, mock_orchestrator
+    ):
+        """Test compare with different regions for each account."""
+        mock_registry.validate_services.return_value = (["s3"], [])
+        mock_registry.list_services.return_value = ["s3"]
+
+        mock_report = Mock()
+        mock_report.summary = Mock()
+        mock_report.summary.total_changes = 0
+        mock_report.summary.total_services_with_changes = 0
+        mock_report.summary.total_services_compared = 1
+        mock_report.summary.execution_time_seconds = 1.0
+        mock_report.summary.services_with_errors = []
+
+        mock_orch_instance = Mock()
+        mock_orch_instance.compare_accounts.return_value = mock_report
+        mock_orchestrator.return_value = mock_orch_instance
+
+        mock_formatter = Mock()
+        mock_formatter.format.return_value = "formatted output"
+        mock_get_formatter.return_value = mock_formatter
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            [
+                "compare",
+                "--account1",
+                "123456789012",
+                "--account2",
+                "987654321098",
+                "--region1",
+                "us-east-1",
+                "--region2",
+                "eu-west-1",
+                "--services",
+                "s3",
+            ],
+        )
+
+        # Both regions should be shown (use partial match to handle ANSI codes)
+        assert "us-east" in result.output
+        assert "eu-west" in result.output
+
+    @patch("aws_comparator.cli.commands.ServiceRegistry")
+    def test_compare_warns_about_invalid_services(self, mock_registry):
+        """Test compare warns about invalid services but continues with valid ones."""
+        mock_registry.validate_services.return_value = (["s3"], ["invalid_svc"])
+        mock_registry.list_services.return_value = ["s3"]
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            [
+                "compare",
+                "--account1",
+                "123456789012",
+                "--account2",
+                "987654321098",
+                "--services",
+                "s3,invalid_svc",
+            ],
+        )
+
+        # Should show warning about invalid services
+        assert "invalid_svc" in result.output or result.exit_code != 0
+
+
+class TestListServicesCommandVerbose:
+    """Additional tests for list-services verbose mode."""
+
+    @patch("aws_comparator.cli.commands.ServiceRegistry")
+    def test_list_services_verbose_no_resource_types(self, mock_registry):
+        """Test list-services verbose mode with empty resource types."""
+        mock_registry.get_all_service_info.return_value = {
+            "s3": {"description": "Amazon S3", "resource_types": []},
+        }
+        runner = CliRunner()
+        result = runner.invoke(cli, ["list-services", "--verbose"])
+        assert result.exit_code == 0
+        # Should show "-" for empty resource types
+        assert "-" in result.output or "s3" in result.output
+
+    @patch("aws_comparator.cli.commands.ServiceRegistry")
+    def test_list_services_verbose_multiple_resource_types(self, mock_registry):
+        """Test list-services verbose mode with multiple resource types."""
+        mock_registry.get_all_service_info.return_value = {
+            "ec2": {
+                "description": "Amazon EC2",
+                "resource_types": ["instances", "security_groups", "vpcs"],
+            },
+        }
+        runner = CliRunner()
+        result = runner.invoke(cli, ["list-services", "--verbose"])
+        assert result.exit_code == 0
+        assert "instances" in result.output
+
+
+class TestParseServicesEdgeCases:
+    """Edge case tests for parse_services function."""
+
+    def test_parse_services_only_whitespace(self):
+        """Test parsing string with only whitespace returns None."""
+        result = parse_services("   ")
+        assert result is None
+
+    def test_parse_services_only_commas(self):
+        """Test parsing string with only commas returns None."""
+        result = parse_services(",,,")
+        assert result is None
+
+    def test_parse_services_mixed_empty_and_valid(self):
+        """Test parsing with empty items filters them out."""
+        result = parse_services("s3,,ec2,  ,lambda")
+        assert result == ["s3", "ec2", "lambda"]

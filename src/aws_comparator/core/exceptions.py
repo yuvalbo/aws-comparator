@@ -5,7 +5,7 @@ This module defines all custom exceptions used throughout the application,
 following a hierarchical structure for better error handling and debugging.
 """
 
-from typing import Dict, Any, Optional
+from typing import Any, Optional
 
 
 class AWSComparatorError(Exception):
@@ -25,7 +25,7 @@ class AWSComparatorError(Exception):
         self,
         message: str,
         error_code: str,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[dict[str, Any]] = None
     ) -> None:
         """
         Initialize the base exception.
@@ -87,7 +87,7 @@ class InvalidCredentialsError(AuthenticationError):
     """Raised when AWS credentials are invalid."""
 
     def __init__(self, reason: Optional[str] = None) -> None:
-        details: Dict[str, str] = {
+        details: dict[str, str] = {
             "suggestion": "Verify your AWS access key and secret key"
         }
         if reason:

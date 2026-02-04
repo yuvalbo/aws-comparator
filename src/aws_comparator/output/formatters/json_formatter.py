@@ -9,7 +9,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, Union
 
 from aws_comparator.models.comparison import (
     ComparisonReport,
@@ -40,7 +40,7 @@ class JSONFormatter(BaseFormatter):
 
     def __init__(
         self,
-        indent: int | None = 2,
+        indent: Optional[int] = 2,
         sort_keys: bool = False,
         include_summary: bool = True,
         ensure_ascii: bool = False,
@@ -66,7 +66,7 @@ class JSONFormatter(BaseFormatter):
         )
 
     def format(
-        self, report: ComparisonReport | ServiceComparisonResult
+        self, report: Union[ComparisonReport, ServiceComparisonResult]
     ) -> str:
         """
         Format a comparison report as JSON.
@@ -105,7 +105,7 @@ class JSONFormatter(BaseFormatter):
 
     def write_to_file(
         self,
-        report: ComparisonReport | ServiceComparisonResult,
+        report: Union[ComparisonReport, ServiceComparisonResult],
         filepath: Path,
     ) -> None:
         """
@@ -155,7 +155,7 @@ class JSONFormatter(BaseFormatter):
             raise
 
     def _build_output_data(
-        self, report: ComparisonReport | ServiceComparisonResult
+        self, report: Union[ComparisonReport, ServiceComparisonResult]
     ) -> dict[str, Any]:
         """
         Build the output data dictionary from the report.

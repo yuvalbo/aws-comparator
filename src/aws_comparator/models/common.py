@@ -7,8 +7,9 @@ the application for consistent data representation.
 
 from datetime import datetime
 from enum import Enum
-from typing import Dict, Optional, Any
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from typing import Any, Optional
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class AWSRegion(str, Enum):
@@ -98,7 +99,7 @@ class AWSResource(BaseModel):
     )
 
     arn: Optional[str] = Field(None, description="Amazon Resource Name")
-    tags: Dict[str, str] = Field(
+    tags: dict[str, str] = Field(
         default_factory=dict,
         description="Resource tags as key-value pairs"
     )
@@ -108,7 +109,7 @@ class AWSResource(BaseModel):
     )
     region: Optional[str] = Field(None, description="AWS region")
 
-    def normalize_tags(self, tag_list: list[Dict[str, str]]) -> Dict[str, str]:
+    def normalize_tags(self, tag_list: list[dict[str, str]]) -> dict[str, str]:
         """
         Convert AWS tag list format to dictionary format.
 
@@ -123,11 +124,11 @@ class AWSResource(BaseModel):
 
         Example:
             >>> resource = AWSResource()
-            >>> tags = [{'Key': 'Env', 'Value': 'prod'}, {'Key': 'Team', 'Value': 'backend'}]
+            >>> tags = [{'Key': 'Env', 'Value': 'prod'}]
             >>> resource.normalize_tags(tags)
-            {'Env': 'prod', 'Team': 'backend'}
+            {'Env': 'prod'}
         """
-        result: Dict[str, str] = {}
+        result: dict[str, str] = {}
         for tag in tag_list:
             # Handle both 'Key'/'Value' and 'key'/'value' formats
             key = tag.get('Key') or tag.get('key', '')
@@ -241,5 +242,5 @@ class AccountInfo(BaseModel):
 
 
 # Type aliases for better code readability
-TagDict = Dict[str, str]
-MetadataDict = Dict[str, Any]
+TagDict = dict[str, str]
+MetadataDict = dict[str, Any]

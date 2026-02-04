@@ -6,8 +6,8 @@ to self-register and be discovered at runtime without modifying the
 orchestrator code.
 """
 
-from typing import Any, Dict, List, Type, Optional, Callable
 import logging
+from typing import Any, Callable, Optional
 
 from aws_comparator.core.exceptions import ServiceNotSupportedError
 
@@ -30,16 +30,16 @@ class ServiceRegistry:
         >>> fetcher = ServiceRegistry.get_fetcher('ec2', session, region)
     """
 
-    _registry: Dict[str, Type[Any]] = {}
-    _metadata: Dict[str, Dict[str, Any]] = {}
+    _registry: dict[str, type[Any]] = {}
+    _metadata: dict[str, dict[str, Any]] = {}
 
     @classmethod
     def register(
         cls,
         service_name: str,
         description: Optional[str] = None,
-        resource_types: Optional[List[str]] = None
-    ) -> Callable[[Type[Any]], Type[Any]]:
+        resource_types: Optional[list[str]] = None
+    ) -> Callable[[type[Any]], type[Any]]:
         """
         Decorator to register a service fetcher.
 
@@ -56,7 +56,7 @@ class ServiceRegistry:
             ... class EC2Fetcher(BaseServiceFetcher):
             ...     pass
         """
-        def decorator(fetcher_class: Type[Any]) -> Type[Any]:
+        def decorator(fetcher_class: type[Any]) -> type[Any]:
             if service_name in cls._registry:
                 logger.warning(
                     f"Service '{service_name}' is already registered. "
@@ -112,7 +112,7 @@ class ServiceRegistry:
             raise
 
     @classmethod
-    def list_services(cls) -> List[str]:
+    def list_services(cls) -> list[str]:
         """
         List all registered service names.
 
@@ -122,7 +122,7 @@ class ServiceRegistry:
         return sorted(cls._registry.keys())
 
     @classmethod
-    def get_service_info(cls, service_name: str) -> Optional[Dict[str, Any]]:
+    def get_service_info(cls, service_name: str) -> Optional[dict[str, Any]]:
         """
         Get metadata about a registered service.
 
@@ -135,7 +135,7 @@ class ServiceRegistry:
         return cls._metadata.get(service_name)
 
     @classmethod
-    def get_all_service_info(cls) -> Dict[str, Dict[str, Any]]:
+    def get_all_service_info(cls) -> dict[str, dict[str, Any]]:
         """
         Get metadata for all registered services.
 
@@ -179,7 +179,7 @@ class ServiceRegistry:
         return len(cls._registry)
 
     @classmethod
-    def validate_services(cls, service_names: List[str]) -> tuple[List[str], List[str]]:
+    def validate_services(cls, service_names: list[str]) -> tuple[list[str], list[str]]:
         """
         Validate a list of service names.
 

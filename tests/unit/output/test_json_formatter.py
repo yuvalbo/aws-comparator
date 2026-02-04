@@ -335,3 +335,43 @@ class TestJSONFormatterBuildOutputData:
         result = formatter._build_output_data(sample_report)
 
         assert "_summary_stats" not in result
+
+
+class TestJSONFormatterErrorHandling:
+    """Tests for error handling in JSONFormatter."""
+
+    def test_format_raises_on_error(self, sample_report):
+        """Test format raises exception on serialization error."""
+        from unittest.mock import patch
+
+        formatter = JSONFormatter()
+
+        # Create a mock report that causes serialization to fail
+        with patch.object(
+            formatter, "_build_output_data", side_effect=ValueError("Mock error")
+        ):
+            with pytest.raises(ValueError, match="Mock error"):
+                formatter.format(sample_report)
+
+    def test_write_to_file_os_error(self, sample_report, tmp_path):
+        """Test write_to_file handles OSError."""
+        from unittest.mock import patch
+
+        formatter = JSONFormatter()
+        filepath = tmp_path / "report.json"
+
+        with patch("builtins.open", side_effect=OSError("Permission denied")):
+            with pytest.raises(OSError):
+                formatter.write_to_file(sample_report, filepath)
+
+    def test_write_to_file_serialization_error(self, sample_report, tmp_path):
+        """Test write_to_file handles serialization errors."""
+        from unittest.mock import patch
+
+        formatter = JSONFormatter()
+        filepath = tmp_path / "report.json"
+
+        # Patch json.dump to raise a serialization error
+        with patch("json.dump", side_effect=TypeError("Not serializable")):
+            with pytest.raises(TypeError):
+                formatter.write_to_file(sample_report, filepath)

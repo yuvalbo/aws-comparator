@@ -8,7 +8,7 @@ to YAML format with configurable formatting options.
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Union
 
 import yaml
 
@@ -75,7 +75,7 @@ class YAMLFormatter(BaseFormatter):
         )
 
     def format(
-        self, report: ComparisonReport | ServiceComparisonResult
+        self, report: Union[ComparisonReport, ServiceComparisonResult]
     ) -> str:
         """
         Format a comparison report as YAML.
@@ -118,7 +118,7 @@ class YAMLFormatter(BaseFormatter):
 
     def write_to_file(
         self,
-        report: ComparisonReport | ServiceComparisonResult,
+        report: Union[ComparisonReport, ServiceComparisonResult],
         filepath: Path,
     ) -> None:
         """
@@ -172,7 +172,7 @@ class YAMLFormatter(BaseFormatter):
             raise
 
     def _build_output_data(
-        self, report: ComparisonReport | ServiceComparisonResult
+        self, report: Union[ComparisonReport, ServiceComparisonResult]
     ) -> dict[str, Any]:
         """
         Build the output data dictionary from the report.

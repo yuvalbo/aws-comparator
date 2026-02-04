@@ -9,7 +9,7 @@ import logging
 import sys
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, TextIO
+from typing import Any, Optional, TextIO, Union
 
 from aws_comparator.models.comparison import (
     ChangeSeverity,
@@ -46,7 +46,7 @@ class BaseFormatter(ABC):
 
     @abstractmethod
     def format(
-        self, report: ComparisonReport | ServiceComparisonResult
+        self, report: Union[ComparisonReport, ServiceComparisonResult]
     ) -> str:
         """
         Format a comparison report as a string.
@@ -67,7 +67,7 @@ class BaseFormatter(ABC):
     @abstractmethod
     def write_to_file(
         self,
-        report: ComparisonReport | ServiceComparisonResult,
+        report: Union[ComparisonReport, ServiceComparisonResult],
         filepath: Path,
     ) -> None:
         """
@@ -85,8 +85,8 @@ class BaseFormatter(ABC):
 
     def write_to_stream(
         self,
-        report: ComparisonReport | ServiceComparisonResult,
-        stream: TextIO | None = None,
+        report: Union[ComparisonReport, ServiceComparisonResult],
+        stream: Optional[TextIO] = None,
     ) -> None:
         """
         Write formatted report to a stream (default: stdout).
@@ -103,7 +103,7 @@ class BaseFormatter(ABC):
         output_stream.flush()
 
     def _get_all_changes(
-        self, report: ComparisonReport | ServiceComparisonResult
+        self, report: Union[ComparisonReport, ServiceComparisonResult]
     ) -> list[ResourceChange]:
         """
         Extract all changes from a report.
@@ -146,7 +146,7 @@ class BaseFormatter(ABC):
         return changes
 
     def _generate_summary_stats(
-        self, report: ComparisonReport | ServiceComparisonResult
+        self, report: Union[ComparisonReport, ServiceComparisonResult]
     ) -> dict[str, Any]:
         """
         Generate summary statistics for a report.
@@ -199,7 +199,7 @@ class BaseFormatter(ABC):
         return stats
 
     def _is_comparison_report(
-        self, report: ComparisonReport | ServiceComparisonResult
+        self, report: Union[ComparisonReport, ServiceComparisonResult]
     ) -> bool:
         """
         Check if the report is a full ComparisonReport.

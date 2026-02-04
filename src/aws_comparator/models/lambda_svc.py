@@ -4,10 +4,10 @@ Pydantic models for AWS Lambda service resources.
 This module defines strongly-typed models for Lambda functions and layers.
 """
 
-from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Any
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from typing import Any, Optional
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from aws_comparator.models.common import AWSResource
 
@@ -52,8 +52,10 @@ class VpcConfig(BaseModel):
     """Lambda VPC configuration."""
     model_config = ConfigDict(extra="ignore")
 
-    subnet_ids: List[str] = Field(default_factory=list, description="VPC subnet IDs")
-    security_group_ids: List[str] = Field(default_factory=list, description="Security group IDs")
+    subnet_ids: list[str] = Field(default_factory=list, description="VPC subnet IDs")
+    security_group_ids: list[str] = Field(
+        default_factory=list, description="Security group IDs"
+    )
     vpc_id: Optional[str] = Field(None, description="VPC ID")
 
 
@@ -61,7 +63,9 @@ class Environment(BaseModel):
     """Lambda environment variables."""
     model_config = ConfigDict(extra="ignore")
 
-    variables: Dict[str, str] = Field(default_factory=dict, description="Environment variables")
+    variables: dict[str, str] = Field(
+        default_factory=dict, description="Environment variables"
+    )
 
 
 class DeadLetterConfig(BaseModel):
@@ -75,7 +79,9 @@ class TracingConfig(BaseModel):
     """Lambda X-Ray tracing configuration."""
     model_config = ConfigDict(extra="ignore")
 
-    mode: str = Field(default="PassThrough", description="Tracing mode (Active/PassThrough)")
+    mode: str = Field(
+        default="PassThrough", description="Tracing mode (Active/PassThrough)"
+    )
 
 
 class LambdaFunction(AWSResource):
@@ -113,7 +119,9 @@ class LambdaFunction(AWSResource):
     vpc_config: Optional[VpcConfig] = Field(None, description="VPC configuration")
 
     # Environment
-    environment: Optional[Environment] = Field(None, description="Environment variables")
+    environment: Optional[Environment] = Field(
+        None, description="Environment variables"
+    )
 
     # Dead letter queue
     dead_letter_config: Optional[DeadLetterConfig] = Field(
@@ -122,25 +130,27 @@ class LambdaFunction(AWSResource):
     )
 
     # Tracing
-    tracing_config: Optional[TracingConfig] = Field(None, description="Tracing configuration")
+    tracing_config: Optional[TracingConfig] = Field(
+        None, description="Tracing configuration"
+    )
 
     # Layers
-    layers: List[str] = Field(default_factory=list, description="Layer ARNs")
+    layers: list[str] = Field(default_factory=list, description="Layer ARNs")
 
     # File systems
-    file_system_configs: List[Dict[str, Any]] = Field(
+    file_system_configs: list[dict[str, Any]] = Field(
         default_factory=list,
         description="EFS file system configurations"
     )
 
     # Image config (for container images)
-    image_config_response: Optional[Dict[str, Any]] = Field(
+    image_config_response: Optional[dict[str, Any]] = Field(
         None,
         description="Container image configuration"
     )
 
     # Architectures
-    architectures: List[str] = Field(
+    architectures: list[str] = Field(
         default_factory=lambda: ["x86_64"],
         description="Instruction set architectures"
     )
@@ -183,8 +193,8 @@ class LambdaFunction(AWSResource):
     @classmethod
     def from_aws_response(
         cls,
-        function_data: Dict[str, Any],
-        tags: Optional[Dict[str, str]] = None
+        function_data: dict[str, Any],
+        tags: Optional[dict[str, str]] = None
     ) -> "LambdaFunction":
         """
         Create LambdaFunction instance from AWS API response.
@@ -196,7 +206,7 @@ class LambdaFunction(AWSResource):
         Returns:
             LambdaFunction instance
         """
-        function_dict = {
+        function_dict: dict[str, Any] = {
             'function_name': function_data.get('FunctionName'),
             'function_arn': function_data.get('FunctionArn'),
             'arn': function_data.get('FunctionArn'),
@@ -231,15 +241,17 @@ class LambdaFunction(AWSResource):
             }
 
         # Environment
-        if 'Environment' in function_data and 'Variables' in function_data['Environment']:
+        env_data = function_data.get('Environment', {})
+        if 'Variables' in env_data:
             function_dict['environment'] = {
-                'variables': function_data['Environment']['Variables']
+                'variables': env_data['Variables']
             }
 
         # Dead letter config
-        if 'DeadLetterConfig' in function_data and 'TargetArn' in function_data['DeadLetterConfig']:
+        dlc_data = function_data.get('DeadLetterConfig', {})
+        if 'TargetArn' in dlc_data:
             function_dict['dead_letter_config'] = {
-                'target_arn': function_data['DeadLetterConfig']['TargetArn']
+                'target_arn': dlc_data['TargetArn']
             }
 
         # Tracing
@@ -250,7 +262,9 @@ class LambdaFunction(AWSResource):
 
         # Layers
         if 'Layers' in function_data:
-            function_dict['layers'] = [layer['Arn'] for layer in function_data['Layers']]
+            function_dict['layers'] = [
+                layer['Arn'] for layer in function_data['Layers']
+            ]
 
         # File systems
         if 'FileSystemConfigs' in function_data:
@@ -258,7 +272,9 @@ class LambdaFunction(AWSResource):
 
         # Image config
         if 'ImageConfigResponse' in function_data:
-            function_dict['image_config_response'] = function_data['ImageConfigResponse']
+            function_dict['image_config_response'] = function_data[
+                'ImageConfigResponse'
+            ]
 
         # Architectures
         if 'Architectures' in function_data:
@@ -266,7 +282,9 @@ class LambdaFunction(AWSResource):
 
         # Ephemeral storage
         if 'EphemeralStorage' in function_data:
-            function_dict['ephemeral_storage_size'] = function_data['EphemeralStorage'].get('Size', 512)
+            function_dict['ephemeral_storage_size'] = function_data[
+                'EphemeralStorage'
+            ].get('Size', 512)
 
         return cls(**function_dict)
 
@@ -290,18 +308,18 @@ class LambdaLayer(AWSResource):
     version: int = Field(..., description="Layer version number")
     description: Optional[str] = Field(None, description="Layer description")
     created_date: str = Field(..., description="Creation date")
-    compatible_runtimes: List[Runtime] = Field(
+    compatible_runtimes: list[Runtime] = Field(
         default_factory=list,
         description="Compatible runtimes"
     )
-    compatible_architectures: List[str] = Field(
+    compatible_architectures: list[str] = Field(
         default_factory=list,
         description="Compatible architectures"
     )
     license_info: Optional[str] = Field(None, description="License information")
 
     @classmethod
-    def from_aws_response(cls, layer_data: Dict[str, Any]) -> "LambdaLayer":
+    def from_aws_response(cls, layer_data: dict[str, Any]) -> "LambdaLayer":
         """
         Create LambdaLayer instance from AWS API response.
 
@@ -311,7 +329,7 @@ class LambdaLayer(AWSResource):
         Returns:
             LambdaLayer instance
         """
-        layer_dict = {
+        layer_dict: dict[str, Any] = {
             'layer_name': layer_data.get('LayerName'),
             'layer_arn': layer_data.get('LayerArn'),
             'layer_version_arn': layer_data.get('LayerVersionArn'),
@@ -320,7 +338,9 @@ class LambdaLayer(AWSResource):
             'description': layer_data.get('Description'),
             'created_date': layer_data.get('CreatedDate'),
             'compatible_runtimes': layer_data.get('CompatibleRuntimes', []),
-            'compatible_architectures': layer_data.get('CompatibleArchitectures', []),
+            'compatible_architectures': layer_data.get(
+                'CompatibleArchitectures', []
+            ),
             'license_info': layer_data.get('LicenseInfo')
         }
 

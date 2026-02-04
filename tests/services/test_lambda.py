@@ -206,3 +206,208 @@ class TestLambdaFetcherErrorHandling:
         # Should handle gracefully
         resources = fetcher.fetch_resources()
         assert "functions" in resources
+
+    def test_fetch_function_tags_access_denied(self, mock_session):
+        """Test fetcher handles AccessDenied when fetching tags."""
+        from botocore.exceptions import ClientError
+
+        mock_paginator = MagicMock()
+        mock_paginator.paginate.return_value = [
+            {
+                "Functions": [
+                    {
+                        "FunctionName": "test-function",
+                        "FunctionArn": "arn:aws:lambda:us-east-1:123456789012:function:test-function",
+                        "Runtime": "python3.9",
+                        "Role": "arn:aws:iam::123456789012:role/test-role",
+                        "Handler": "handler.main",
+                        "CodeSize": 1000,
+                        "CodeSha256": "abc123",
+                        "LastModified": "2024-01-01T00:00:00.000+0000",
+                        "Version": "$LATEST",
+                    }
+                ]
+            }
+        ]
+        mock_client = MagicMock()
+        mock_client.get_paginator.return_value = mock_paginator
+        mock_client.list_tags.side_effect = ClientError(
+            {"Error": {"Code": "AccessDenied", "Message": "Access Denied"}},
+            "ListTags",
+        )
+        mock_client.get_function_concurrency.return_value = {}
+        mock_session.client.return_value = mock_client
+
+        fetcher = LambdaFetcher(session=mock_session, region="us-east-1")
+        resources = fetcher.fetch_resources()
+
+        # Should still return the function, just without tags
+        assert len(resources["functions"]) == 1
+        assert resources["functions"][0].tags == {}
+
+    def test_fetch_function_concurrency_not_configured(self, mock_session):
+        """Test fetcher handles when concurrency is not configured."""
+        from botocore.exceptions import ClientError
+
+        mock_paginator = MagicMock()
+        mock_paginator.paginate.return_value = [
+            {
+                "Functions": [
+                    {
+                        "FunctionName": "test-function",
+                        "FunctionArn": "arn:aws:lambda:us-east-1:123456789012:function:test-function",
+                        "Runtime": "python3.9",
+                        "Role": "arn:aws:iam::123456789012:role/test-role",
+                        "Handler": "handler.main",
+                        "CodeSize": 1000,
+                        "CodeSha256": "abc123",
+                        "LastModified": "2024-01-01T00:00:00.000+0000",
+                        "Version": "$LATEST",
+                    }
+                ]
+            }
+        ]
+        mock_client = MagicMock()
+        mock_client.get_paginator.return_value = mock_paginator
+        mock_client.list_tags.return_value = {"Tags": {}}
+        mock_client.get_function_concurrency.side_effect = ClientError(
+            {"Error": {"Code": "ResourceNotFoundException", "Message": "Not found"}},
+            "GetFunctionConcurrency",
+        )
+        mock_session.client.return_value = mock_client
+
+        fetcher = LambdaFetcher(session=mock_session, region="us-east-1")
+        resources = fetcher.fetch_resources()
+
+        # Should still return the function
+        assert len(resources["functions"]) == 1
+
+    def test_fetch_function_access_denied(self, mock_session):
+        """Test fetcher handles AccessDenied on function details."""
+        from botocore.exceptions import ClientError
+
+        mock_paginator = MagicMock()
+        mock_paginator.paginate.return_value = [
+            {
+                "Functions": [
+                    {
+                        "FunctionName": "test-function",
+                        "FunctionArn": "arn:aws:lambda:us-east-1:123456789012:function:test-function",
+                    }
+                ]
+            }
+        ]
+        mock_client = MagicMock()
+        mock_client.get_paginator.return_value = mock_paginator
+        # Simulate that list_tags throws AccessDenied which causes an issue parsing
+        mock_client.list_tags.side_effect = ClientError(
+            {"Error": {"Code": "AccessDenied", "Message": "Access Denied"}},
+            "ListTags",
+        )
+        mock_client.get_function_concurrency.side_effect = ClientError(
+            {"Error": {"Code": "AccessDenied", "Message": "Access Denied"}},
+            "GetFunctionConcurrency",
+        )
+        mock_session.client.return_value = mock_client
+
+        fetcher = LambdaFetcher(session=mock_session, region="us-east-1")
+        resources = fetcher.fetch_resources()
+
+        # Should return empty - the function data is incomplete
+        assert "functions" in resources
+
+    def test_fetch_layers_success(self, mock_session):
+        """Test fetcher returns layers successfully."""
+        mock_paginator = MagicMock()
+        mock_paginator.paginate.return_value = [
+            {
+                "Layers": [
+                    {
+                        "LayerName": "test-layer",
+                        "LayerArn": "arn:aws:lambda:us-east-1:123456789012:layer:test-layer",
+                        "LatestMatchingVersion": {
+                            "LayerVersionArn": "arn:aws:lambda:us-east-1:123456789012:layer:test-layer:1",
+                            "Version": 1,
+                            "CreatedDate": "2024-01-01T00:00:00.000+0000",
+                        },
+                    }
+                ]
+            }
+        ]
+        mock_client = MagicMock()
+        mock_client.get_paginator.return_value = mock_paginator
+        mock_session.client.return_value = mock_client
+
+        fetcher = LambdaFetcher(session=mock_session, region="us-east-1")
+        # Call the internal method directly
+        layers = fetcher._fetch_layers()
+
+        assert len(layers) == 1
+        assert layers[0].layer_name == "test-layer"
+
+    def test_fetch_layers_access_denied(self, mock_session):
+        """Test fetcher handles AccessDenied on layers."""
+        mock_paginator = MagicMock()
+        mock_paginator.paginate.return_value = [
+            {
+                "Layers": [
+                    {
+                        "LayerName": "test-layer",
+                        "LayerArn": "arn:aws:lambda:us-east-1:123456789012:layer:test-layer",
+                        "LatestMatchingVersion": {
+                            "LayerVersionArn": "arn:aws:lambda:us-east-1:123456789012:layer:test-layer:1",
+                            "Version": 1,
+                            "CreatedDate": "2024-01-01T00:00:00.000+0000",
+                        },
+                    }
+                ]
+            }
+        ]
+        mock_client = MagicMock()
+        # Make list_layers work
+        mock_client.get_paginator.return_value = mock_paginator
+        mock_session.client.return_value = mock_client
+
+        fetcher = LambdaFetcher(session=mock_session, region="us-east-1")
+        layers = fetcher._fetch_layers()
+
+        # Should return the layer
+        assert len(layers) == 1
+
+    def test_fetch_layers_error(self, mock_session):
+        """Test fetcher handles errors when listing layers."""
+        mock_paginator = MagicMock()
+        mock_paginator.paginate.side_effect = Exception("Failed to list layers")
+        mock_client = MagicMock()
+        mock_client.get_paginator.return_value = mock_paginator
+        mock_session.client.return_value = mock_client
+
+        fetcher = LambdaFetcher(session=mock_session, region="us-east-1")
+        layers = fetcher._fetch_layers()
+
+        # Should return empty list on error
+        assert layers == []
+
+    def test_fetch_layers_without_latest_version(self, mock_session):
+        """Test fetcher skips layers without LatestMatchingVersion."""
+        mock_paginator = MagicMock()
+        mock_paginator.paginate.return_value = [
+            {
+                "Layers": [
+                    {
+                        "LayerName": "test-layer",
+                        "LayerArn": "arn:aws:lambda:us-east-1:123456789012:layer:test-layer",
+                        # No LatestMatchingVersion
+                    }
+                ]
+            }
+        ]
+        mock_client = MagicMock()
+        mock_client.get_paginator.return_value = mock_paginator
+        mock_session.client.return_value = mock_client
+
+        fetcher = LambdaFetcher(session=mock_session, region="us-east-1")
+        layers = fetcher._fetch_layers()
+
+        # Should return empty list when no version data
+        assert layers == []

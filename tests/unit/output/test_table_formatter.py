@@ -400,3 +400,89 @@ class TestTableFormatterExtractResourceInfo:
         result = formatter._extract_resource_info(data)
 
         assert len(result) <= 5
+
+
+class TestTableFormatterErrorHandling:
+    """Tests for error handling in TableFormatter."""
+
+    def test_format_raises_on_error(self, sample_report):
+        """Test format raises exception on formatting error."""
+        from unittest.mock import patch
+
+        formatter = TableFormatter()
+
+        # Mock a method to cause an error during formatting
+        with patch.object(
+            formatter, "_render_report", side_effect=ValueError("Mock error")
+        ):
+            with pytest.raises(ValueError, match="Mock error"):
+                formatter.format(sample_report)
+
+    def test_write_to_file_os_error(self, sample_report, tmp_path):
+        """Test write_to_file handles OSError."""
+        from unittest.mock import patch
+
+        formatter = TableFormatter()
+        filepath = tmp_path / "report.txt"
+
+        with patch("builtins.open", side_effect=OSError("Permission denied")):
+            with pytest.raises(OSError):
+                formatter.write_to_file(sample_report, filepath)
+
+
+class TestTableFormatterNoChanges:
+    """Tests for formatting with no changes."""
+
+    def test_format_report_no_changes(self):
+        """Test formatting a report with no changes."""
+        empty_resource_comparison = ResourceTypeComparison(
+            resource_type="buckets",
+            account1_count=5,
+            account2_count=5,
+            added=[],
+            removed=[],
+            modified=[],
+            unchanged_count=5,
+        )
+
+        service_result = ServiceComparisonResult(
+            service_name="s3",
+            resource_comparisons={"buckets": empty_resource_comparison},
+            errors=[],
+            execution_time_seconds=1.0,
+        )
+
+        report = ComparisonReport(
+            account1_id="123456789012",
+            account2_id="987654321098",
+            region="us-east-1",
+            services_compared=["s3"],
+            results=[service_result],
+            summary=ReportSummary(
+                total_services_compared=1,
+                total_services_with_changes=0,
+                total_changes=0,
+                total_resources_account1=5,
+                total_resources_account2=5,
+                execution_time_seconds=1.0,
+            ),
+        )
+
+        formatter = TableFormatter(use_colors=False)
+        result = formatter.format(report)
+
+        assert "0" in result  # No changes
+        assert isinstance(result, str)
+
+
+class TestTableFormatterShowUnchanged:
+    """Tests for show_unchanged option."""
+
+    def test_format_with_show_unchanged(self, sample_report):
+        """Test formatting with unchanged resources shown."""
+        formatter = TableFormatter(use_colors=False, show_unchanged=True)
+        result = formatter.format(sample_report)
+
+        # Should still produce valid output
+        assert isinstance(result, str)
+        assert "SUMMARY" in result

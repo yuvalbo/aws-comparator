@@ -5,13 +5,14 @@ This module implements fetching of S3 bucket resources and their configurations.
 """
 
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from botocore.exceptions import ClientError
 
-from aws_comparator.services.base import BaseServiceFetcher
+from aws_comparator.core.registry import ServiceRegistry
 from aws_comparator.models.common import AWSResource
 from aws_comparator.models.s3 import S3Bucket
-from aws_comparator.core.registry import ServiceRegistry
+from aws_comparator.services.base import BaseServiceFetcher
 
 
 @ServiceRegistry.register(
@@ -46,7 +47,7 @@ class S3Fetcher(BaseServiceFetcher):
         """
         return self.session.client('s3', region_name=self.region)
 
-    def fetch_resources(self) -> Dict[str, List[AWSResource]]:
+    def fetch_resources(self) -> dict[str, list[AWSResource]]:
         """
         Fetch all S3 resources.
 
@@ -57,7 +58,7 @@ class S3Fetcher(BaseServiceFetcher):
             'buckets': self._safe_fetch('buckets', self._fetch_buckets)
         }
 
-    def get_resource_types(self) -> List[str]:
+    def get_resource_types(self) -> list[str]:
         """
         Get list of resource types handled by this fetcher.
 
@@ -66,14 +67,17 @@ class S3Fetcher(BaseServiceFetcher):
         """
         return ['buckets']
 
-    def _fetch_buckets(self) -> List[S3Bucket]:
+    def _fetch_buckets(self) -> list[S3Bucket]:
         """
         Fetch all S3 buckets and their configurations.
 
         Returns:
             List of S3Bucket resources
         """
-        buckets: List[S3Bucket] = []
+        buckets: list[S3Bucket] = []
+
+        if self.client is None:
+            return buckets
 
         # List all buckets
         try:
@@ -112,7 +116,7 @@ class S3Fetcher(BaseServiceFetcher):
 
         return buckets
 
-    def _fetch_bucket_details(self, bucket_name: str) -> Dict[str, Any]:
+    def _fetch_bucket_details(self, bucket_name: str) -> dict[str, Any]:
         """
         Fetch detailed configuration for a specific bucket.
 
@@ -122,12 +126,17 @@ class S3Fetcher(BaseServiceFetcher):
         Returns:
             Dictionary containing all bucket configuration data
         """
-        details: Dict[str, Any] = {}
+        details: dict[str, Any] = {}
+
+        if self.client is None:
+            return details
 
         # Fetch location
         try:
             location = self.client.get_bucket_location(Bucket=bucket_name)
-            details['LocationConstraint'] = location.get('LocationConstraint') or 'us-east-1'
+            details['LocationConstraint'] = (
+                location.get('LocationConstraint') or 'us-east-1'
+            )
         except ClientError:
             pass
 
@@ -141,29 +150,36 @@ class S3Fetcher(BaseServiceFetcher):
         # Fetch encryption
         try:
             encryption = self.client.get_bucket_encryption(Bucket=bucket_name)
-            details['Encryption'] = encryption.get('ServerSideEncryptionConfiguration', {})
+            details['Encryption'] = encryption.get(
+                'ServerSideEncryptionConfiguration', {}
+            )
         except ClientError as e:
             # Encryption may not be configured
-            if e.response.get('Error', {}).get('Code') != 'ServerSideEncryptionConfigurationNotFoundError':
+            error_code = e.response.get('Error', {}).get('Code')
+            if error_code != 'ServerSideEncryptionConfigurationNotFoundError':
                 self.logger.debug(f"No encryption configured for {bucket_name}")
 
         # Fetch public access block
         try:
             public_access = self.client.get_public_access_block(Bucket=bucket_name)
-            details['PublicAccessBlock'] = public_access.get('PublicAccessBlockConfiguration', {})
+            details['PublicAccessBlock'] = public_access.get(
+                'PublicAccessBlockConfiguration', {}
+            )
         except ClientError:
             pass
 
         # Fetch logging
         try:
-            logging = self.client.get_bucket_logging(Bucket=bucket_name)
-            details['Logging'] = logging
+            logging_config = self.client.get_bucket_logging(Bucket=bucket_name)
+            details['Logging'] = logging_config
         except ClientError:
             pass
 
         # Fetch lifecycle configuration
         try:
-            lifecycle = self.client.get_bucket_lifecycle_configuration(Bucket=bucket_name)
+            lifecycle = self.client.get_bucket_lifecycle_configuration(
+                Bucket=bucket_name
+            )
             details['Lifecycle'] = lifecycle
         except ClientError as e:
             # Lifecycle may not be configured
@@ -176,7 +192,8 @@ class S3Fetcher(BaseServiceFetcher):
             details['Replication'] = replication.get('ReplicationConfiguration', {})
         except ClientError as e:
             # Replication may not be configured
-            if e.response.get('Error', {}).get('Code') != 'ReplicationConfigurationNotFoundError':
+            error_code = e.response.get('Error', {}).get('Code')
+            if error_code != 'ReplicationConfigurationNotFoundError':
                 self.logger.debug(f"No replication configured for {bucket_name}")
 
         # Fetch website configuration
@@ -201,7 +218,11 @@ class S3Fetcher(BaseServiceFetcher):
         try:
             policy = self.client.get_bucket_policy(Bucket=bucket_name)
             policy_text = policy.get('Policy', '{}')
-            details['Policy'] = json.loads(policy_text) if isinstance(policy_text, str) else policy_text
+            details['Policy'] = (
+                json.loads(policy_text)
+                if isinstance(policy_text, str)
+                else policy_text
+            )
         except ClientError as e:
             # Policy may not exist
             if e.response.get('Error', {}).get('Code') != 'NoSuchBucketPolicy':
@@ -218,16 +239,21 @@ class S3Fetcher(BaseServiceFetcher):
 
         # Fetch object lock
         try:
-            object_lock = self.client.get_object_lock_configuration(Bucket=bucket_name)
+            object_lock = self.client.get_object_lock_configuration(
+                Bucket=bucket_name
+            )
             details['ObjectLock'] = object_lock.get('ObjectLockConfiguration', {})
         except ClientError as e:
             # Object lock may not be configured
-            if e.response.get('Error', {}).get('Code') != 'ObjectLockConfigurationNotFoundError':
+            error_code = e.response.get('Error', {}).get('Code')
+            if error_code != 'ObjectLockConfigurationNotFoundError':
                 self.logger.debug(f"No object lock for {bucket_name}")
 
         # Fetch request payment
         try:
-            request_payment = self.client.get_bucket_request_payment(Bucket=bucket_name)
+            request_payment = self.client.get_bucket_request_payment(
+                Bucket=bucket_name
+            )
             details['RequestPayment'] = request_payment
         except ClientError:
             pass

@@ -5,9 +5,9 @@ This module defines the abstract base class that all service-specific
 fetchers must implement, ensuring a consistent interface across services.
 """
 
-from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
 import logging
+from abc import ABC, abstractmethod
+from typing import Any, Callable, Optional
 
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
@@ -40,7 +40,7 @@ class BaseServiceFetcher(ABC):
         ...     def _create_client(self):
         ...         return self.session.client('ec2', region_name=self.region)
         ...
-        ...     def fetch_resources(self) -> Dict[str, List[AWSResource]]:
+        ...     def fetch_resources(self) -> dict[str, list[AWSResource]]:
         ...         return {
         ...             'instances': self._fetch_instances(),
         ...             'security_groups': self._fetch_security_groups(),
@@ -60,13 +60,17 @@ class BaseServiceFetcher(ABC):
         """
         self.session = session
         self.region = region
-        self.logger = logging.getLogger(f"{self.__class__.__module__}.{self.__class__.__name__}")
+        self.logger = logging.getLogger(
+            f"{self.__class__.__module__}.{self.__class__.__name__}"
+        )
         self.client: Optional[Any] = None
 
         # Initialize the client
         try:
             self.client = self._create_client()
-            self.logger.debug(f"Initialized {self.SERVICE_NAME} fetcher for region {region}")
+            self.logger.debug(
+                f"Initialized {self.SERVICE_NAME} fetcher for region {region}"
+            )
         except NoCredentialsError as e:
             self.logger.error(f"No credentials available: {e}")
             raise
@@ -92,7 +96,7 @@ class BaseServiceFetcher(ABC):
         pass
 
     @abstractmethod
-    def fetch_resources(self) -> Dict[str, List[AWSResource]]:
+    def fetch_resources(self) -> dict[str, list[AWSResource]]:
         """
         Fetch all resources for this service.
 
@@ -111,7 +115,7 @@ class BaseServiceFetcher(ABC):
         pass
 
     @abstractmethod
-    def get_resource_types(self) -> List[str]:
+    def get_resource_types(self) -> list[str]:
         """
         Return list of resource types this fetcher handles.
 
@@ -128,7 +132,7 @@ class BaseServiceFetcher(ABC):
         operation_name: str,
         result_key: Optional[str] = None,
         **kwargs: Any
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Generic pagination helper for AWS API calls.
 
@@ -162,7 +166,7 @@ class BaseServiceFetcher(ABC):
             # Check if paginator is available
             if self.client.can_paginate(operation_name):
                 paginator = self.client.get_paginator(operation_name)
-                results: List[Dict[str, Any]] = []
+                results: list[dict[str, Any]] = []
 
                 self.logger.debug(f"Paginating {operation_name} with params: {kwargs}")
 
@@ -207,24 +211,30 @@ class BaseServiceFetcher(ABC):
                     self.SERVICE_NAME,
                     operation_name,
                     f"{self.SERVICE_NAME}:{operation_name}"
-                )
-            elif error_code in ['Throttling', 'RequestLimitExceeded', 'TooManyRequestsException']:
-                raise ServiceThrottlingError(self.SERVICE_NAME, operation_name)
+                ) from e
+            elif error_code in [
+                'Throttling', 'RequestLimitExceeded', 'TooManyRequestsException'
+            ]:
+                raise ServiceThrottlingError(
+                    self.SERVICE_NAME, operation_name
+                ) from e
             else:
                 raise DataFetchError(
                     self.SERVICE_NAME,
                     operation_name,
                     f"{error_code}: {e}"
-                )
+                ) from e
 
         except Exception as e:
             raise DataFetchError(
                 self.SERVICE_NAME,
                 operation_name,
                 str(e)
-            )
+            ) from e
 
-    def _normalize_tags(self, tags: Optional[List[Dict[str, str]]]) -> Dict[str, str]:
+    def _normalize_tags(
+        self, tags: Optional[list[dict[str, str]]]
+    ) -> dict[str, str]:
         """
         Normalize AWS tags to consistent dictionary format.
 
@@ -238,14 +248,14 @@ class BaseServiceFetcher(ABC):
             Dictionary mapping tag keys to values
 
         Example:
-            >>> tags = [{'Key': 'Environment', 'Value': 'prod'}, {'Key': 'Team', 'Value': 'backend'}]
+            >>> tags = [{'Key': 'Environment', 'Value': 'prod'}]
             >>> self._normalize_tags(tags)
-            {'Environment': 'prod', 'Team': 'backend'}
+            {'Environment': 'prod'}
         """
         if not tags:
             return {}
 
-        normalized: Dict[str, str] = {}
+        normalized: dict[str, str] = {}
         for tag in tags:
             # Handle both 'Key'/'Value' and 'key'/'value' formats
             key = tag.get('Key') or tag.get('key', '')
@@ -259,8 +269,8 @@ class BaseServiceFetcher(ABC):
     def _safe_fetch(
         self,
         resource_type: str,
-        fetch_func: callable
-    ) -> List[AWSResource]:
+        fetch_func: Callable[[], list[Any]]
+    ) -> list[AWSResource]:
         """
         Safely execute a fetch function with error handling.
 
@@ -303,7 +313,10 @@ class BaseServiceFetcher(ABC):
 
     def __str__(self) -> str:
         """Return string representation of fetcher."""
-        return f"{self.__class__.__name__}(service={self.SERVICE_NAME}, region={self.region})"
+        return (
+            f"{self.__class__.__name__}"
+            f"(service={self.SERVICE_NAME}, region={self.region})"
+        )
 
     def __repr__(self) -> str:
         """Return detailed representation for debugging."""

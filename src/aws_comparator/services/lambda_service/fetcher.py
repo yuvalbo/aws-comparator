@@ -4,13 +4,14 @@ AWS Lambda service fetcher.
 This module implements fetching of Lambda function and layer resources.
 """
 
-from typing import Any, Dict, List
+from typing import Any
+
 from botocore.exceptions import ClientError
 
-from aws_comparator.services.base import BaseServiceFetcher
+from aws_comparator.core.registry import ServiceRegistry
 from aws_comparator.models.common import AWSResource
 from aws_comparator.models.lambda_svc import LambdaFunction, LambdaLayer
-from aws_comparator.core.registry import ServiceRegistry
+from aws_comparator.services.base import BaseServiceFetcher
 
 
 @ServiceRegistry.register(
@@ -41,7 +42,7 @@ class LambdaFetcher(BaseServiceFetcher):
         """
         return self.session.client('lambda', region_name=self.region)
 
-    def fetch_resources(self) -> Dict[str, List[AWSResource]]:
+    def fetch_resources(self) -> dict[str, list[AWSResource]]:
         """
         Fetch all Lambda resources.
 
@@ -53,7 +54,7 @@ class LambdaFetcher(BaseServiceFetcher):
             'layers': self._safe_fetch('layers', self._fetch_layers)
         }
 
-    def get_resource_types(self) -> List[str]:
+    def get_resource_types(self) -> list[str]:
         """
         Get list of resource types handled by this fetcher.
 
@@ -62,14 +63,17 @@ class LambdaFetcher(BaseServiceFetcher):
         """
         return ['functions', 'layers']
 
-    def _fetch_functions(self) -> List[LambdaFunction]:
+    def _fetch_functions(self) -> list[LambdaFunction]:
         """
         Fetch all Lambda functions and their configurations.
 
         Returns:
             List of LambdaFunction resources
         """
-        functions: List[LambdaFunction] = []
+        functions: list[LambdaFunction] = []
+
+        if self.client is None:
+            return functions
 
         try:
             # Use pagination to list all functions
@@ -82,7 +86,7 @@ class LambdaFetcher(BaseServiceFetcher):
                     function_name = function_data['FunctionName']
 
                     # Get function tags
-                    tags = {}
+                    tags: dict[str, str] = {}
                     try:
                         tag_response = self.client.list_tags(
                             Resource=function_data['FunctionArn']
@@ -124,18 +128,20 @@ class LambdaFetcher(BaseServiceFetcher):
                         )
 
         except Exception as e:
-            self.logger.error(f"Failed to list Lambda functions: {e}", exc_info=True)
+            self.logger.error(
+                f"Failed to list Lambda functions: {e}", exc_info=True
+            )
 
         return functions
 
-    def _fetch_layers(self) -> List[LambdaLayer]:
+    def _fetch_layers(self) -> list[LambdaLayer]:
         """
         Fetch all Lambda layers and their versions.
 
         Returns:
             List of LambdaLayer resources
         """
-        layers: List[LambdaLayer] = []
+        layers: list[LambdaLayer] = []
 
         try:
             # List all layers
@@ -175,6 +181,8 @@ class LambdaFetcher(BaseServiceFetcher):
                         )
 
         except Exception as e:
-            self.logger.error(f"Failed to list Lambda layers: {e}", exc_info=True)
+            self.logger.error(
+                f"Failed to list Lambda layers: {e}", exc_info=True
+            )
 
         return layers

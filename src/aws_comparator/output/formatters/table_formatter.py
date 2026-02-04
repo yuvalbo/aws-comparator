@@ -10,7 +10,7 @@ import logging
 import re
 from io import StringIO
 from pathlib import Path
-from typing import Any
+from typing import Any, Union
 
 from rich.console import Console
 
@@ -105,7 +105,7 @@ class TableFormatter(BaseFormatter):
         self._account2_id: str = "Account 2"
 
     def format(
-        self, report: ComparisonReport | ServiceComparisonResult
+        self, report: Union[ComparisonReport, ServiceComparisonResult]
     ) -> str:
         """
         Format a comparison report as Rich output.
@@ -151,7 +151,7 @@ class TableFormatter(BaseFormatter):
 
     def write_to_file(
         self,
-        report: ComparisonReport | ServiceComparisonResult,
+        report: Union[ComparisonReport, ServiceComparisonResult],
         filepath: Path,
     ) -> None:
         """
@@ -205,7 +205,7 @@ class TableFormatter(BaseFormatter):
     def _render_report(
         self,
         console: Console,
-        report: ComparisonReport | ServiceComparisonResult,
+        report: Union[ComparisonReport, ServiceComparisonResult],
     ) -> None:
         """
         Render the complete report to the console.
@@ -240,7 +240,7 @@ class TableFormatter(BaseFormatter):
     def _render_header(
         self,
         console: Console,
-        report: ComparisonReport | ServiceComparisonResult,
+        report: Union[ComparisonReport, ServiceComparisonResult],
     ) -> None:
         """
         Render the report header with account and region info.
@@ -281,7 +281,7 @@ class TableFormatter(BaseFormatter):
     def _render_summary(
         self,
         console: Console,
-        report: ComparisonReport | ServiceComparisonResult,
+        report: Union[ComparisonReport, ServiceComparisonResult],
     ) -> None:
         """
         Render the summary statistics section.

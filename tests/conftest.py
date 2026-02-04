@@ -4,14 +4,13 @@ Pytest configuration and shared fixtures.
 This module provides common fixtures and configuration for all tests.
 """
 
-import pytest
 from pathlib import Path
-from typing import Dict, Any
 
-from aws_comparator.core.config import ComparisonConfig, AccountConfig
+import pytest
+
+from aws_comparator.core.config import AccountConfig, ComparisonConfig
 from aws_comparator.models.comparison import (
     ComparisonReport,
-    ServiceComparisonResult,
     ReportSummary,
 )
 
@@ -37,7 +36,9 @@ def account2_config() -> AccountConfig:
 
 
 @pytest.fixture
-def comparison_config(account1_config: AccountConfig, account2_config: AccountConfig) -> ComparisonConfig:
+def comparison_config(
+    account1_config: AccountConfig, account2_config: AccountConfig
+) -> ComparisonConfig:
     """Fixture for comparison configuration."""
     return ComparisonConfig(
         account1=account1_config,
@@ -62,7 +63,9 @@ def sample_summary() -> ReportSummary:
 
 
 @pytest.fixture
-def sample_report(comparison_config: ComparisonConfig, sample_summary: ReportSummary) -> ComparisonReport:
+def sample_report(
+    comparison_config: ComparisonConfig, sample_summary: ReportSummary
+) -> ComparisonReport:
     """Fixture for comparison report."""
     return ComparisonReport(
         account1_id=comparison_config.account1.account_id,

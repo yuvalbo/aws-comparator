@@ -6,8 +6,9 @@ This module defines strongly-typed models for S3 buckets and related resources.
 
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Any
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from typing import Any, Optional
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from aws_comparator.models.common import AWSResource
 
@@ -38,9 +39,15 @@ class PublicAccessBlockConfiguration(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     block_public_acls: bool = Field(default=False, description="Block public ACLs")
-    ignore_public_acls: bool = Field(default=False, description="Ignore public ACLs")
-    block_public_policy: bool = Field(default=False, description="Block public policy")
-    restrict_public_buckets: bool = Field(default=False, description="Restrict public buckets")
+    ignore_public_acls: bool = Field(
+        default=False, description="Ignore public ACLs"
+    )
+    block_public_policy: bool = Field(
+        default=False, description="Block public policy"
+    )
+    restrict_public_buckets: bool = Field(
+        default=False, description="Restrict public buckets"
+    )
 
 
 class BucketEncryption(BaseModel):
@@ -51,7 +58,9 @@ class BucketEncryption(BaseModel):
         ...,
         description="Server-side encryption algorithm"
     )
-    kms_master_key_id: Optional[str] = Field(None, description="KMS key ID for encryption")
+    kms_master_key_id: Optional[str] = Field(
+        None, description="KMS key ID for encryption"
+    )
     bucket_key_enabled: bool = Field(default=False, description="Bucket key enabled")
 
 
@@ -64,7 +73,9 @@ class LifecycleRule(BaseModel):
     prefix: Optional[str] = Field(None, description="Object key prefix")
     expiration_days: Optional[int] = Field(None, description="Days until expiration")
     transition_days: Optional[int] = Field(None, description="Days until transition")
-    transition_storage_class: Optional[str] = Field(None, description="Target storage class")
+    transition_storage_class: Optional[str] = Field(
+        None, description="Target storage class"
+    )
 
 
 class ReplicationRule(BaseModel):
@@ -75,7 +86,9 @@ class ReplicationRule(BaseModel):
     status: str = Field(..., description="Rule status (Enabled/Disabled)")
     priority: Optional[int] = Field(None, description="Rule priority")
     destination_bucket: str = Field(..., description="Destination bucket ARN")
-    destination_storage_class: Optional[str] = Field(None, description="Destination storage class")
+    destination_storage_class: Optional[str] = Field(
+        None, description="Destination storage class"
+    )
 
 
 class S3Bucket(AWSResource):
@@ -93,7 +106,9 @@ class S3Bucket(AWSResource):
     # Location and ownership
     location: Optional[str] = Field(None, description="Bucket location constraint")
     owner_id: Optional[str] = Field(None, description="Bucket owner ID")
-    owner_display_name: Optional[str] = Field(None, description="Bucket owner display name")
+    owner_display_name: Optional[str] = Field(
+        None, description="Bucket owner display name"
+    )
 
     # Versioning
     versioning_status: BucketVersioningStatus = Field(
@@ -103,7 +118,9 @@ class S3Bucket(AWSResource):
     mfa_delete: Optional[str] = Field(None, description="MFA delete status")
 
     # Encryption
-    encryption: Optional[BucketEncryption] = Field(None, description="Encryption configuration")
+    encryption: Optional[BucketEncryption] = Field(
+        None, description="Encryption configuration"
+    )
 
     # Public access
     public_access_block: Optional[PublicAccessBlockConfiguration] = Field(
@@ -113,29 +130,41 @@ class S3Bucket(AWSResource):
 
     # Logging
     logging_enabled: bool = Field(default=False, description="Access logging enabled")
-    logging_target_bucket: Optional[str] = Field(None, description="Logging target bucket")
-    logging_target_prefix: Optional[str] = Field(None, description="Logging target prefix")
+    logging_target_bucket: Optional[str] = Field(
+        None, description="Logging target bucket"
+    )
+    logging_target_prefix: Optional[str] = Field(
+        None, description="Logging target prefix"
+    )
 
     # Lifecycle
-    lifecycle_rules: List[LifecycleRule] = Field(
+    lifecycle_rules: list[LifecycleRule] = Field(
         default_factory=list,
         description="Lifecycle rules"
     )
 
     # Replication
-    replication_rules: List[ReplicationRule] = Field(
+    replication_rules: list[ReplicationRule] = Field(
         default_factory=list,
         description="Replication rules"
     )
 
     # Website hosting
-    website_enabled: bool = Field(default=False, description="Static website hosting enabled")
-    website_index_document: Optional[str] = Field(None, description="Website index document")
-    website_error_document: Optional[str] = Field(None, description="Website error document")
+    website_enabled: bool = Field(
+        default=False, description="Static website hosting enabled"
+    )
+    website_index_document: Optional[str] = Field(
+        None, description="Website index document"
+    )
+    website_error_document: Optional[str] = Field(
+        None, description="Website error document"
+    )
 
     # Policies
-    policy: Optional[Dict[str, Any]] = Field(None, description="Bucket policy document")
-    cors_rules: List[Dict[str, Any]] = Field(
+    policy: Optional[dict[str, Any]] = Field(
+        None, description="Bucket policy document"
+    )
+    cors_rules: list[dict[str, Any]] = Field(
         default_factory=list,
         description="CORS configuration rules"
     )
@@ -171,8 +200,8 @@ class S3Bucket(AWSResource):
     @classmethod
     def from_aws_response(
         cls,
-        bucket_data: Dict[str, Any],
-        additional_data: Optional[Dict[str, Any]] = None
+        bucket_data: dict[str, Any],
+        additional_data: Optional[dict[str, Any]] = None
     ) -> "S3Bucket":
         """
         Create S3Bucket instance from AWS API response.
@@ -187,7 +216,7 @@ class S3Bucket(AWSResource):
         additional_data = additional_data or {}
 
         # Build the bucket model
-        bucket_dict = {
+        bucket_dict: dict[str, Any] = {
             'name': bucket_data.get('Name'),
             'creation_date': bucket_data.get('CreationDate'),
             'arn': f"arn:aws:s3:::{bucket_data.get('Name')}",
@@ -228,11 +257,15 @@ class S3Bucket(AWSResource):
 
         # Add logging
         if 'Logging' in additional_data:
-            logging = additional_data['Logging'].get('LoggingEnabled', {})
-            if logging:
+            logging_config = additional_data['Logging'].get('LoggingEnabled', {})
+            if logging_config:
                 bucket_dict['logging_enabled'] = True
-                bucket_dict['logging_target_bucket'] = logging.get('TargetBucket')
-                bucket_dict['logging_target_prefix'] = logging.get('TargetPrefix')
+                bucket_dict['logging_target_bucket'] = logging_config.get(
+                    'TargetBucket'
+                )
+                bucket_dict['logging_target_prefix'] = logging_config.get(
+                    'TargetPrefix'
+                )
 
         # Add lifecycle rules
         if 'Lifecycle' in additional_data:
@@ -243,8 +276,14 @@ class S3Bucket(AWSResource):
                     'status': rule.get('Status'),
                     'prefix': rule.get('Prefix'),
                     'expiration_days': rule.get('Expiration', {}).get('Days'),
-                    'transition_days': rule.get('Transitions', [{}])[0].get('Days') if rule.get('Transitions') else None,
-                    'transition_storage_class': rule.get('Transitions', [{}])[0].get('StorageClass') if rule.get('Transitions') else None
+                    'transition_days': (
+                        rule.get('Transitions', [{}])[0].get('Days')
+                        if rule.get('Transitions') else None
+                    ),
+                    'transition_storage_class': (
+                        rule.get('Transitions', [{}])[0].get('StorageClass')
+                        if rule.get('Transitions') else None
+                    )
                 }
                 for rule in rules
             ]
@@ -258,7 +297,9 @@ class S3Bucket(AWSResource):
                     'status': rule.get('Status'),
                     'priority': rule.get('Priority'),
                     'destination_bucket': rule.get('Destination', {}).get('Bucket'),
-                    'destination_storage_class': rule.get('Destination', {}).get('StorageClass')
+                    'destination_storage_class': rule.get(
+                        'Destination', {}
+                    ).get('StorageClass')
                 }
                 for rule in rules
             ]
@@ -267,8 +308,12 @@ class S3Bucket(AWSResource):
         if 'Website' in additional_data:
             website = additional_data['Website']
             bucket_dict['website_enabled'] = True
-            bucket_dict['website_index_document'] = website.get('IndexDocument', {}).get('Suffix')
-            bucket_dict['website_error_document'] = website.get('ErrorDocument', {}).get('Key')
+            bucket_dict['website_index_document'] = website.get(
+                'IndexDocument', {}
+            ).get('Suffix')
+            bucket_dict['website_error_document'] = website.get(
+                'ErrorDocument', {}
+            ).get('Key')
 
         # Add tags
         if 'Tags' in additional_data:
@@ -285,11 +330,15 @@ class S3Bucket(AWSResource):
 
         # Add object lock
         if 'ObjectLock' in additional_data:
-            bucket_dict['object_lock_enabled'] = additional_data['ObjectLock'].get('ObjectLockEnabled') == 'Enabled'
+            bucket_dict['object_lock_enabled'] = (
+                additional_data['ObjectLock'].get('ObjectLockEnabled') == 'Enabled'
+            )
 
         # Add requester pays
         if 'RequestPayment' in additional_data:
-            bucket_dict['requester_pays'] = additional_data['RequestPayment'].get('Payer') == 'Requester'
+            bucket_dict['requester_pays'] = (
+                additional_data['RequestPayment'].get('Payer') == 'Requester'
+            )
 
         return cls(**bucket_dict)
 

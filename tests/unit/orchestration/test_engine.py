@@ -535,3 +535,113 @@ class TestProgressCallback:
         orch.compare_accounts()
 
         callback.assert_called()
+
+
+class TestCreateSessionClientError:
+    """Tests for _create_session client error handling."""
+
+    @patch("aws_comparator.orchestration.engine.boto3.Session")
+    def test_create_session_client_error_invalid_token(
+        self, mock_session_class, orchestrator, account1_config
+    ):
+        """Test creating session with InvalidClientTokenId error."""
+        mock_session = MagicMock()
+        mock_session_class.return_value = mock_session
+        mock_sts = MagicMock()
+        mock_session.client.return_value = mock_sts
+        mock_sts.get_caller_identity.side_effect = ClientError(
+            {"Error": {"Code": "InvalidClientTokenId", "Message": "Invalid token"}},
+            "GetCallerIdentity",
+        )
+
+        with pytest.raises(InvalidCredentialsError):
+            orchestrator._create_session(account1_config)
+
+    @patch("aws_comparator.orchestration.engine.boto3.Session")
+    def test_create_session_client_error_signature_mismatch(
+        self, mock_session_class, orchestrator, account1_config
+    ):
+        """Test creating session with SignatureDoesNotMatch error."""
+        mock_session = MagicMock()
+        mock_session_class.return_value = mock_session
+        mock_sts = MagicMock()
+        mock_session.client.return_value = mock_sts
+        mock_sts.get_caller_identity.side_effect = ClientError(
+            {"Error": {"Code": "SignatureDoesNotMatch", "Message": "Signature mismatch"}},
+            "GetCallerIdentity",
+        )
+
+        with pytest.raises(InvalidCredentialsError):
+            orchestrator._create_session(account1_config)
+
+    @patch("aws_comparator.orchestration.engine.boto3.Session")
+    def test_create_session_client_error_other(
+        self, mock_session_class, orchestrator, account1_config
+    ):
+        """Test creating session with other ClientError is re-raised."""
+        mock_session = MagicMock()
+        mock_session_class.return_value = mock_session
+        mock_sts = MagicMock()
+        mock_session.client.return_value = mock_sts
+        mock_sts.get_caller_identity.side_effect = ClientError(
+            {"Error": {"Code": "ThrottlingException", "Message": "Throttled"}},
+            "GetCallerIdentity",
+        )
+
+        with pytest.raises(ClientError):
+            orchestrator._create_session(account1_config)
+
+
+class TestAssumeRoleWithSessionName:
+    """Tests for _assume_role with session name."""
+
+    def test_assume_role_with_session_name(self, orchestrator):
+        """Test role assumption with custom session name."""
+        mock_session = MagicMock()
+        mock_sts = MagicMock()
+        mock_session.client.return_value = mock_sts
+        mock_sts.assume_role.return_value = {
+            "Credentials": {
+                "AccessKeyId": "AKIA123",
+                "SecretAccessKey": "secret",
+                "SessionToken": "token",
+            }
+        }
+
+        config = AccountConfig(
+            account_id="123456789012",
+            profile=None,
+            role_arn="arn:aws:iam::123456789012:role/TestRole",
+            external_id=None,
+            session_name="CustomSessionName",
+            region="us-east-1",
+        )
+
+        with patch("aws_comparator.orchestration.engine.boto3.Session"):
+            orchestrator._assume_role(mock_session, config)
+
+            call_kwargs = mock_sts.assume_role.call_args[1]
+            assert call_kwargs["RoleSessionName"] == "CustomSessionName"
+
+
+class TestFetchServiceDataWithError:
+    """Tests for _fetch_service_data error path."""
+
+    @patch("aws_comparator.orchestration.engine.ServiceRegistry")
+    def test_fetch_service_data_with_generic_exception(
+        self, mock_registry, orchestrator
+    ):
+        """Test service data fetch with generic exception."""
+        mock_fetcher = MagicMock()
+        mock_fetcher.fetch_resources.side_effect = RuntimeError("Unexpected error")
+        mock_registry.get_fetcher.return_value = mock_fetcher
+
+        mock_session = MagicMock()
+        name, resources, error = orchestrator._fetch_service_data(
+            "s3", mock_session, "us-east-1"
+        )
+
+        assert name == "s3"
+        assert resources == {}
+        assert error is not None
+        assert "Unexpected error" in error

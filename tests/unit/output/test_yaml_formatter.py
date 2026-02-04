@@ -320,3 +320,43 @@ class TestYAMLFormatterUnicode:
         # Should be valid YAML
         parsed = yaml.safe_load(result)
         assert isinstance(parsed, dict)
+
+
+class TestYAMLFormatterErrorHandling:
+    """Tests for error handling in YAMLFormatter."""
+
+    def test_format_raises_on_error(self, sample_report):
+        """Test format raises exception on serialization error."""
+        from unittest.mock import patch
+
+        formatter = YAMLFormatter()
+
+        # Create a mock report that causes serialization to fail
+        with patch.object(
+            formatter, "_build_output_data", side_effect=ValueError("Mock error")
+        ):
+            with pytest.raises(ValueError, match="Mock error"):
+                formatter.format(sample_report)
+
+    def test_write_to_file_os_error(self, sample_report, tmp_path):
+        """Test write_to_file handles OSError."""
+        from unittest.mock import patch
+
+        formatter = YAMLFormatter()
+        filepath = tmp_path / "report.yaml"
+
+        with patch("builtins.open", side_effect=OSError("Permission denied")):
+            with pytest.raises(OSError):
+                formatter.write_to_file(sample_report, filepath)
+
+    def test_write_to_file_serialization_error(self, sample_report, tmp_path):
+        """Test write_to_file handles serialization errors."""
+        from unittest.mock import patch
+
+        formatter = YAMLFormatter()
+        filepath = tmp_path / "report.yaml"
+
+        # Patch yaml.dump to raise a serialization error
+        with patch("yaml.dump", side_effect=yaml.YAMLError("Not serializable")):
+            with pytest.raises(yaml.YAMLError):
+                formatter.write_to_file(sample_report, filepath)

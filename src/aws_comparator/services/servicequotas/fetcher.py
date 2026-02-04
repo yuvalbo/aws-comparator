@@ -5,7 +5,7 @@ This module implements fetching of service quotas for all services
 being compared by the AWS Account Comparator.
 """
 
-from typing import Any
+from typing import Any, Optional
 
 from botocore.exceptions import ClientError
 
@@ -255,7 +255,7 @@ class ServiceQuotasFetcher(BaseServiceFetcher):
         self,
         service_code: str,
         quota_code: str
-    ) -> ServiceQuota | None:
+    ) -> Optional[ServiceQuota]:
         """
         Get a specific quota by service and quota code.
 
@@ -266,6 +266,9 @@ class ServiceQuotasFetcher(BaseServiceFetcher):
         Returns:
             ServiceQuota instance, or None if not found
         """
+        if self.client is None:
+            return None
+
         try:
             response = self.client.get_service_quota(
                 ServiceCode=service_code,
@@ -275,6 +278,7 @@ class ServiceQuotasFetcher(BaseServiceFetcher):
             quota_data = response.get('Quota')
             if quota_data:
                 # Also fetch default value
+                default_value: Optional[float] = None
                 try:
                     default_response = self.client.get_aws_default_service_quota(
                         ServiceCode=service_code,
@@ -282,7 +286,7 @@ class ServiceQuotasFetcher(BaseServiceFetcher):
                     )
                     default_value = float(default_response['Quota']['Value'])
                 except ClientError:
-                    default_value = None
+                    pass
 
                 return ServiceQuota.from_aws_response(
                     quota_data,

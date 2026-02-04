@@ -364,5 +364,212 @@ class TestApplicationVersionModel:
         assert version.source_bundle is not None
 
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+class TestElasticBeanstalkFetcherErrorHandling:
+    """Tests for error handling in ElasticBeanstalkFetcher."""
+
+    def test_fetch_applications_client_error(self, session):
+        """Test fetcher handles client errors for applications."""
+        from unittest.mock import patch
+
+        fetcher = ElasticBeanstalkFetcher(session=session, region="us-east-1")
+
+        with patch.object(fetcher.client, "describe_applications") as mock_describe:
+            from botocore.exceptions import ClientError
+
+            mock_describe.side_effect = ClientError(
+                {"Error": {"Code": "AccessDenied", "Message": "Access Denied"}},
+                "DescribeApplications",
+            )
+
+            applications = fetcher._fetch_applications()
+
+            assert applications == []
+
+    def test_fetch_environments_client_error(self, session):
+        """Test fetcher handles client errors for environments."""
+        from unittest.mock import patch
+
+        fetcher = ElasticBeanstalkFetcher(session=session, region="us-east-1")
+
+        with patch.object(fetcher.client, "describe_environments") as mock_describe:
+            from botocore.exceptions import ClientError
+
+            mock_describe.side_effect = ClientError(
+                {"Error": {"Code": "AccessDenied", "Message": "Access Denied"}},
+                "DescribeEnvironments",
+            )
+
+            environments = fetcher._fetch_environments()
+
+            assert environments == []
+
+    def test_fetch_application_per_item_exception(self, session):
+        """Test fetcher handles exception for individual application."""
+        from unittest.mock import patch
+
+        fetcher = ElasticBeanstalkFetcher(session=session, region="us-east-1")
+
+        with patch.object(fetcher.client, "describe_applications") as mock_describe:
+            mock_describe.return_value = {
+                "Applications": [
+                    {
+                        "ApplicationName": "test-app",
+                        # Missing required fields to trigger exception
+                    }
+                ]
+            }
+
+            applications = fetcher._fetch_applications()
+            # Should handle the error gracefully
+            assert isinstance(applications, list)
+
+    def test_fetch_environments_per_item_exception(self, session):
+        """Test fetcher handles exception for individual environment."""
+        from unittest.mock import patch
+
+        fetcher = ElasticBeanstalkFetcher(session=session, region="us-east-1")
+
+        with patch.object(fetcher.client, "describe_environments") as mock_describe:
+            mock_describe.return_value = {
+                "Environments": [
+                    {
+                        "EnvironmentName": "test-env",
+                        # Minimal data
+                    }
+                ]
+            }
+
+            environments = fetcher._fetch_environments()
+            # Should handle gracefully
+            assert isinstance(environments, list)
+
+    def test_fetch_configuration_templates_with_templates(self, session):
+        """Test fetching configuration templates."""
+        from unittest.mock import patch
+
+        fetcher = ElasticBeanstalkFetcher(session=session, region="us-east-1")
+
+        with patch.object(fetcher.client, "describe_applications") as mock_apps:
+            mock_apps.return_value = {
+                "Applications": [
+                    {
+                        "ApplicationName": "test-app",
+                        "ConfigurationTemplates": ["template1"],
+                    }
+                ]
+            }
+
+            with patch.object(
+                fetcher.client, "describe_configuration_settings"
+            ) as mock_settings:
+                mock_settings.return_value = {
+                    "ConfigurationSettings": [
+                        {
+                            "TemplateName": "template1",
+                            "ApplicationName": "test-app",
+                            "SolutionStackName": "64bit Amazon Linux",
+                        }
+                    ]
+                }
+
+                templates = fetcher._fetch_configuration_templates()
+
+                assert len(templates) == 1
+
+    def test_fetch_configuration_templates_error(self, session):
+        """Test fetching templates handles errors."""
+        from unittest.mock import patch
+
+        fetcher = ElasticBeanstalkFetcher(session=session, region="us-east-1")
+
+        with patch.object(fetcher.client, "describe_applications") as mock_apps:
+            mock_apps.return_value = {
+                "Applications": [
+                    {
+                        "ApplicationName": "test-app",
+                        "ConfigurationTemplates": ["template1"],
+                    }
+                ]
+            }
+
+            with patch.object(
+                fetcher.client, "describe_configuration_settings"
+            ) as mock_settings:
+                from botocore.exceptions import ClientError
+
+                mock_settings.side_effect = ClientError(
+                    {"Error": {"Code": "AccessDenied", "Message": "Denied"}},
+                    "DescribeConfigurationSettings",
+                )
+
+                templates = fetcher._fetch_configuration_templates()
+
+                # Should return empty list on error
+                assert templates == []
+
+    def test_fetch_application_versions_with_versions(self, session):
+        """Test fetching application versions."""
+        from unittest.mock import patch
+
+        fetcher = ElasticBeanstalkFetcher(session=session, region="us-east-1")
+
+        with patch.object(fetcher.client, "describe_applications") as mock_apps:
+            mock_apps.return_value = {
+                "Applications": [
+                    {
+                        "ApplicationName": "test-app",
+                        "Versions": ["v1"],
+                    }
+                ]
+            }
+
+            with patch.object(
+                fetcher.client, "describe_application_versions"
+            ) as mock_versions:
+                mock_versions.return_value = {
+                    "ApplicationVersions": [
+                        {
+                            "ApplicationName": "test-app",
+                            "VersionLabel": "v1",
+                        }
+                    ]
+                }
+
+                versions = fetcher._fetch_application_versions()
+
+                assert len(versions) == 1
+
+    def test_fetch_application_versions_error(self, session):
+        """Test fetching versions handles errors."""
+        from unittest.mock import patch
+
+        fetcher = ElasticBeanstalkFetcher(session=session, region="us-east-1")
+
+        with patch.object(fetcher.client, "describe_applications") as mock_apps:
+            mock_apps.return_value = {
+                "Applications": [
+                    {
+                        "ApplicationName": "test-app",
+                        "Versions": ["v1"],
+                    }
+                ]
+            }
+
+            with patch.object(
+                fetcher.client, "describe_application_versions"
+            ) as mock_versions:
+                from botocore.exceptions import ClientError
+
+                mock_versions.side_effect = ClientError(
+                    {"Error": {"Code": "AccessDenied", "Message": "Denied"}},
+                    "DescribeApplicationVersions",
+                )
+
+                versions = fetcher._fetch_application_versions()
+
+                # Should return empty list on error
+                assert versions == []
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

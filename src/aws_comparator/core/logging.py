@@ -6,18 +6,16 @@ file rotation, and service-specific log namespaces.
 """
 
 import logging
-import sys
-from pathlib import Path
-from typing import Optional
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
+from typing import Optional, Union
 
 from rich.console import Console
 from rich.logging import RichHandler
 from rich.traceback import install as install_rich_traceback
 
 from aws_comparator.core.config import LogLevel
-
 
 # Install Rich traceback handler for better error display
 install_rich_traceback(show_locals=True, max_frames=10)
@@ -34,7 +32,9 @@ class ServiceLoggerAdapter(logging.LoggerAdapter):
     by service.
     """
 
-    def process(self, msg: str, kwargs: dict) -> tuple[str, dict]:
+    def process(
+        self, msg: str, kwargs: dict
+    ) -> tuple[str, dict]:  # type: ignore[type-arg]
         """
         Process log message to add service context.
 
@@ -45,7 +45,8 @@ class ServiceLoggerAdapter(logging.LoggerAdapter):
         Returns:
             Tuple of (modified_message, kwargs)
         """
-        service = self.extra.get('service', 'unknown')
+        extra = self.extra or {}
+        service = extra.get('service', 'unknown')
         return f"[{service}] {msg}", kwargs
 
 
@@ -154,7 +155,9 @@ def setup_logging(
     )
 
 
-def get_logger(name: str, service: Optional[str] = None) -> logging.Logger:
+def get_logger(
+    name: str, service: Optional[str] = None
+) -> Union[logging.Logger, ServiceLoggerAdapter]:
     """
     Get a logger for a specific module.
 
@@ -211,7 +214,12 @@ class LogTimer:
         self.logger.log(self.level, f"Starting: {self.operation}")
         return self
 
-    def __exit__(self, exc_type: type, exc_val: Exception, exc_tb: object) -> None:
+    def __exit__(
+        self,
+        exc_type: Optional[type],
+        exc_val: Optional[Exception],
+        exc_tb: object
+    ) -> None:
         """Stop the timer and log duration."""
         if self.start_time:
             duration = (datetime.now() - self.start_time).total_seconds()
@@ -227,7 +235,9 @@ class LogTimer:
                 )
 
 
-def log_operation_start(logger: logging.Logger, operation: str, **context: str) -> None:
+def log_operation_start(
+    logger: logging.Logger, operation: str, **context: str
+) -> None:
     """
     Log the start of an operation with context.
 
@@ -237,7 +247,7 @@ def log_operation_start(logger: logging.Logger, operation: str, **context: str) 
         **context: Additional context as keyword arguments
     """
     context_str = ", ".join(f"{k}={v}" for k, v in context.items())
-    logger.info(f"▶ {operation} ({context_str})")
+    logger.info(f"Starting {operation} ({context_str})")
 
 
 def log_operation_success(
@@ -256,7 +266,7 @@ def log_operation_success(
         **context: Additional context as keyword arguments
     """
     context_str = ", ".join(f"{k}={v}" for k, v in context.items())
-    logger.info(f"✓ {operation} completed in {duration:.2f}s ({context_str})")
+    logger.info(f"Completed {operation} in {duration:.2f}s ({context_str})")
 
 
 def log_operation_failure(
@@ -276,7 +286,7 @@ def log_operation_failure(
     """
     context_str = ", ".join(f"{k}={v}" for k, v in context.items())
     logger.error(
-        f"✗ {operation} failed: {error.__class__.__name__}: {error} ({context_str})"
+        f"Failed {operation}: {error.__class__.__name__}: {error} ({context_str})"
     )
 
 

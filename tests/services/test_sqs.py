@@ -159,3 +159,125 @@ class TestSQSFetcherErrorHandling:
         # Should handle gracefully
         resources = fetcher.fetch_resources()
         assert "queues" in resources
+
+    def test_fetch_queue_attributes_access_denied(self, mock_session):
+        """Test fetcher handles AccessDenied error on queue attributes."""
+        from botocore.exceptions import ClientError
+
+        mock_client = MagicMock()
+        mock_client.list_queues.return_value = {
+            "QueueUrls": ["https://sqs.us-east-1.amazonaws.com/123456789012/test-queue"]
+        }
+        mock_client.get_queue_attributes.side_effect = ClientError(
+            {"Error": {"Code": "AccessDenied", "Message": "Access Denied"}},
+            "GetQueueAttributes",
+        )
+        mock_session.client.return_value = mock_client
+
+        fetcher = SQSFetcher(session=mock_session, region="us-east-1")
+        resources = fetcher.fetch_resources()
+
+        # Should return empty list when queue attributes can't be fetched
+        assert resources["queues"] == []
+
+    def test_fetch_queue_non_existent_queue(self, mock_session):
+        """Test fetcher handles NonExistentQueue error."""
+        from botocore.exceptions import ClientError
+
+        mock_client = MagicMock()
+        mock_client.list_queues.return_value = {
+            "QueueUrls": ["https://sqs.us-east-1.amazonaws.com/123456789012/test-queue"]
+        }
+        mock_client.get_queue_attributes.side_effect = ClientError(
+            {
+                "Error": {
+                    "Code": "AWS.SimpleQueueService.NonExistentQueue",
+                    "Message": "Queue does not exist",
+                }
+            },
+            "GetQueueAttributes",
+        )
+        mock_session.client.return_value = mock_client
+
+        fetcher = SQSFetcher(session=mock_session, region="us-east-1")
+        resources = fetcher.fetch_resources()
+
+        # Should return empty list when queue doesn't exist
+        assert resources["queues"] == []
+
+    def test_fetch_queue_other_client_error(self, mock_session):
+        """Test fetcher handles other client errors gracefully."""
+        from botocore.exceptions import ClientError
+
+        mock_client = MagicMock()
+        mock_client.list_queues.return_value = {
+            "QueueUrls": ["https://sqs.us-east-1.amazonaws.com/123456789012/test-queue"]
+        }
+        mock_client.get_queue_attributes.side_effect = ClientError(
+            {"Error": {"Code": "InternalError", "Message": "Internal error"}},
+            "GetQueueAttributes",
+        )
+        mock_session.client.return_value = mock_client
+
+        fetcher = SQSFetcher(session=mock_session, region="us-east-1")
+        resources = fetcher.fetch_resources()
+
+        # Should return empty list on other errors
+        assert resources["queues"] == []
+
+    def test_fetch_queue_tags_client_error(self, mock_session):
+        """Test fetcher handles error when fetching tags."""
+        from botocore.exceptions import ClientError
+
+        mock_client = MagicMock()
+        mock_client.list_queues.return_value = {
+            "QueueUrls": ["https://sqs.us-east-1.amazonaws.com/123456789012/test-queue"]
+        }
+        mock_client.get_queue_attributes.return_value = {
+            "Attributes": {
+                "QueueArn": "arn:aws:sqs:us-east-1:123456789012:test-queue",
+            }
+        }
+        mock_client.list_queue_tags.side_effect = ClientError(
+            {"Error": {"Code": "AccessDenied", "Message": "Access Denied"}},
+            "ListQueueTags",
+        )
+        mock_session.client.return_value = mock_client
+
+        fetcher = SQSFetcher(session=mock_session, region="us-east-1")
+        resources = fetcher.fetch_resources()
+
+        # Should still return the queue, just without tags
+        assert len(resources["queues"]) == 1
+        assert resources["queues"][0].tags == {}
+
+    def test_fetch_queue_success_with_full_attributes(self, mock_session):
+        """Test fetcher returns queue with full attributes."""
+        mock_client = MagicMock()
+        mock_client.list_queues.return_value = {
+            "QueueUrls": ["https://sqs.us-east-1.amazonaws.com/123456789012/test-queue"]
+        }
+        mock_client.get_queue_attributes.return_value = {
+            "Attributes": {
+                "QueueArn": "arn:aws:sqs:us-east-1:123456789012:test-queue",
+                "DelaySeconds": "0",
+                "MaximumMessageSize": "262144",
+                "MessageRetentionPeriod": "345600",
+                "ReceiveMessageWaitTimeSeconds": "0",
+                "VisibilityTimeout": "30",
+                "FifoQueue": "false",
+            }
+        }
+        mock_client.list_queue_tags.return_value = {
+            "Tags": {"Environment": "test"}
+        }
+        mock_session.client.return_value = mock_client
+
+        fetcher = SQSFetcher(session=mock_session, region="us-east-1")
+        resources = fetcher.fetch_resources()
+
+        assert len(resources["queues"]) == 1
+        queue = resources["queues"][0]
+        assert queue.queue_name == "test-queue"
+        assert queue.delay_seconds == 0
+        assert queue.tags == {"Environment": "test"}

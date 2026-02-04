@@ -4,13 +4,14 @@ AWS SQS service fetcher.
 This module implements fetching of SQS queue resources and their configurations.
 """
 
-from typing import Any, Dict, List
+from typing import Any
+
 from botocore.exceptions import ClientError
 
-from aws_comparator.services.base import BaseServiceFetcher
+from aws_comparator.core.registry import ServiceRegistry
 from aws_comparator.models.common import AWSResource
 from aws_comparator.models.sqs import SQSQueue
-from aws_comparator.core.registry import ServiceRegistry
+from aws_comparator.services.base import BaseServiceFetcher
 
 
 @ServiceRegistry.register(
@@ -40,7 +41,7 @@ class SQSFetcher(BaseServiceFetcher):
         """
         return self.session.client('sqs', region_name=self.region)
 
-    def fetch_resources(self) -> Dict[str, List[AWSResource]]:
+    def fetch_resources(self) -> dict[str, list[AWSResource]]:
         """
         Fetch all SQS resources.
 
@@ -51,7 +52,7 @@ class SQSFetcher(BaseServiceFetcher):
             'queues': self._safe_fetch('queues', self._fetch_queues)
         }
 
-    def get_resource_types(self) -> List[str]:
+    def get_resource_types(self) -> list[str]:
         """
         Get list of resource types handled by this fetcher.
 
@@ -60,14 +61,17 @@ class SQSFetcher(BaseServiceFetcher):
         """
         return ['queues']
 
-    def _fetch_queues(self) -> List[SQSQueue]:
+    def _fetch_queues(self) -> list[SQSQueue]:
         """
         Fetch all SQS queues and their configurations.
 
         Returns:
             List of SQSQueue resources
         """
-        queues: List[SQSQueue] = []
+        queues: list[SQSQueue] = []
+
+        if self.client is None:
+            return queues
 
         try:
             # List all queue URLs
@@ -86,7 +90,7 @@ class SQSFetcher(BaseServiceFetcher):
                     attributes = attr_response.get('Attributes', {})
 
                     # Get queue tags
-                    tags = {}
+                    tags: dict[str, str] = {}
                     try:
                         tag_response = self.client.list_queue_tags(QueueUrl=queue_url)
                         tags = tag_response.get('Tags', {})
@@ -104,7 +108,10 @@ class SQSFetcher(BaseServiceFetcher):
                 except ClientError as e:
                     error_code = e.response.get('Error', {}).get('Code', '')
                     queue_name = queue_url.split('/')[-1]
-                    if error_code in ['AccessDenied', 'AWS.SimpleQueueService.NonExistentQueue']:
+                    if error_code in [
+                        'AccessDenied',
+                        'AWS.SimpleQueueService.NonExistentQueue'
+                    ]:
                         self.logger.warning(
                             f"Cannot access queue {queue_name}: {error_code}"
                         )
