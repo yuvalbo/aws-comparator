@@ -21,6 +21,8 @@ Example:
     >>> formatter.write_to_file(report, Path("report.json"))
 """
 
+from __future__ import annotations
+
 from typing import Any
 
 from aws_comparator.output.formatters.json_formatter import JSONFormatter

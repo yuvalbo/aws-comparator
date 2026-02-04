@@ -9,9 +9,8 @@ This script generates comprehensive implementations for all 11 AWS services incl
 - Integration tests
 """
 
-import os
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Any
 
 # Define all services with their configurations
 SERVICES = {
@@ -108,7 +107,7 @@ SERVICES = {
 }
 
 
-def generate_fetcher_template(service_key: str, config: Dict[str, Any]) -> str:
+def generate_fetcher_template(service_key: str, config: dict[str, Any]) -> str:
     """Generate fetcher implementation for a service."""
 
     resource_methods = '\n'.join([
