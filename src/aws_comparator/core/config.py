@@ -10,7 +10,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Optional
 
-import yaml
+import yaml  # type: ignore[import-untyped]
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from aws_comparator.core.exceptions import (
@@ -331,7 +331,8 @@ class ComparisonConfig(BaseModel):
         Returns:
             YAML representation of configuration
         """
-        return yaml.dump(self.to_dict(), default_flow_style=False)
+        result: str = yaml.dump(self.to_dict(), default_flow_style=False)
+        return result
 
     def save(self, config_path: Path) -> None:
         """

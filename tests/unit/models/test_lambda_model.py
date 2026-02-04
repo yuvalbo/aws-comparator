@@ -448,7 +448,7 @@ class TestLambdaLayerStr:
             layer_version_arn="arn:aws:lambda:us-east-1:123456789012:layer:my-layer:5",
             arn="arn:aws:lambda:us-east-1:123456789012:layer:my-layer:5",
             version=5,
-            created_date="2024-01-01T00:00:00.000+0000",
+            layer_created_date="2024-01-01T00:00:00.000+0000",
         )
 
         result = str(layer)

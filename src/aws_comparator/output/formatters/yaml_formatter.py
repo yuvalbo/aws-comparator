@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Union
 
-import yaml
+import yaml  # type: ignore[import-untyped]
 
 from aws_comparator.models.comparison import (
     ComparisonReport,
@@ -108,7 +108,8 @@ class YAMLFormatter(BaseFormatter):
             self.logger.debug(
                 f"YAML formatting complete, output size: {len(yaml_str)} bytes"
             )
-            return yaml_str
+            result: str = yaml_str
+            return result
 
         except Exception as e:
             self.logger.error(f"Error formatting report as YAML: {e}", exc_info=True)

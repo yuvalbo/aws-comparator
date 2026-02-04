@@ -242,6 +242,8 @@ def compare(  # noqa: C901
             account_id=account1,
             profile=profile1,
             role_arn=role1,
+            external_id=None,
+            session_name=None,
             region=effective_region1,
         )
 
@@ -249,6 +251,8 @@ def compare(  # noqa: C901
             account_id=account2,
             profile=profile2,
             role_arn=role2,
+            external_id=None,
+            session_name=None,
             region=effective_region2,
         )
 

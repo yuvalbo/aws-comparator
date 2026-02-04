@@ -9,8 +9,11 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Optional
 
-import boto3
-from botocore.exceptions import ClientError, NoCredentialsError
+import boto3  # type: ignore[import-untyped]
+from botocore.exceptions import (  # type: ignore[import-untyped]
+    ClientError,
+    NoCredentialsError,
+)
 
 from aws_comparator.core.exceptions import (
     DataFetchError,
@@ -195,7 +198,8 @@ class BaseServiceFetcher(ABC):
                 response = operation(**kwargs)
 
                 if result_key and result_key in response:
-                    return response[result_key]
+                    result: list[dict[str, Any]] = response[result_key]
+                    return result
                 return [response]
 
         except ClientError as e:

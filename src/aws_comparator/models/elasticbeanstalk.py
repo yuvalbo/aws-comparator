@@ -306,30 +306,41 @@ class ConfigurationTemplate(AWSResource):
         Returns:
             ConfigurationTemplate instance
         """
-        config_dict = {
-            "template_name": config_data.get("TemplateName"),
-            "application_name": config_data.get("ApplicationName"),
-            "description": config_data.get("Description"),
-            "solution_stack_name": config_data.get("SolutionStackName"),
-            "platform_arn": config_data.get("PlatformArn"),
-            "date_created": config_data.get("DateCreated"),
-            "date_updated": config_data.get("DateUpdated"),
-            "deployment_status": config_data.get("DeploymentStatus"),
-        }
+        template_name: str = config_data.get("TemplateName") or ""
+        application_name: str = config_data.get("ApplicationName") or ""
+        tags_data = config_data.get("Tags")
+        tags: dict[str, str] = tags_data if isinstance(tags_data, dict) else {}
 
-        # Add option settings if present
+        # Process option settings if present
+        option_settings: list[OptionSetting] = []
         if "OptionSettings" in config_data:
-            config_dict["option_settings"] = [
-                {
-                    "namespace": opt.get("Namespace"),
-                    "option_name": opt.get("OptionName"),
-                    "value": opt.get("Value"),
-                    "resource_name": opt.get("ResourceName"),
-                }
-                for opt in config_data["OptionSettings"]
-            ]
+            for opt in config_data["OptionSettings"]:
+                namespace: str = opt.get("Namespace") or ""
+                option_name: str = opt.get("OptionName") or ""
+                option_settings.append(
+                    OptionSetting(
+                        namespace=namespace,
+                        option_name=option_name,
+                        value=opt.get("Value"),
+                        resource_name=opt.get("ResourceName"),
+                    )
+                )
 
-        return cls(**config_dict)
+        return cls(
+            template_name=template_name,
+            application_name=application_name,
+            description=config_data.get("Description"),
+            solution_stack_name=config_data.get("SolutionStackName"),
+            platform_arn=config_data.get("PlatformArn"),
+            date_created=config_data.get("DateCreated"),
+            date_updated=config_data.get("DateUpdated"),
+            deployment_status=config_data.get("DeploymentStatus"),
+            option_settings=option_settings,
+            tags=tags,
+            arn=None,
+            created_date=None,
+            region=None,
+        )
 
     def __str__(self) -> str:
         """Return string representation of configuration template."""
@@ -370,20 +381,27 @@ class ApplicationVersion(AWSResource):
         Returns:
             ApplicationVersion instance
         """
-        version_dict = {
-            "application_name": version_data.get("ApplicationName"),
-            "version_label": version_data.get("VersionLabel"),
-            "description": version_data.get("Description"),
-            "source_build_information": version_data.get("SourceBuildInformation"),
-            "source_bundle": version_data.get("SourceBundle"),
-            "date_created": version_data.get("DateCreated"),
-            "date_updated": version_data.get("DateUpdated"),
-            "status": version_data.get("Status"),
-            "build_arn": version_data.get("BuildArn"),
-            "arn": version_data.get("ApplicationVersionArn"),
-        }
+        application_name: str = version_data.get("ApplicationName") or ""
+        version_label: str = version_data.get("VersionLabel") or ""
+        version_arn: str = version_data.get("ApplicationVersionArn") or ""
+        tags_data = version_data.get("Tags")
+        tags: dict[str, str] = tags_data if isinstance(tags_data, dict) else {}
 
-        return cls(**version_dict)
+        return cls(
+            application_name=application_name,
+            version_label=version_label,
+            description=version_data.get("Description"),
+            source_build_information=version_data.get("SourceBuildInformation"),
+            source_bundle=version_data.get("SourceBundle"),
+            date_created=version_data.get("DateCreated"),
+            date_updated=version_data.get("DateUpdated"),
+            status=version_data.get("Status"),
+            build_arn=version_data.get("BuildArn"),
+            arn=version_arn,
+            tags=tags,
+            created_date=None,
+            region=None,
+        )
 
     def __str__(self) -> str:
         """Return string representation of application version."""

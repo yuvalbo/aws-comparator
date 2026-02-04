@@ -8,7 +8,7 @@ archives, and connections.
 import json
 from typing import Any
 
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError  # type: ignore[import-untyped]
 
 from aws_comparator.core.registry import ServiceRegistry
 from aws_comparator.models.common import AWSResource
@@ -92,6 +92,8 @@ class EventBridgeFetcher(BaseServiceFetcher):
 
                     # Get event bus details including policy
                     try:
+                        if self.client is None:
+                            continue
                         describe_response = self.client.describe_event_bus(
                             Name=bus_name
                         )
@@ -109,7 +111,7 @@ class EventBridgeFetcher(BaseServiceFetcher):
 
                     # Get tags
                     try:
-                        if "Arn" in bus_data:
+                        if "Arn" in bus_data and self.client is not None:
                             tag_response = self.client.list_tags_for_resource(
                                 ResourceARN=bus_data["Arn"]
                             )
@@ -178,6 +180,8 @@ class EventBridgeFetcher(BaseServiceFetcher):
 
                             # Get rule details
                             try:
+                                if self.client is None:
+                                    continue
                                 describe_response = self.client.describe_rule(
                                     Name=rule_name, EventBusName=bus_name
                                 )
@@ -189,6 +193,8 @@ class EventBridgeFetcher(BaseServiceFetcher):
                             # Get targets for this rule
                             targets = []
                             try:
+                                if self.client is None:
+                                    continue
                                 target_response = self.client.list_targets_by_rule(
                                     Rule=rule_name, EventBusName=bus_name
                                 )
@@ -199,7 +205,7 @@ class EventBridgeFetcher(BaseServiceFetcher):
 
                             # Get tags
                             try:
-                                if "Arn" in rule_data:
+                                if "Arn" in rule_data and self.client is not None:
                                     tag_response = self.client.list_tags_for_resource(
                                         ResourceARN=rule_data["Arn"]
                                     )
@@ -276,6 +282,8 @@ class EventBridgeFetcher(BaseServiceFetcher):
 
                     # Get archive details
                     try:
+                        if self.client is None:
+                            continue
                         describe_response = self.client.describe_archive(
                             ArchiveName=archive_name
                         )
@@ -286,7 +294,7 @@ class EventBridgeFetcher(BaseServiceFetcher):
 
                     # Get tags
                     try:
-                        if "ArchiveArn" in archive_data:
+                        if "ArchiveArn" in archive_data and self.client is not None:
                             tag_response = self.client.list_tags_for_resource(
                                 ResourceARN=archive_data["ArchiveArn"]
                             )
@@ -345,6 +353,8 @@ class EventBridgeFetcher(BaseServiceFetcher):
 
                     # Get connection details
                     try:
+                        if self.client is None:
+                            continue
                         describe_response = self.client.describe_connection(
                             Name=connection_name
                         )
@@ -355,7 +365,10 @@ class EventBridgeFetcher(BaseServiceFetcher):
 
                     # Get tags
                     try:
-                        if "ConnectionArn" in connection_data:
+                        if (
+                            "ConnectionArn" in connection_data
+                            and self.client is not None
+                        ):
                             tag_response = self.client.list_tags_for_resource(
                                 ResourceARN=connection_data["ConnectionArn"]
                             )

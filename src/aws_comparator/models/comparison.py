@@ -109,13 +109,13 @@ class ResourceTypeComparison(BaseModel):
     )
     unchanged_count: int = Field(ge=0, default=0, description="Unchanged resources")
 
-    @computed_field  # type: ignore[misc]
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def total_changes(self) -> int:
         """Total number of changes (added + removed + modified)."""
         return len(self.added) + len(self.removed) + len(self.modified)
 
-    @computed_field  # type: ignore[misc]
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def has_changes(self) -> bool:
         """Check if any changes exist."""
@@ -160,13 +160,13 @@ class ServiceComparisonResult(BaseModel):
         default_factory=datetime.utcnow, description="When comparison was performed"
     )
 
-    @computed_field  # type: ignore[misc]
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def total_changes(self) -> int:
         """Total changes across all resource types."""
         return sum(comp.total_changes for comp in self.resource_comparisons.values())
 
-    @computed_field  # type: ignore[misc]
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def has_errors(self) -> bool:
         """Check if any errors occurred."""

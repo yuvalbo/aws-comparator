@@ -132,19 +132,33 @@ class FoundationModel(AWSResource):
         Returns:
             FoundationModel instance
         """
+        model_arn: str = model_data.get("modelArn") or ""
+        model_id: str = model_data.get("modelId") or ""
+        model_name: str = model_data.get("modelName") or ""
+        provider_name: str = model_data.get("providerName") or ""
+        input_modalities: list[str] = model_data.get("inputModalities") or []
+        output_modalities: list[str] = model_data.get("outputModalities") or []
+        customizations_supported: list[str] = (
+            model_data.get("customizationsSupported") or []
+        )
+        inference_types_supported: list[str] = (
+            model_data.get("inferenceTypesSupported") or []
+        )
         return cls(
-            model_arn=model_data.get("modelArn", ""),
-            model_id=model_data.get("modelId", ""),
-            model_name=model_data.get("modelName", ""),
-            provider_name=model_data.get("providerName", ""),
-            input_modalities=model_data.get("inputModalities", []),
-            output_modalities=model_data.get("outputModalities", []),
+            model_arn=model_arn,
+            model_id=model_id,
+            model_name=model_name,
+            provider_name=provider_name,
+            input_modalities=input_modalities,
+            output_modalities=output_modalities,
             response_streaming_supported=model_data.get(
                 "responseStreamingSupported", False
             ),
-            customizations_supported=model_data.get("customizationsSupported", []),
-            inference_types_supported=model_data.get("inferenceTypesSupported", []),
-            arn=model_data.get("modelArn", ""),
+            customizations_supported=customizations_supported,
+            inference_types_supported=inference_types_supported,
+            arn=model_arn,
+            created_date=None,
+            region=None,
         )
 
     def __str__(self) -> str:
@@ -203,14 +217,19 @@ class CustomModel(AWSResource):
         Returns:
             CustomModel instance
         """
+        model_arn: str = model_data.get("modelArn") or ""
+        model_name: str = model_data.get("modelName") or ""
+        base_model_arn: str = model_data.get("baseModelArn") or ""
         return cls(
-            model_arn=model_data.get("modelArn", ""),
-            model_name=model_data.get("modelName", ""),
+            model_arn=model_arn,
+            model_name=model_name,
             job_name=model_data.get("jobName"),
-            base_model_arn=model_data.get("baseModelArn", ""),
+            base_model_arn=base_model_arn,
             creation_time=model_data.get("creationTime"),
             model_kms_key_arn=model_data.get("modelKmsKeyArn"),
-            arn=model_data.get("modelArn", ""),
+            arn=model_arn,
+            created_date=None,
+            region=None,
         )
 
     def __str__(self) -> str:
@@ -274,15 +293,25 @@ class ProvisionedModelThroughput(AWSResource):
         Returns:
             ProvisionedModelThroughput instance
         """
+        provisioned_model_arn: str = throughput_data.get("provisionedModelArn") or ""
+        provisioned_model_name: str = throughput_data.get("provisionedModelName") or ""
+        model_arn: str = throughput_data.get("modelArn") or ""
+        status: str = throughput_data.get("status") or ""
+        desired_units = throughput_data.get("desiredModelUnits")
+        desired_model_units: int = (
+            desired_units if isinstance(desired_units, int) else 1
+        )
         return cls(
-            provisioned_model_arn=throughput_data.get("provisionedModelArn", ""),
-            provisioned_model_name=throughput_data.get("provisionedModelName", ""),
-            model_arn=throughput_data.get("modelArn", ""),
-            desired_model_units=throughput_data.get("desiredModelUnits", 1),
+            provisioned_model_arn=provisioned_model_arn,
+            provisioned_model_name=provisioned_model_name,
+            model_arn=model_arn,
+            desired_model_units=desired_model_units,
             current_model_units=throughput_data.get("modelUnits"),
-            status=throughput_data.get("status", ""),
+            status=status,
             creation_time=throughput_data.get("creationTime"),
-            arn=throughput_data.get("provisionedModelArn", ""),
+            arn=provisioned_model_arn,
+            created_date=None,
+            region=None,
         )
 
     def __str__(self) -> str:
@@ -316,10 +345,14 @@ class ModelAccessConfiguration(AWSResource):
         Returns:
             ModelAccessConfiguration instance
         """
+        model_id: str = access_data.get("modelId") or ""
+        access_status: str = access_data.get("accessStatus") or ""
         return cls(
-            model_id=access_data.get("modelId", ""),
-            access_status=access_data.get("accessStatus", ""),
-            arn=f"arn:aws:bedrock:::foundation-model/{access_data.get('modelId', '')}",
+            model_id=model_id,
+            access_status=access_status,
+            arn=f"arn:aws:bedrock:::foundation-model/{model_id}",
+            created_date=None,
+            region=None,
         )
 
     def __str__(self) -> str:
@@ -377,16 +410,25 @@ class Guardrail(AWSResource):
         Returns:
             Guardrail instance
         """
+        guardrail_id: str = guardrail_data.get("id") or ""
+        guardrail_arn: str = guardrail_data.get("arn") or ""
+        name: str = guardrail_data.get("name") or ""
+        status: str = guardrail_data.get("status") or ""
+        version: str = guardrail_data.get("version") or "DRAFT"
+        tags_data = guardrail_data.get("tags")
+        tags: dict[str, str] = tags_data if isinstance(tags_data, dict) else {}
         return cls(
-            guardrail_id=guardrail_data.get("id", ""),
-            guardrail_arn=guardrail_data.get("arn", ""),
-            name=guardrail_data.get("name", ""),
-            status=guardrail_data.get("status", ""),
-            version=guardrail_data.get("version", "DRAFT"),
+            guardrail_id=guardrail_id,
+            guardrail_arn=guardrail_arn,
+            name=name,
+            status=status,
+            version=version,
             created_at=guardrail_data.get("createdAt"),
             updated_at=guardrail_data.get("updatedAt"),
-            arn=guardrail_data.get("arn", ""),
-            tags=guardrail_data.get("tags", {}),
+            arn=guardrail_arn,
+            tags=tags,
+            created_date=None,
+            region=None,
         )
 
     def __str__(self) -> str:

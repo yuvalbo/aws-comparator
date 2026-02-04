@@ -7,7 +7,7 @@ log groups, and dashboards.
 
 from typing import Any
 
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError  # type: ignore[import-untyped]
 
 from aws_comparator.core.registry import ServiceRegistry
 from aws_comparator.models.cloudwatch import CloudWatchAlarm, Dashboard, LogGroup
@@ -209,6 +209,8 @@ class CloudWatchFetcher(BaseServiceFetcher):
                     # Note: This can be expensive for many dashboards
                     dashboard_details = None
                     try:
+                        if self.client is None:
+                            continue
                         details_response = self.client.get_dashboard(
                             DashboardName=dashboard_name
                         )

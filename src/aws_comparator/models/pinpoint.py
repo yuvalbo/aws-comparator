@@ -577,16 +577,19 @@ class PinpointEventStream(AWSResource):
         Returns:
             PinpointEventStream instance
         """
-        event_stream_dict = {
-            "application_id": application_id,
-            "destination_stream_arn": event_stream_data.get("DestinationStreamArn"),
-            "role_arn": event_stream_data.get("RoleArn"),
-            "external_id": event_stream_data.get("ExternalId"),
-            "last_modified_date": event_stream_data.get("LastModifiedDate"),
-            "last_updated_by": event_stream_data.get("LastUpdatedBy"),
-        }
-
-        return cls(**event_stream_dict)
+        dest_arn: str = event_stream_data.get("DestinationStreamArn") or ""
+        role_arn: str = event_stream_data.get("RoleArn") or ""
+        return cls(
+            application_id=application_id,
+            destination_stream_arn=dest_arn,
+            role_arn=role_arn,
+            external_id=event_stream_data.get("ExternalId"),
+            last_modified_date=event_stream_data.get("LastModifiedDate"),
+            last_updated_by=event_stream_data.get("LastUpdatedBy"),
+            arn=None,
+            created_date=None,
+            region=None,
+        )
 
     def __str__(self) -> str:
         """Return string representation of Pinpoint event stream."""

@@ -304,7 +304,7 @@ class LambdaLayer(AWSResource):
     layer_version_arn: str = Field(..., description="Layer version ARN")
     version: int = Field(..., description="Layer version number")
     description: Optional[str] = Field(None, description="Layer description")
-    created_date: str = Field(..., description="Creation date")
+    layer_created_date: str = Field(..., description="Creation date")
     compatible_runtimes: list[Runtime] = Field(
         default_factory=list, description="Compatible runtimes"
     )
@@ -331,7 +331,7 @@ class LambdaLayer(AWSResource):
             "arn": layer_data.get("LayerVersionArn"),
             "version": layer_data.get("Version"),
             "description": layer_data.get("Description"),
-            "created_date": layer_data.get("CreatedDate"),
+            "layer_created_date": layer_data.get("CreatedDate"),
             "compatible_runtimes": layer_data.get("CompatibleRuntimes", []),
             "compatible_architectures": layer_data.get("CompatibleArchitectures", []),
             "license_info": layer_data.get("LicenseInfo"),

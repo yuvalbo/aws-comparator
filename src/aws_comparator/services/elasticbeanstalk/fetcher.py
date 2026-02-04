@@ -7,7 +7,7 @@ configuration template, and application version resources.
 
 from typing import Any
 
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError  # type: ignore[import-untyped]
 
 from aws_comparator.core.registry import ServiceRegistry
 from aws_comparator.models.common import AWSResource
@@ -95,6 +95,8 @@ class ElasticBeanstalkFetcher(BaseServiceFetcher):
 
         try:
             # Describe all applications
+            if self.client is None:
+                return applications
             response = self.client.describe_applications()
             app_list = response.get("Applications", [])
 
@@ -145,6 +147,8 @@ class ElasticBeanstalkFetcher(BaseServiceFetcher):
 
         try:
             # Describe all environments (across all applications)
+            if self.client is None:
+                return environments
             response = self.client.describe_environments(IncludeDeleted=False)
             env_list = response.get("Environments", [])
 
@@ -198,6 +202,8 @@ class ElasticBeanstalkFetcher(BaseServiceFetcher):
 
         try:
             # First, get all applications
+            if self.client is None:
+                return templates
             response = self.client.describe_applications()
             app_list = response.get("Applications", [])
 
@@ -211,6 +217,8 @@ class ElasticBeanstalkFetcher(BaseServiceFetcher):
                 # Fetch configuration settings for each template
                 for template_name in template_names:
                     try:
+                        if self.client is None:
+                            continue
                         config_response = self.client.describe_configuration_settings(
                             ApplicationName=app_name, TemplateName=template_name
                         )
@@ -274,6 +282,8 @@ class ElasticBeanstalkFetcher(BaseServiceFetcher):
 
         try:
             # First, get all applications
+            if self.client is None:
+                return versions
             response = self.client.describe_applications()
             app_list = response.get("Applications", [])
 
@@ -286,6 +296,8 @@ class ElasticBeanstalkFetcher(BaseServiceFetcher):
 
                 # Fetch application version details
                 try:
+                    if self.client is None:
+                        continue
                     versions_response = self.client.describe_application_versions(
                         ApplicationName=app_name
                     )

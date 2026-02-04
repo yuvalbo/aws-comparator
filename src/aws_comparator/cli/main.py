@@ -61,7 +61,7 @@ def main() -> None:
     It handles top-level exception catching and exit codes.
     """
     try:
-        cli(standalone_mode=True)  # type: ignore[call-arg]
+        cli(standalone_mode=True)
     except KeyboardInterrupt:
         console.print("\n[yellow]Operation cancelled by user.[/yellow]")
         sys.exit(130)  # Standard exit code for Ctrl+C

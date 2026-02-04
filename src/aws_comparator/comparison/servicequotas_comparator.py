@@ -84,8 +84,8 @@ class ServiceQuotasComparator(ResourceComparator):
 
         # Check if resource has service_code and quota_code attributes
         if hasattr(resource, "service_code") and hasattr(resource, "quota_code"):
-            service_code = resource.service_code  # type: ignore[attr-defined]
-            quota_code = resource.quota_code  # type: ignore[attr-defined]
+            service_code = getattr(resource, "service_code", None)
+            quota_code = getattr(resource, "quota_code", None)
             if service_code and quota_code:
                 base_id = f"{service_code}/{quota_code}"
                 # Try to get human-readable names if available

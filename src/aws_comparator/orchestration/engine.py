@@ -12,8 +12,12 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from typing import Any, Callable, Optional
 
-import boto3
-from botocore.exceptions import ClientError, NoCredentialsError, ProfileNotFound
+import boto3  # type: ignore[import-untyped]
+from botocore.exceptions import (  # type: ignore[import-untyped]
+    ClientError,
+    NoCredentialsError,
+    ProfileNotFound,
+)
 
 import aws_comparator.services.bedrock  # noqa: F401
 import aws_comparator.services.cloudwatch  # noqa: F401
@@ -569,6 +573,7 @@ class ComparisonOrchestrator:
                             service_name=service_name,
                             error_type=type(exc).__name__,
                             error_message=str(exc),
+                            error_code=None,
                             traceback=traceback.format_exc(),
                         )
                     )
@@ -639,6 +644,7 @@ class ComparisonOrchestrator:
                         service_name=service_name,
                         error_type=type(exc).__name__,
                         error_message=str(exc),
+                        error_code=None,
                         traceback=traceback.format_exc(),
                     )
                 )

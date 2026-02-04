@@ -65,16 +65,19 @@ class CloudWatchComparator(ResourceComparator):
         Uses name-based fields instead of ARN for cross-account comparison.
         """
         # CloudWatch Alarms
-        if hasattr(resource, "alarm_name") and resource.alarm_name:  # type: ignore[attr-defined]
-            return str(resource.alarm_name)  # type: ignore[attr-defined]
+        alarm_name = getattr(resource, "alarm_name", None)
+        if alarm_name:
+            return str(alarm_name)
 
         # CloudWatch Log Groups
-        if hasattr(resource, "log_group_name") and resource.log_group_name:  # type: ignore[attr-defined]
-            return str(resource.log_group_name)  # type: ignore[attr-defined]
+        log_group_name = getattr(resource, "log_group_name", None)
+        if log_group_name:
+            return str(log_group_name)
 
         # CloudWatch Dashboards
-        if hasattr(resource, "dashboard_name") and resource.dashboard_name:  # type: ignore[attr-defined]
-            return str(resource.dashboard_name)  # type: ignore[attr-defined]
+        dashboard_name = getattr(resource, "dashboard_name", None)
+        if dashboard_name:
+            return str(dashboard_name)
 
         # Fallback to parent implementation
         return super()._get_resource_identifier(resource)
@@ -121,12 +124,14 @@ class EventBridgeComparator(ResourceComparator):
                 return f"{name}@{event_bus_name}"
 
         # Event Buses
-        if hasattr(resource, "name") and resource.name:  # type: ignore[attr-defined]
-            return str(resource.name)  # type: ignore[attr-defined]
+        name = getattr(resource, "name", None)
+        if name:
+            return str(name)
 
         # Archives
-        if hasattr(resource, "archive_name") and resource.archive_name:  # type: ignore[attr-defined]
-            return str(resource.archive_name)  # type: ignore[attr-defined]
+        archive_name = getattr(resource, "archive_name", None)
+        if archive_name:
+            return str(archive_name)
 
         # Fallback to parent implementation
         return super()._get_resource_identifier(resource)
@@ -170,8 +175,9 @@ class SecretsManagerComparator(ResourceComparator):
         Uses secret name instead of ARN.
         """
         # Secrets - use name field
-        if hasattr(resource, "name") and resource.name:  # type: ignore[attr-defined]
-            return str(resource.name)  # type: ignore[attr-defined]
+        name = getattr(resource, "name", None)
+        if name:
+            return str(name)
 
         # Fallback to parent implementation
         return super()._get_resource_identifier(resource)
@@ -218,12 +224,14 @@ class LambdaComparator(ResourceComparator):
         Uses function_name or layer_name instead of ARN.
         """
         # Lambda Functions
-        if hasattr(resource, "function_name") and resource.function_name:  # type: ignore[attr-defined]
-            return str(resource.function_name)  # type: ignore[attr-defined]
+        function_name = getattr(resource, "function_name", None)
+        if function_name:
+            return str(function_name)
 
         # Lambda Layers
-        if hasattr(resource, "layer_name") and resource.layer_name:  # type: ignore[attr-defined]
-            return str(resource.layer_name)  # type: ignore[attr-defined]
+        layer_name = getattr(resource, "layer_name", None)
+        if layer_name:
+            return str(layer_name)
 
         # Fallback to parent implementation
         return super()._get_resource_identifier(resource)
@@ -265,8 +273,9 @@ class S3Comparator(ResourceComparator):
         Uses bucket name (globally unique).
         """
         # S3 Buckets - use name field
-        if hasattr(resource, "name") and resource.name:  # type: ignore[attr-defined]
-            return str(resource.name)  # type: ignore[attr-defined]
+        name = getattr(resource, "name", None)
+        if name:
+            return str(name)
 
         # Fallback to parent implementation
         return super()._get_resource_identifier(resource)
@@ -426,8 +435,9 @@ class SQSComparator(ResourceComparator):
         Uses queue_name instead of ARN/URL.
         """
         # SQS Queues - use queue_name
-        if hasattr(resource, "queue_name") and resource.queue_name:  # type: ignore[attr-defined]
-            return str(resource.queue_name)  # type: ignore[attr-defined]
+        queue_name = getattr(resource, "queue_name", None)
+        if queue_name:
+            return str(queue_name)
 
         # Fallback to parent implementation
         return super()._get_resource_identifier(resource)
@@ -469,19 +479,19 @@ class BedrockComparator(ResourceComparator):
         Uses model_id or model_name instead of ARN.
         """
         # Model ID
-        if hasattr(resource, "model_id") and resource.model_id:  # type: ignore[attr-defined]
-            return str(resource.model_id)  # type: ignore[attr-defined]
+        model_id = getattr(resource, "model_id", None)
+        if model_id:
+            return str(model_id)
 
         # Model name
-        if hasattr(resource, "model_name") and resource.model_name:  # type: ignore[attr-defined]
-            return str(resource.model_name)  # type: ignore[attr-defined]
+        model_name = getattr(resource, "model_name", None)
+        if model_name:
+            return str(model_name)
 
         # Provisioned model name
-        if (
-            hasattr(resource, "provisioned_model_name")
-            and resource.provisioned_model_name
-        ):  # type: ignore[attr-defined]
-            return str(resource.provisioned_model_name)  # type: ignore[attr-defined]
+        provisioned_model_name = getattr(resource, "provisioned_model_name", None)
+        if provisioned_model_name:
+            return str(provisioned_model_name)
 
         # Fallback to parent implementation
         return super()._get_resource_identifier(resource)
@@ -535,8 +545,9 @@ class ElasticBeanstalkComparator(ResourceComparator):
                 return f"{app_name}/{env_name}"
 
         # Application - use application_name
-        if hasattr(resource, "application_name") and resource.application_name:  # type: ignore[attr-defined]
-            return str(resource.application_name)  # type: ignore[attr-defined]
+        application_name = getattr(resource, "application_name", None)
+        if application_name:
+            return str(application_name)
 
         # Fallback to parent implementation
         return super()._get_resource_identifier(resource)

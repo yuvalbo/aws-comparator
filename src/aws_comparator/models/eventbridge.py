@@ -144,15 +144,20 @@ class EventBus(AWSResource):
         Returns:
             EventBus instance
         """
-        bus_dict = {
-            "name": bus_data.get("Name"),
-            "arn": bus_data.get("Arn"),
-            "policy": bus_data.get("Policy"),
-            "description": bus_data.get("Description"),
-            "creation_time": bus_data.get("CreationTime"),
-        }
-
-        return cls(**bus_dict)
+        bus_name: str = bus_data.get("Name") or ""
+        bus_arn: str = bus_data.get("Arn") or ""
+        tags_data = bus_data.get("Tags")
+        tags: dict[str, str] = tags_data if isinstance(tags_data, dict) else {}
+        return cls(
+            name=bus_name,
+            arn=bus_arn,
+            policy=bus_data.get("Policy"),
+            description=bus_data.get("Description"),
+            creation_time=bus_data.get("CreationTime"),
+            tags=tags,
+            created_date=None,
+            region=None,
+        )
 
     def __str__(self) -> str:
         """Return string representation of event bus."""
@@ -252,7 +257,20 @@ class Rule(AWSResource):
                         "input_template": transformer.get("InputTemplate", ""),
                     }
 
-                target_objects.append(Target(**target_dict))
+                target_id: str = target_data.get("Id", "")
+                target_arn: str = target_data.get("Arn", "")
+                target_objects.append(
+                    Target(
+                        id=target_id,
+                        arn=target_arn,
+                        role_arn=target_dict.get("role_arn"),
+                        input=target_dict.get("input"),
+                        input_path=target_dict.get("input_path"),
+                        input_transformer=target_dict.get("input_transformer"),
+                        dead_letter_config=target_dict.get("dead_letter_config"),
+                        retry_policy=target_dict.get("retry_policy"),
+                    )
+                )
 
             rule_dict["targets"] = target_objects
 
@@ -313,19 +331,27 @@ class Archive(AWSResource):
         Returns:
             Archive instance
         """
-        archive_dict = {
-            "archive_name": archive_data.get("ArchiveName"),
-            "event_source_arn": archive_data.get("EventSourceArn"),
-            "description": archive_data.get("Description"),
-            "state": archive_data.get("State"),
-            "retention_days": archive_data.get("RetentionDays"),
-            "size_bytes": archive_data.get("SizeBytes"),
-            "event_count": archive_data.get("EventCount"),
-            "creation_time": archive_data.get("CreationTime"),
-            "arn": archive_data.get("ArchiveArn"),
-        }
-
-        return cls(**archive_dict)
+        state_str = archive_data.get("State", "ENABLED")
+        state = ArchiveState(state_str) if state_str else ArchiveState.ENABLED
+        archive_name: str = archive_data.get("ArchiveName") or ""
+        event_source_arn: str = archive_data.get("EventSourceArn") or ""
+        archive_arn: str = archive_data.get("ArchiveArn") or ""
+        tags_data = archive_data.get("Tags")
+        tags: dict[str, str] = tags_data if isinstance(tags_data, dict) else {}
+        return cls(
+            archive_name=archive_name,
+            event_source_arn=event_source_arn,
+            description=archive_data.get("Description"),
+            state=state,
+            retention_days=archive_data.get("RetentionDays"),
+            size_bytes=archive_data.get("SizeBytes"),
+            event_count=archive_data.get("EventCount"),
+            creation_time=archive_data.get("CreationTime"),
+            arn=archive_arn,
+            tags=tags,
+            created_date=None,
+            region=None,
+        )
 
     def __str__(self) -> str:
         """Return string representation of archive."""
@@ -386,18 +412,35 @@ class Connection(AWSResource):
         Returns:
             Connection instance
         """
-        connection_dict = {
-            "name": connection_data.get("Name"),
-            "arn": connection_data.get("ConnectionArn"),
-            "connection_state": connection_data.get("ConnectionState"),
-            "authorization_type": connection_data.get("AuthorizationType"),
-            "description": connection_data.get("Description"),
-            "creation_time": connection_data.get("CreationTime"),
-            "last_modified_time": connection_data.get("LastModifiedTime"),
-            "last_authorized_time": connection_data.get("LastAuthorizedTime"),
-        }
-
-        return cls(**connection_dict)
+        conn_state_str = connection_data.get("ConnectionState", "AUTHORIZED")
+        auth_type_str = connection_data.get("AuthorizationType", "BASIC")
+        conn_state = (
+            ConnectionState(conn_state_str)
+            if conn_state_str
+            else ConnectionState.AUTHORIZED
+        )
+        auth_type = (
+            AuthorizationType(auth_type_str)
+            if auth_type_str
+            else AuthorizationType.BASIC
+        )
+        conn_name: str = connection_data.get("Name") or ""
+        conn_arn: str = connection_data.get("ConnectionArn") or ""
+        tags_data = connection_data.get("Tags")
+        tags: dict[str, str] = tags_data if isinstance(tags_data, dict) else {}
+        return cls(
+            name=conn_name,
+            arn=conn_arn,
+            connection_state=conn_state,
+            authorization_type=auth_type,
+            description=connection_data.get("Description"),
+            creation_time=connection_data.get("CreationTime"),
+            last_modified_time=connection_data.get("LastModifiedTime"),
+            last_authorized_time=connection_data.get("LastAuthorizedTime"),
+            tags=tags,
+            created_date=None,
+            region=None,
+        )
 
     def __str__(self) -> str:
         """Return string representation of connection."""

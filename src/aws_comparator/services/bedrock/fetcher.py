@@ -6,7 +6,7 @@ This module implements fetching of Bedrock model resources and configurations.
 
 from typing import Any
 
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError  # type: ignore[import-untyped]
 
 from aws_comparator.core.registry import ServiceRegistry
 from aws_comparator.models.bedrock import (
@@ -99,6 +99,8 @@ class BedrockFetcher(BaseServiceFetcher):
 
         try:
             # List foundation models (no pagination needed for this API)
+            if self.client is None:
+                return models
             response = self.client.list_foundation_models()
             model_summaries = response.get("modelSummaries", [])
 
@@ -145,6 +147,8 @@ class BedrockFetcher(BaseServiceFetcher):
 
         try:
             # Use pagination for custom models
+            if self.client is None:
+                return models
             paginator = self.client.get_paginator("list_custom_models")
             page_iterator = paginator.paginate()
 
@@ -192,6 +196,8 @@ class BedrockFetcher(BaseServiceFetcher):
 
         try:
             # Use pagination for provisioned throughput
+            if self.client is None:
+                return throughputs
             paginator = self.client.get_paginator("list_provisioned_model_throughputs")
             page_iterator = paginator.paginate()
 
@@ -249,6 +255,8 @@ class BedrockFetcher(BaseServiceFetcher):
 
         try:
             # Use pagination for guardrails
+            if self.client is None:
+                return guardrails
             paginator = self.client.get_paginator("list_guardrails")
             page_iterator = paginator.paginate()
 

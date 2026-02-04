@@ -9,7 +9,7 @@ import logging
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 from rich.console import Console
 from rich.logging import RichHandler
@@ -32,7 +32,9 @@ class ServiceLoggerAdapter(logging.LoggerAdapter):
     by service.
     """
 
-    def process(self, msg: str, kwargs: dict) -> tuple[str, dict]:  # type: ignore[type-arg]
+    def process(  # type: ignore[override]
+        self, msg: str, kwargs: dict[str, Any]
+    ) -> tuple[str, dict[str, Any]]:
         """
         Process log message to add service context.
 

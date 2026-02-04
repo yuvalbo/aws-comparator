@@ -7,7 +7,7 @@ channel, and event stream resources.
 
 from typing import Any
 
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError  # type: ignore[import-untyped]
 
 from aws_comparator.core.registry import ServiceRegistry
 from aws_comparator.models.common import AWSResource
@@ -94,6 +94,8 @@ class PinpointFetcher(BaseServiceFetcher):
         try:
             # Fetch applications using pagination if available
             # Note: get_apps doesn't have native pagination, but we handle NextToken
+            if self.client is None:
+                return applications
             response = self.client.get_apps()
 
             if "ApplicationsResponse" in response:
@@ -148,6 +150,8 @@ class PinpointFetcher(BaseServiceFetcher):
         for app in applications:
             try:
                 # Get campaigns for this application
+                if self.client is None:
+                    continue
                 response = self.client.get_campaigns(ApplicationId=app.application_id)
 
                 if "CampaignsResponse" in response:
@@ -202,6 +206,8 @@ class PinpointFetcher(BaseServiceFetcher):
         for app in applications:
             try:
                 # Get segments for this application
+                if self.client is None:
+                    continue
                 response = self.client.get_segments(ApplicationId=app.application_id)
 
                 if "SegmentsResponse" in response:
@@ -334,6 +340,8 @@ class PinpointFetcher(BaseServiceFetcher):
         for app in applications:
             try:
                 # Get event stream for this application
+                if self.client is None:
+                    continue
                 response = self.client.get_event_stream(
                     ApplicationId=app.application_id
                 )
