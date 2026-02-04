@@ -595,3 +595,120 @@ class TestCloudWatchEdgeCases:
 
         # Should get first dashboard, skip invalid one
         assert len(dashboards) >= 1
+
+
+class TestCloudWatchFetcherAdditionalCoverage:
+    """Additional tests for coverage."""
+
+    @pytest.fixture
+    def mock_session(self):
+        """Create a mock boto3 session."""
+        return Mock()
+
+    @pytest.fixture
+    def fetcher(self, mock_session):
+        """Create a CloudWatch fetcher instance."""
+        return CloudWatchFetcher(session=mock_session, region="us-east-1")
+
+    def test_fetch_log_groups_fallback_no_paginator(self, fetcher):
+        """Test log groups fetching fallback when paginator not available."""
+        mock_logs_client = Mock()
+
+        with patch.object(
+            fetcher, "_create_logs_client", return_value=mock_logs_client
+        ):
+            mock_logs_client.can_paginate.return_value = False
+            mock_logs_client.describe_log_groups.return_value = {
+                "logGroups": [
+                    {
+                        "logGroupName": "/aws/lambda/test-function",
+                        "arn": "arn:aws:logs:us-east-1:123456789012:log-group:/aws/lambda/test-function",
+                        "creationTime": 1640995200000,
+                    }
+                ]
+            }
+
+            log_groups = fetcher._fetch_log_groups()
+
+            assert len(log_groups) == 1
+            assert log_groups[0].log_group_name == "/aws/lambda/test-function"
+
+    def test_fetch_log_groups_fallback_client_error(self, fetcher):
+        """Test log groups fetching fallback with ClientError."""
+        mock_logs_client = Mock()
+
+        with patch.object(
+            fetcher, "_create_logs_client", return_value=mock_logs_client
+        ):
+            mock_logs_client.can_paginate.return_value = False
+            mock_logs_client.describe_log_groups.side_effect = ClientError(
+                {"Error": {"Code": "AccessDenied", "Message": "Access denied"}},
+                "DescribeLogGroups",
+            )
+
+            log_groups = fetcher._fetch_log_groups()
+
+            assert log_groups == []
+
+    def test_fetch_log_groups_outer_exception(self, fetcher):
+        """Test log groups fetching with outer exception."""
+        with patch.object(fetcher, "_create_logs_client") as mock_create:
+            mock_create.side_effect = Exception("Failed to create client")
+
+            log_groups = fetcher._fetch_log_groups()
+
+            assert log_groups == []
+
+    def test_fetch_alarms_client_error(self, fetcher):
+        """Test alarms fetching with ClientError."""
+        with patch.object(fetcher, "_paginate") as mock_paginate:
+            mock_paginate.side_effect = ClientError(
+                {"Error": {"Code": "AccessDenied", "Message": "Access denied"}},
+                "DescribeAlarms",
+            )
+
+            alarms = fetcher._fetch_alarms()
+
+            assert alarms == []
+
+    def test_fetch_dashboards_client_error(self, fetcher):
+        """Test dashboards fetching with ClientError."""
+        with patch.object(fetcher, "_paginate") as mock_paginate:
+            mock_paginate.side_effect = ClientError(
+                {"Error": {"Code": "AccessDenied", "Message": "Access denied"}},
+                "ListDashboards",
+            )
+
+            dashboards = fetcher._fetch_dashboards()
+
+            assert dashboards == []
+
+    def test_fetch_log_groups_fallback_multiple_groups(self, fetcher):
+        """Test log groups fetching fallback with multiple groups."""
+        mock_logs_client = Mock()
+
+        with patch.object(
+            fetcher, "_create_logs_client", return_value=mock_logs_client
+        ):
+            mock_logs_client.can_paginate.return_value = False
+            mock_logs_client.describe_log_groups.return_value = {
+                "logGroups": [
+                    {
+                        "logGroupName": "/aws/lambda/func1",
+                        "arn": "arn:aws:logs:us-east-1:123456789012:log-group:/aws/lambda/func1",
+                        "creationTime": 1640995200000,
+                    },
+                    {
+                        "logGroupName": "/aws/lambda/func2",
+                        "arn": "arn:aws:logs:us-east-1:123456789012:log-group:/aws/lambda/func2",
+                        "creationTime": 1640995200000,
+                    },
+                ]
+            }
+
+            log_groups = fetcher._fetch_log_groups()
+
+            assert len(log_groups) == 2
+            names = [lg.log_group_name for lg in log_groups]
+            assert "/aws/lambda/func1" in names
+            assert "/aws/lambda/func2" in names

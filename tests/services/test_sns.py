@@ -185,3 +185,178 @@ class TestSNSFetcherErrorHandling:
         resources = fetcher.fetch_resources()
         assert "topics" in resources
         assert "subscriptions" in resources
+
+    def test_fetch_topics_per_topic_client_error_access_denied(self, mock_session):
+        """Test fetcher handles AccessDenied error per topic."""
+        from botocore.exceptions import ClientError
+
+        mock_paginator = MagicMock()
+        mock_paginator.paginate.return_value = [
+            {
+                "Topics": [
+                    {"TopicArn": "arn:aws:sns:us-east-1:123456789012:topic1"},
+                    {"TopicArn": "arn:aws:sns:us-east-1:123456789012:topic2"},
+                ]
+            }
+        ]
+
+        mock_client = MagicMock()
+        mock_client.get_paginator.return_value = mock_paginator
+        mock_client.get_topic_attributes.side_effect = ClientError(
+            {"Error": {"Code": "AccessDenied", "Message": "Access Denied"}},
+            "GetTopicAttributes",
+        )
+        mock_session.client.return_value = mock_client
+
+        fetcher = SNSFetcher(session=mock_session, region="us-east-1")
+        topics = fetcher._fetch_topics()
+
+        # Should return empty list when access denied on topics
+        assert topics == []
+
+    def test_fetch_topics_per_topic_client_error_other(self, mock_session):
+        """Test fetcher handles non-AccessDenied error per topic."""
+        from botocore.exceptions import ClientError
+
+        mock_paginator = MagicMock()
+        mock_paginator.paginate.return_value = [
+            {
+                "Topics": [
+                    {"TopicArn": "arn:aws:sns:us-east-1:123456789012:topic1"},
+                ]
+            }
+        ]
+
+        mock_client = MagicMock()
+        mock_client.get_paginator.return_value = mock_paginator
+        mock_client.get_topic_attributes.side_effect = ClientError(
+            {"Error": {"Code": "InternalError", "Message": "Internal error"}},
+            "GetTopicAttributes",
+        )
+        mock_session.client.return_value = mock_client
+
+        fetcher = SNSFetcher(session=mock_session, region="us-east-1")
+        topics = fetcher._fetch_topics()
+
+        # Should return empty list when error on topic
+        assert topics == []
+
+    def test_fetch_topics_outer_exception(self, mock_session):
+        """Test fetcher handles outer exception for topics."""
+        mock_paginator = MagicMock()
+        mock_paginator.paginate.side_effect = Exception("Unexpected error")
+        mock_client = MagicMock()
+        mock_client.get_paginator.return_value = mock_paginator
+        mock_session.client.return_value = mock_client
+
+        fetcher = SNSFetcher(session=mock_session, region="us-east-1")
+        topics = fetcher._fetch_topics()
+
+        assert topics == []
+
+    def test_fetch_subscriptions_per_sub_client_error_access_denied(self, mock_session):
+        """Test fetcher handles AccessDenied error per subscription."""
+        from botocore.exceptions import ClientError
+
+        mock_paginator = MagicMock()
+        mock_paginator.paginate.return_value = [
+            {
+                "Subscriptions": [
+                    {
+                        "SubscriptionArn": "arn:aws:sns:us-east-1:123456789012:topic1:sub1",
+                        "TopicArn": "arn:aws:sns:us-east-1:123456789012:topic1",
+                        "Protocol": "email",
+                        "Endpoint": "test@example.com",
+                        "Owner": "123456789012",
+                    },
+                ]
+            }
+        ]
+
+        mock_client = MagicMock()
+        mock_client.get_paginator.return_value = mock_paginator
+        mock_client.get_subscription_attributes.side_effect = ClientError(
+            {"Error": {"Code": "AccessDenied", "Message": "Access Denied"}},
+            "GetSubscriptionAttributes",
+        )
+        mock_session.client.return_value = mock_client
+
+        fetcher = SNSFetcher(session=mock_session, region="us-east-1")
+        subs = fetcher._fetch_subscriptions()
+
+        # Should still return subscription even if attributes failed
+        assert len(subs) == 1
+
+    def test_fetch_subscriptions_per_sub_client_error_other(self, mock_session):
+        """Test fetcher handles non-AccessDenied error per subscription."""
+        from botocore.exceptions import ClientError
+
+        mock_paginator = MagicMock()
+        mock_paginator.paginate.return_value = [
+            {
+                "Subscriptions": [
+                    {
+                        "SubscriptionArn": "arn:aws:sns:us-east-1:123456789012:topic1:sub1",
+                        "TopicArn": "arn:aws:sns:us-east-1:123456789012:topic1",
+                        "Protocol": "email",
+                        "Endpoint": "test@example.com",
+                        "Owner": "123456789012",
+                    },
+                ]
+            }
+        ]
+
+        mock_client = MagicMock()
+        mock_client.get_paginator.return_value = mock_paginator
+        # This error is caught in inner try, so subscription is still added
+        mock_client.get_subscription_attributes.side_effect = ClientError(
+            {"Error": {"Code": "InternalError", "Message": "Internal error"}},
+            "GetSubscriptionAttributes",
+        )
+        mock_session.client.return_value = mock_client
+
+        fetcher = SNSFetcher(session=mock_session, region="us-east-1")
+        subs = fetcher._fetch_subscriptions()
+
+        # Subscription is still returned even if attributes failed
+        assert len(subs) == 1
+
+    def test_fetch_subscriptions_outer_exception(self, mock_session):
+        """Test fetcher handles outer exception for subscriptions."""
+        mock_paginator = MagicMock()
+        mock_paginator.paginate.side_effect = Exception("Unexpected error")
+        mock_client = MagicMock()
+        mock_client.get_paginator.return_value = mock_paginator
+        mock_session.client.return_value = mock_client
+
+        fetcher = SNSFetcher(session=mock_session, region="us-east-1")
+        subs = fetcher._fetch_subscriptions()
+
+        assert subs == []
+
+    def test_fetch_subscriptions_skips_pending(self, mock_session):
+        """Test fetcher skips pending subscriptions."""
+        mock_paginator = MagicMock()
+        mock_paginator.paginate.return_value = [
+            {
+                "Subscriptions": [
+                    {
+                        "SubscriptionArn": "PendingConfirmation",
+                        "TopicArn": "arn:aws:sns:us-east-1:123456789012:topic1",
+                        "Protocol": "email",
+                        "Endpoint": "test@example.com",
+                        "Owner": "123456789012",
+                    },
+                ]
+            }
+        ]
+
+        mock_client = MagicMock()
+        mock_client.get_paginator.return_value = mock_paginator
+        mock_session.client.return_value = mock_client
+
+        fetcher = SNSFetcher(session=mock_session, region="us-east-1")
+        subs = fetcher._fetch_subscriptions()
+
+        # Should return empty since pending subs are skipped
+        assert subs == []

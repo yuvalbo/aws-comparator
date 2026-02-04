@@ -418,3 +418,125 @@ class TestLambdaFetcherErrorHandling:
 
         # Should return empty list when no version data
         assert layers == []
+
+    def test_fetch_function_other_client_error(self, mock_session):
+        """Test fetcher handles non-AccessDenied ClientError on function details."""
+        from botocore.exceptions import ClientError
+
+        mock_paginator = MagicMock()
+        mock_paginator.paginate.return_value = [
+            {
+                "Functions": [
+                    {
+                        "FunctionName": "test-function",
+                        "FunctionArn": "arn:aws:lambda:us-east-1:123456789012:function:test-function",
+                        "Runtime": "python3.9",
+                        "Role": "arn:aws:iam::123456789012:role/test-role",
+                        "Handler": "handler.main",
+                        "CodeSize": 1000,
+                        "CodeSha256": "abc123",
+                        "LastModified": "2024-01-01T00:00:00.000+0000",
+                        "Version": "$LATEST",
+                    }
+                ]
+            }
+        ]
+        mock_client = MagicMock()
+        mock_client.get_paginator.return_value = mock_paginator
+        # list_tags ClientError is caught and ignored, not re-raised
+        mock_client.list_tags.side_effect = ClientError(
+            {"Error": {"Code": "InternalError", "Message": "Internal error"}},
+            "ListTags",
+        )
+        mock_client.get_function_concurrency.return_value = {}
+        mock_session.client.return_value = mock_client
+
+        fetcher = LambdaFetcher(session=mock_session, region="us-east-1")
+
+        # The ClientError on list_tags is caught, so function is still returned
+        functions = fetcher._fetch_functions()
+        assert len(functions) == 1
+
+    def test_fetch_layers_per_item_client_error(self, mock_session):
+        """Test fetcher handles per-item ClientError for layers."""
+        mock_paginator = MagicMock()
+        mock_paginator.paginate.return_value = [
+            {
+                "Layers": [
+                    {
+                        "LayerName": "layer1",
+                        "LayerArn": "arn:aws:lambda:us-east-1:123456789012:layer:layer1",
+                        "LatestMatchingVersion": {
+                            "LayerVersionArn": "arn:aws:lambda:us-east-1:123456789012:layer:layer1:1",
+                            "Version": 1,
+                            "CreatedDate": "2024-01-01T00:00:00.000+0000",
+                        },
+                    },
+                    {
+                        "LayerName": "layer2",
+                        "LayerArn": "arn:aws:lambda:us-east-1:123456789012:layer:layer2",
+                        "LatestMatchingVersion": {
+                            "LayerVersionArn": "arn:aws:lambda:us-east-1:123456789012:layer:layer2:1",
+                            "Version": 1,
+                            "CreatedDate": "2024-01-01T00:00:00.000+0000",
+                        },
+                    },
+                ]
+            }
+        ]
+        mock_client = MagicMock()
+        mock_client.get_paginator.return_value = mock_paginator
+        mock_session.client.return_value = mock_client
+
+        fetcher = LambdaFetcher(session=mock_session, region="us-east-1")
+        layers = fetcher._fetch_layers()
+
+        # Should return both layers
+        assert len(layers) == 2
+
+    def test_fetch_layers_per_item_access_denied(self, mock_session):
+        """Test fetcher handles AccessDenied for layers."""
+        from botocore.exceptions import ClientError
+
+        def make_paginate_raise(*args, **kwargs):
+            raise ClientError(
+                {"Error": {"Code": "AccessDenied", "Message": "Access Denied"}},
+                "ListLayers",
+            )
+
+        mock_paginator = MagicMock()
+        mock_paginator.paginate.side_effect = make_paginate_raise
+        mock_client = MagicMock()
+        mock_client.get_paginator.return_value = mock_paginator
+        mock_session.client.return_value = mock_client
+
+        fetcher = LambdaFetcher(session=mock_session, region="us-east-1")
+        layers = fetcher._fetch_layers()
+
+        # Should return empty list on AccessDenied
+        assert layers == []
+
+    def test_fetch_layers_other_client_error(self, mock_session):
+        """Test fetcher handles non-AccessDenied error for layers."""
+        mock_paginator = MagicMock()
+        mock_paginator.paginate.return_value = [
+            {
+                "Layers": [
+                    {
+                        "LayerName": "test-layer",
+                        "LayerArn": "arn:aws:lambda:us-east-1:123456789012:layer:test-layer",
+                        # Invalid data to trigger ClientError in per-item processing
+                    }
+                ]
+            }
+        ]
+
+        mock_client = MagicMock()
+        mock_client.get_paginator.return_value = mock_paginator
+        mock_session.client.return_value = mock_client
+
+        fetcher = LambdaFetcher(session=mock_session, region="us-east-1")
+        layers = fetcher._fetch_layers()
+
+        # Should return empty since layer has no LatestMatchingVersion
+        assert layers == []

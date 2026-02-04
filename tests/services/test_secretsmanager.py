@@ -348,6 +348,135 @@ class TestSecretsManagerFetcher:
         assert len(audit_logs) > 0
 
 
+class TestSecretsManagerFetcherSecurityViolations:
+    """Test security violation detection in fetcher."""
+
+    @pytest.fixture
+    def mock_session(self):
+        """Create a mock session."""
+        return MagicMock()
+
+    @pytest.fixture
+    def fetcher(self, mock_session):
+        """Create fetcher with mock session."""
+        with patch("boto3.Session", return_value=mock_session):
+            return SecretsManagerFetcher(session=mock_session, region="us-east-1")
+
+    def test_list_secrets_with_secret_string_skips(self, fetcher):
+        """Test that secrets with SecretString in list response are skipped."""
+        mock_client = MagicMock()
+        fetcher.client = mock_client
+
+        mock_client.get_paginator.return_value.paginate.return_value = [
+            {
+                "SecretList": [
+                    {
+                        "Name": "secret-with-value",
+                        "ARN": "arn:aws:secretsmanager:us-east-1:123456789012:secret:test",
+                        "SecretString": "should-not-be-here",  # Security violation
+                    }
+                ]
+            }
+        ]
+
+        resources = fetcher.fetch_resources()
+
+        # Should skip secret with security violation
+        assert len(resources["secrets"]) == 0
+
+    def test_describe_secret_with_secret_string_skips(self, fetcher):
+        """Test that describe_secret with SecretString is handled."""
+        mock_client = MagicMock()
+        fetcher.client = mock_client
+
+        mock_client.get_paginator.return_value.paginate.return_value = [
+            {
+                "SecretList": [
+                    {
+                        "Name": "test-secret",
+                        "ARN": "arn:aws:secretsmanager:us-east-1:123456789012:secret:test",
+                    }
+                ]
+            }
+        ]
+
+        mock_client.describe_secret.return_value = {
+            "Name": "test-secret",
+            "ARN": "arn:aws:secretsmanager:us-east-1:123456789012:secret:test",
+            "SecretString": "should-not-be-here",  # Security violation
+        }
+
+        resources = fetcher.fetch_resources()
+
+        # Should skip secret with security violation in describe
+        assert len(resources["secrets"]) == 0
+
+    def test_describe_secret_other_client_error(self, fetcher):
+        """Test handling of non-AccessDenied error from describe_secret."""
+        mock_client = MagicMock()
+        fetcher.client = mock_client
+
+        mock_client.get_paginator.return_value.paginate.return_value = [
+            {
+                "SecretList": [
+                    {
+                        "Name": "test-secret",
+                        "ARN": "arn:aws:secretsmanager:us-east-1:123456789012:secret:test",
+                    }
+                ]
+            }
+        ]
+
+        mock_client.describe_secret.side_effect = ClientError(
+            {"Error": {"Code": "InternalError", "Message": "Internal error"}},
+            "DescribeSecret",
+        )
+
+        resources = fetcher.fetch_resources()
+
+        # Should skip secret when describe fails with non-recoverable error
+        assert len(resources["secrets"]) == 0
+
+    def test_per_secret_client_error_access_denied(self, fetcher):
+        """Test handling of AccessDenied error per secret."""
+        mock_client = MagicMock()
+        fetcher.client = mock_client
+
+        mock_client.get_paginator.return_value.paginate.return_value = [
+            {
+                "SecretList": [
+                    {
+                        "Name": "test-secret",
+                        "ARN": "arn:aws:secretsmanager:us-east-1:123456789012:secret:test",
+                    }
+                ]
+            }
+        ]
+
+        mock_client.describe_secret.side_effect = ClientError(
+            {"Error": {"Code": "AccessDenied", "Message": "Access Denied"}},
+            "DescribeSecret",
+        )
+
+        resources = fetcher.fetch_resources()
+
+        # Should return secret with only list_secrets data
+        assert len(resources["secrets"]) == 1
+
+    def test_outer_exception_returns_empty(self, fetcher):
+        """Test outer exception returns empty list."""
+        mock_client = MagicMock()
+        fetcher.client = mock_client
+
+        mock_client.get_paginator.return_value.paginate.side_effect = Exception(
+            "Unexpected error"
+        )
+
+        resources = fetcher.fetch_resources()
+
+        assert resources["secrets"] == []
+
+
 class TestSecretsManagerFetcherEdgeCases:
     """Test edge cases and error conditions."""
 

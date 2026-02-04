@@ -589,3 +589,138 @@ class TestServiceQuotasIntegration:
         assert len(quotas) == 2
         # All three services should have been attempted
         assert call_count["count"] == 3
+
+
+class TestServiceQuotasFetcherAdditionalCoverage:
+    """Additional tests for coverage."""
+
+    @pytest.fixture
+    def mock_session(self):
+        """Create a mock boto3 session."""
+        return MagicMock()
+
+    @pytest.fixture
+    def fetcher(self, mock_session):
+        """Create ServiceQuotasFetcher instance."""
+        return ServiceQuotasFetcher(mock_session, "us-east-1")
+
+    def test_fetch_quotas_for_service_per_quota_exception(self, fetcher):
+        """Test handling of per-quota parsing errors."""
+        with patch.object(fetcher, "_paginate") as mock_paginate:
+            mock_paginate.return_value = [
+                {
+                    "ServiceCode": "lambda",
+                    "QuotaCode": "TEST-001",
+                    # Missing required fields to trigger exception
+                }
+            ]
+
+            with patch.object(fetcher, "_fetch_default_quotas") as mock_defaults:
+                mock_defaults.return_value = {}
+
+                quotas = fetcher._fetch_quotas_for_service("lambda")
+
+                # Should return empty list due to parsing error
+                assert quotas == []
+
+    def test_fetch_quotas_for_service_nosuchresource(self, fetcher):
+        """Test handling of NoSuchResourceException."""
+        with patch.object(fetcher, "_paginate") as mock_paginate:
+            mock_paginate.side_effect = ClientError(
+                {"Error": {"Code": "NoSuchResourceException", "Message": "Not found"}},
+                "list_service_quotas",
+            )
+
+            quotas = fetcher._fetch_quotas_for_service("nonexistent")
+
+            # Should return empty list
+            assert quotas == []
+
+    def test_fetch_default_quotas_client_error(self, fetcher):
+        """Test _fetch_default_quotas handles ClientError."""
+        with patch.object(fetcher, "_paginate") as mock_paginate:
+            mock_paginate.side_effect = ClientError(
+                {"Error": {"Code": "ServiceException", "Message": "Error"}},
+                "list_aws_default_service_quotas",
+            )
+
+            defaults = fetcher._fetch_default_quotas("lambda")
+
+            # Should return empty dict on error
+            assert defaults == {}
+
+    def test_list_available_services_exception(self, fetcher):
+        """Test list_available_services handles exceptions."""
+        with patch.object(fetcher, "_paginate") as mock_paginate:
+            mock_paginate.side_effect = Exception("Unexpected error")
+
+            services = fetcher.list_available_services()
+
+            # Should return empty list on error
+            assert services == []
+
+    def test_get_quota_by_code_client_none(self, fetcher):
+        """Test get_quota_by_code when client is None."""
+        fetcher.client = None
+
+        quota = fetcher.get_quota_by_code("lambda", "L-B99A9384")
+
+        assert quota is None
+
+    def test_get_quota_by_code_default_value_error(self, fetcher):
+        """Test get_quota_by_code when fetching default value fails."""
+        mock_client = MagicMock()
+        fetcher.client = mock_client
+
+        mock_client.get_service_quota.return_value = {
+            "Quota": {
+                "ServiceCode": "lambda",
+                "ServiceName": "AWS Lambda",
+                "QuotaCode": "L-B99A9384",
+                "QuotaName": "Concurrent executions",
+                "QuotaArn": "arn:aws:servicequotas::lambda/L-B99A9384",
+                "Value": 1000.0,
+                "Unit": "None",
+                "Adjustable": True,
+                "GlobalQuota": False,
+            }
+        }
+
+        mock_client.get_aws_default_service_quota.side_effect = ClientError(
+            {"Error": {"Code": "InternalError", "Message": "Error"}},
+            "get_aws_default_service_quota",
+        )
+
+        quota = fetcher.get_quota_by_code("lambda", "L-B99A9384")
+
+        # Should still return quota even if default fails
+        assert quota is not None
+        assert quota.quota_code == "L-B99A9384"
+        assert quota.default_value is None
+
+    def test_get_quota_by_code_other_client_error(self, fetcher):
+        """Test get_quota_by_code with non-standard error."""
+        mock_client = MagicMock()
+        fetcher.client = mock_client
+
+        mock_client.get_service_quota.side_effect = ClientError(
+            {"Error": {"Code": "InternalError", "Message": "Server error"}},
+            "get_service_quota",
+        )
+
+        quota = fetcher.get_quota_by_code("lambda", "L-B99A9384")
+
+        # Should return None and log error
+        assert quota is None
+
+    def test_fetch_quotas_general_exception(self, fetcher):
+        """Test _fetch_quotas handles general exceptions."""
+        fetcher.TARGET_SERVICE_CODES = ["lambda"]
+
+        with patch.object(fetcher, "_fetch_quotas_for_service") as mock_fetch:
+            mock_fetch.side_effect = Exception("Unexpected error")
+
+            quotas = fetcher._fetch_quotas()
+
+            # Should return empty list on error
+            assert quotas == []

@@ -1,5 +1,7 @@
 """Unit tests for EC2 service fetcher."""
 
+from unittest.mock import MagicMock, patch
+
 import boto3
 from moto import mock_aws
 
@@ -545,3 +547,175 @@ def test_error_handling_invalid_instance() -> None:
     resources = fetcher.fetch_resources()
     assert "instances" in resources
     assert isinstance(resources["instances"], list)
+
+
+class TestEC2FetcherErrorHandling:
+    """Tests for EC2 fetcher error handling paths."""
+
+    def test_fetch_instances_per_item_exception(self) -> None:
+        """Test handling of per-instance parsing errors."""
+        mock_session = MagicMock()
+        fetcher = EC2Fetcher(mock_session, "us-east-1")
+
+        with patch.object(fetcher, "_paginate") as mock_paginate:
+            # Return invalid instance data to trigger parsing error
+            mock_paginate.return_value = [
+                {
+                    "Instances": [
+                        {"InstanceId": "i-12345678", "InvalidField": "bad_data"}
+                    ]
+                }
+            ]
+
+            instances = fetcher._fetch_instances()
+            # Should return empty list due to parsing errors
+            assert isinstance(instances, list)
+
+    def test_fetch_instances_outer_exception(self) -> None:
+        """Test handling of outer exception in fetch_instances."""
+        mock_session = MagicMock()
+        fetcher = EC2Fetcher(mock_session, "us-east-1")
+
+        with patch.object(fetcher, "_paginate") as mock_paginate:
+            mock_paginate.side_effect = Exception("API Error")
+
+            instances = fetcher._fetch_instances()
+            assert instances == []
+
+    def test_fetch_security_groups_per_item_exception(self) -> None:
+        """Test handling of per-security-group parsing errors."""
+        mock_session = MagicMock()
+        fetcher = EC2Fetcher(mock_session, "us-east-1")
+
+        with patch.object(fetcher, "_paginate") as mock_paginate:
+            mock_paginate.return_value = [
+                {"GroupId": "sg-123", "InvalidField": "bad_data"}
+            ]
+
+            sgs = fetcher._fetch_security_groups()
+            assert isinstance(sgs, list)
+
+    def test_fetch_security_groups_outer_exception(self) -> None:
+        """Test handling of outer exception in fetch_security_groups."""
+        mock_session = MagicMock()
+        fetcher = EC2Fetcher(mock_session, "us-east-1")
+
+        with patch.object(fetcher, "_paginate") as mock_paginate:
+            mock_paginate.side_effect = Exception("API Error")
+
+            sgs = fetcher._fetch_security_groups()
+            assert sgs == []
+
+    def test_fetch_vpcs_per_item_exception(self) -> None:
+        """Test handling of per-VPC parsing errors."""
+        mock_session = MagicMock()
+        fetcher = EC2Fetcher(mock_session, "us-east-1")
+
+        with patch.object(fetcher, "_paginate") as mock_paginate:
+            mock_paginate.return_value = [{"VpcId": "vpc-123", "Invalid": "data"}]
+
+            vpcs = fetcher._fetch_vpcs()
+            assert isinstance(vpcs, list)
+
+    def test_fetch_vpcs_outer_exception(self) -> None:
+        """Test handling of outer exception in fetch_vpcs."""
+        mock_session = MagicMock()
+        fetcher = EC2Fetcher(mock_session, "us-east-1")
+
+        with patch.object(fetcher, "_paginate") as mock_paginate:
+            mock_paginate.side_effect = Exception("API Error")
+
+            vpcs = fetcher._fetch_vpcs()
+            assert vpcs == []
+
+    def test_fetch_subnets_per_item_exception(self) -> None:
+        """Test handling of per-subnet parsing errors."""
+        mock_session = MagicMock()
+        fetcher = EC2Fetcher(mock_session, "us-east-1")
+
+        with patch.object(fetcher, "_paginate") as mock_paginate:
+            mock_paginate.return_value = [{"SubnetId": "subnet-123", "Invalid": "data"}]
+
+            subnets = fetcher._fetch_subnets()
+            assert isinstance(subnets, list)
+
+    def test_fetch_subnets_outer_exception(self) -> None:
+        """Test handling of outer exception in fetch_subnets."""
+        mock_session = MagicMock()
+        fetcher = EC2Fetcher(mock_session, "us-east-1")
+
+        with patch.object(fetcher, "_paginate") as mock_paginate:
+            mock_paginate.side_effect = Exception("API Error")
+
+            subnets = fetcher._fetch_subnets()
+            assert subnets == []
+
+    def test_fetch_route_tables_per_item_exception(self) -> None:
+        """Test handling of per-route-table parsing errors."""
+        mock_session = MagicMock()
+        fetcher = EC2Fetcher(mock_session, "us-east-1")
+
+        with patch.object(fetcher, "_paginate") as mock_paginate:
+            mock_paginate.return_value = [
+                {"RouteTableId": "rtb-123", "Invalid": "data"}
+            ]
+
+            rts = fetcher._fetch_route_tables()
+            assert isinstance(rts, list)
+
+    def test_fetch_route_tables_outer_exception(self) -> None:
+        """Test handling of outer exception in fetch_route_tables."""
+        mock_session = MagicMock()
+        fetcher = EC2Fetcher(mock_session, "us-east-1")
+
+        with patch.object(fetcher, "_paginate") as mock_paginate:
+            mock_paginate.side_effect = Exception("API Error")
+
+            rts = fetcher._fetch_route_tables()
+            assert rts == []
+
+    def test_fetch_network_acls_per_item_exception(self) -> None:
+        """Test handling of per-network-acl parsing errors."""
+        mock_session = MagicMock()
+        fetcher = EC2Fetcher(mock_session, "us-east-1")
+
+        with patch.object(fetcher, "_paginate") as mock_paginate:
+            mock_paginate.return_value = [
+                {"NetworkAclId": "acl-123", "Invalid": "data"}
+            ]
+
+            nacls = fetcher._fetch_network_acls()
+            assert isinstance(nacls, list)
+
+    def test_fetch_network_acls_outer_exception(self) -> None:
+        """Test handling of outer exception in fetch_network_acls."""
+        mock_session = MagicMock()
+        fetcher = EC2Fetcher(mock_session, "us-east-1")
+
+        with patch.object(fetcher, "_paginate") as mock_paginate:
+            mock_paginate.side_effect = Exception("API Error")
+
+            nacls = fetcher._fetch_network_acls()
+            assert nacls == []
+
+    def test_fetch_key_pairs_per_item_exception(self) -> None:
+        """Test handling of per-key-pair parsing errors."""
+        mock_session = MagicMock()
+        fetcher = EC2Fetcher(mock_session, "us-east-1")
+
+        with patch.object(fetcher, "_paginate") as mock_paginate:
+            mock_paginate.return_value = [{"KeyName": "test-key", "Invalid": "data"}]
+
+            keys = fetcher._fetch_key_pairs()
+            assert isinstance(keys, list)
+
+    def test_fetch_key_pairs_outer_exception(self) -> None:
+        """Test handling of outer exception in fetch_key_pairs."""
+        mock_session = MagicMock()
+        fetcher = EC2Fetcher(mock_session, "us-east-1")
+
+        with patch.object(fetcher, "_paginate") as mock_paginate:
+            mock_paginate.side_effect = Exception("API Error")
+
+            keys = fetcher._fetch_key_pairs()
+            assert keys == []

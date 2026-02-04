@@ -367,6 +367,53 @@ class TestApplicationVersionModel:
         assert version.source_bundle is not None
 
 
+class TestElasticBeanstalkFetcherClientNone:
+    """Tests for client is None paths."""
+
+    def test_fetch_applications_client_none(self, session):
+        """Test fetcher handles None client for applications."""
+        fetcher = ElasticBeanstalkFetcher(session=session, region="us-east-1")
+        fetcher.client = None
+
+        applications = fetcher._fetch_applications()
+        assert applications == []
+
+    def test_fetch_environments_client_none(self, session):
+        """Test fetcher handles None client for environments."""
+        fetcher = ElasticBeanstalkFetcher(session=session, region="us-east-1")
+        fetcher.client = None
+
+        environments = fetcher._fetch_environments()
+        assert environments == []
+
+    def test_fetch_configuration_templates_client_none(self, session):
+        """Test fetcher handles None client for configuration templates."""
+        fetcher = ElasticBeanstalkFetcher(session=session, region="us-east-1")
+        fetcher.client = None
+
+        templates = fetcher._fetch_configuration_templates()
+        assert templates == []
+
+    def test_fetch_application_versions_client_none(self, session):
+        """Test fetcher handles None client for application versions."""
+        fetcher = ElasticBeanstalkFetcher(session=session, region="us-east-1")
+        fetcher.client = None
+
+        versions = fetcher._fetch_application_versions()
+        assert versions == []
+
+    def test_fetch_resources_has_all_keys(self, session):
+        """Test fetch_resources returns dict with all expected keys."""
+        fetcher = ElasticBeanstalkFetcher(session=session, region="us-east-1")
+
+        resources = fetcher.fetch_resources()
+
+        assert "applications" in resources
+        assert "environments" in resources
+        assert "configuration_templates" in resources
+        assert "application_versions" in resources
+
+
 class TestElasticBeanstalkFetcherErrorHandling:
     """Tests for error handling in ElasticBeanstalkFetcher."""
 
@@ -572,6 +619,112 @@ class TestElasticBeanstalkFetcherErrorHandling:
 
                 # Should return empty list on error
                 assert versions == []
+
+    def test_fetch_configuration_templates_general_exception(self, session):
+        """Test fetcher handles general exception for templates."""
+        from unittest.mock import patch
+
+        fetcher = ElasticBeanstalkFetcher(session=session, region="us-east-1")
+
+        with patch.object(fetcher.client, "describe_applications") as mock_apps:
+            mock_apps.side_effect = Exception("Unexpected error")
+
+            templates = fetcher._fetch_configuration_templates()
+            assert templates == []
+
+    def test_fetch_application_versions_general_exception(self, session):
+        """Test fetcher handles general exception for versions."""
+        from unittest.mock import patch
+
+        fetcher = ElasticBeanstalkFetcher(session=session, region="us-east-1")
+
+        with patch.object(fetcher.client, "describe_applications") as mock_apps:
+            mock_apps.side_effect = Exception("Unexpected error")
+
+            versions = fetcher._fetch_application_versions()
+            assert versions == []
+
+    def test_fetch_configuration_templates_per_template_exception(self, session):
+        """Test fetcher handles per-template exception."""
+        from unittest.mock import patch
+
+        fetcher = ElasticBeanstalkFetcher(session=session, region="us-east-1")
+
+        with patch.object(fetcher.client, "describe_applications") as mock_apps:
+            mock_apps.return_value = {
+                "Applications": [
+                    {
+                        "ApplicationName": "test-app",
+                        "ConfigurationTemplates": ["template1"],
+                    }
+                ]
+            }
+
+            with patch.object(
+                fetcher.client, "describe_configuration_settings"
+            ) as mock_settings:
+                mock_settings.side_effect = Exception("Unexpected per-item error")
+
+                templates = fetcher._fetch_configuration_templates()
+                # Should return empty list when per-item error
+                assert templates == []
+
+    def test_fetch_application_versions_per_version_exception(self, session):
+        """Test fetcher handles per-version exception."""
+        from unittest.mock import patch
+
+        fetcher = ElasticBeanstalkFetcher(session=session, region="us-east-1")
+
+        with patch.object(fetcher.client, "describe_applications") as mock_apps:
+            mock_apps.return_value = {
+                "Applications": [
+                    {
+                        "ApplicationName": "test-app",
+                        "Versions": ["v1"],
+                    }
+                ]
+            }
+
+            with patch.object(
+                fetcher.client, "describe_application_versions"
+            ) as mock_versions:
+                mock_versions.side_effect = Exception("Unexpected error")
+
+                versions = fetcher._fetch_application_versions()
+                # Should return empty list when per-item error
+                assert versions == []
+
+    def test_fetch_application_versions_version_parsing_error(self, session):
+        """Test fetcher handles version parsing errors."""
+        from unittest.mock import patch
+
+        fetcher = ElasticBeanstalkFetcher(session=session, region="us-east-1")
+
+        with patch.object(fetcher.client, "describe_applications") as mock_apps:
+            mock_apps.return_value = {
+                "Applications": [
+                    {
+                        "ApplicationName": "test-app",
+                        "Versions": ["v1"],
+                    }
+                ]
+            }
+
+            with patch.object(
+                fetcher.client, "describe_application_versions"
+            ) as mock_versions:
+                mock_versions.return_value = {
+                    "ApplicationVersions": [
+                        {
+                            "ApplicationName": "test-app",
+                            # Missing VersionLabel to trigger parsing error
+                        }
+                    ]
+                }
+
+                versions = fetcher._fetch_application_versions()
+                # Should continue and return what it can
+                assert isinstance(versions, list)
 
 
 if __name__ == "__main__":

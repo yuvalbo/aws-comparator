@@ -489,3 +489,303 @@ class TestFetchResources:
         assert "channels" in resources
         assert "event_streams" in resources
         assert len(resources) == 5
+
+
+class TestPinpointFetcherAdditionalCoverage:
+    """Additional tests for coverage."""
+
+    @pytest.fixture
+    def mock_session(self) -> Mock:
+        """Create a mock boto3 session."""
+        session = Mock()
+        return session
+
+    @pytest.fixture
+    def mock_client(self) -> Mock:
+        """Create a mock Pinpoint client."""
+        return Mock()
+
+    @pytest.fixture
+    def fetcher(self, mock_session: Mock, mock_client: Mock) -> PinpointFetcher:
+        """Create a PinpointFetcher instance with mocked dependencies."""
+        mock_session.client.return_value = mock_client
+        return PinpointFetcher(mock_session, "us-east-1")
+
+    def test_fetch_campaigns_per_app_exception(
+        self, fetcher: PinpointFetcher, mock_client: Mock
+    ) -> None:
+        """Test handling of per-app ClientError for campaigns."""
+        mock_client.get_apps.return_value = {
+            "ApplicationsResponse": {
+                "Item": [
+                    {
+                        "Id": "app-123",
+                        "Arn": "arn:aws:mobiletargeting:us-east-1:123456789012:apps/app-123",
+                        "Name": "TestApp",
+                        "tags": {},
+                        "CreationDate": "2024-01-01T00:00:00Z",
+                    }
+                ]
+            }
+        }
+
+        mock_client.get_campaigns.side_effect = ClientError(
+            {"Error": {"Code": "InternalError", "Message": "Internal error"}},
+            "GetCampaigns",
+        )
+
+        campaigns = fetcher._fetch_campaigns()
+
+        # Should return empty list on error
+        assert campaigns == []
+
+    def test_fetch_segments_per_app_exception(
+        self, fetcher: PinpointFetcher, mock_client: Mock
+    ) -> None:
+        """Test handling of per-app ClientError for segments."""
+        mock_client.get_apps.return_value = {
+            "ApplicationsResponse": {
+                "Item": [
+                    {
+                        "Id": "app-123",
+                        "Arn": "arn:aws:mobiletargeting:us-east-1:123456789012:apps/app-123",
+                        "Name": "TestApp",
+                        "tags": {},
+                        "CreationDate": "2024-01-01T00:00:00Z",
+                    }
+                ]
+            }
+        }
+
+        mock_client.get_segments.side_effect = ClientError(
+            {"Error": {"Code": "InternalError", "Message": "Internal error"}},
+            "GetSegments",
+        )
+
+        segments = fetcher._fetch_segments()
+
+        # Should return empty list on error
+        assert segments == []
+
+    def test_fetch_channels_per_app_exception(
+        self, fetcher: PinpointFetcher, mock_client: Mock
+    ) -> None:
+        """Test handling of per-app exception for channels."""
+        mock_client.get_apps.return_value = {
+            "ApplicationsResponse": {
+                "Item": [
+                    {
+                        "Id": "app-123",
+                        "Arn": "arn:aws:mobiletargeting:us-east-1:123456789012:apps/app-123",
+                        "Name": "TestApp",
+                        "tags": {},
+                        "CreationDate": "2024-01-01T00:00:00Z",
+                    }
+                ]
+            }
+        }
+
+        mock_client.get_email_channel.side_effect = Exception("Unexpected error")
+        mock_client.get_sms_channel.side_effect = Exception("Unexpected error")
+        mock_client.get_apns_channel.side_effect = Exception("Unexpected error")
+        mock_client.get_gcm_channel.side_effect = Exception("Unexpected error")
+
+        channels = fetcher._fetch_channels()
+
+        # Should return empty list on error
+        assert channels == []
+
+    def test_fetch_event_streams_per_app_exception(
+        self, fetcher: PinpointFetcher, mock_client: Mock
+    ) -> None:
+        """Test handling of per-app exception for event streams."""
+        mock_client.get_apps.return_value = {
+            "ApplicationsResponse": {
+                "Item": [
+                    {
+                        "Id": "app-123",
+                        "Arn": "arn:aws:mobiletargeting:us-east-1:123456789012:apps/app-123",
+                        "Name": "TestApp",
+                        "tags": {},
+                        "CreationDate": "2024-01-01T00:00:00Z",
+                    }
+                ]
+            }
+        }
+
+        mock_client.get_event_stream.side_effect = Exception("Unexpected error")
+
+        event_streams = fetcher._fetch_event_streams()
+
+        # Should return empty list on error
+        assert event_streams == []
+
+    def test_fetch_applications_outer_exception(
+        self, fetcher: PinpointFetcher, mock_client: Mock
+    ) -> None:
+        """Test handling of outer exception for applications."""
+        mock_client.get_apps.side_effect = Exception("Unexpected error")
+
+        applications = fetcher._fetch_applications()
+
+        # Should return empty list
+        assert applications == []
+
+    def test_fetch_campaigns_outer_exception(
+        self, fetcher: PinpointFetcher, mock_client: Mock
+    ) -> None:
+        """Test handling of outer exception for campaigns."""
+        mock_client.get_apps.side_effect = Exception("Unexpected error")
+
+        campaigns = fetcher._fetch_campaigns()
+
+        # Should return empty list
+        assert campaigns == []
+
+    def test_fetch_segments_outer_exception(
+        self, fetcher: PinpointFetcher, mock_client: Mock
+    ) -> None:
+        """Test handling of outer exception for segments."""
+        mock_client.get_apps.side_effect = Exception("Unexpected error")
+
+        segments = fetcher._fetch_segments()
+
+        # Should return empty list
+        assert segments == []
+
+    def test_fetch_channels_outer_exception(
+        self, fetcher: PinpointFetcher, mock_client: Mock
+    ) -> None:
+        """Test handling of outer exception for channels."""
+        mock_client.get_apps.side_effect = Exception("Unexpected error")
+
+        channels = fetcher._fetch_channels()
+
+        # Should return empty list
+        assert channels == []
+
+    def test_fetch_event_streams_outer_exception(
+        self, fetcher: PinpointFetcher, mock_client: Mock
+    ) -> None:
+        """Test handling of outer exception for event streams."""
+        mock_client.get_apps.side_effect = Exception("Unexpected error")
+
+        event_streams = fetcher._fetch_event_streams()
+
+        # Should return empty list
+        assert event_streams == []
+
+    def test_fetch_channels_all_channel_types(
+        self, fetcher: PinpointFetcher, mock_client: Mock
+    ) -> None:
+        """Test fetching all channel types."""
+        mock_client.get_apps.return_value = {
+            "ApplicationsResponse": {
+                "Item": [
+                    {
+                        "Id": "app-123",
+                        "Arn": "arn:aws:mobiletargeting:us-east-1:123456789012:apps/app-123",
+                        "Name": "TestApp",
+                        "tags": {},
+                        "CreationDate": "2024-01-01T00:00:00Z",
+                    }
+                ]
+            }
+        }
+
+        # Mock all channel types
+        mock_client.get_email_channel.return_value = {
+            "EmailChannelResponse": {
+                "ApplicationId": "app-123",
+                "Enabled": True,
+                "FromAddress": "noreply@example.com",
+                "Identity": "arn:aws:ses:us-east-1:123456789012:identity/example.com",
+                "Platform": "EMAIL",
+                "Id": "email",
+            }
+        }
+        mock_client.get_sms_channel.return_value = {
+            "SMSChannelResponse": {
+                "ApplicationId": "app-123",
+                "Enabled": True,
+                "Platform": "SMS",
+                "Id": "sms",
+            }
+        }
+        mock_client.get_apns_channel.return_value = {
+            "APNSChannelResponse": {
+                "ApplicationId": "app-123",
+                "Enabled": True,
+                "Platform": "APNS",
+                "Id": "apns",
+            }
+        }
+        mock_client.get_gcm_channel.return_value = {
+            "GCMChannelResponse": {
+                "ApplicationId": "app-123",
+                "Enabled": True,
+                "Platform": "GCM",
+                "Id": "gcm",
+            }
+        }
+
+        channels = fetcher._fetch_channels()
+
+        # Should get all 4 channels
+        assert len(channels) == 4
+
+    def test_fetch_segments_access_denied(
+        self, fetcher: PinpointFetcher, mock_client: Mock
+    ) -> None:
+        """Test handling of AccessDenied for segments."""
+        mock_client.get_apps.return_value = {
+            "ApplicationsResponse": {
+                "Item": [
+                    {
+                        "Id": "app-123",
+                        "Arn": "arn:aws:mobiletargeting:us-east-1:123456789012:apps/app-123",
+                        "Name": "TestApp",
+                        "tags": {},
+                        "CreationDate": "2024-01-01T00:00:00Z",
+                    }
+                ]
+            }
+        }
+
+        mock_client.get_segments.side_effect = ClientError(
+            {"Error": {"Code": "AccessDenied", "Message": "Access Denied"}},
+            "GetSegments",
+        )
+
+        segments = fetcher._fetch_segments()
+
+        # Should return empty list
+        assert segments == []
+
+    def test_fetch_campaigns_access_denied(
+        self, fetcher: PinpointFetcher, mock_client: Mock
+    ) -> None:
+        """Test handling of AccessDenied for campaigns."""
+        mock_client.get_apps.return_value = {
+            "ApplicationsResponse": {
+                "Item": [
+                    {
+                        "Id": "app-123",
+                        "Arn": "arn:aws:mobiletargeting:us-east-1:123456789012:apps/app-123",
+                        "Name": "TestApp",
+                        "tags": {},
+                        "CreationDate": "2024-01-01T00:00:00Z",
+                    }
+                ]
+            }
+        }
+
+        mock_client.get_campaigns.side_effect = ClientError(
+            {"Error": {"Code": "AccessDenied", "Message": "Access Denied"}},
+            "GetCampaigns",
+        )
+
+        campaigns = fetcher._fetch_campaigns()
+
+        # Should return empty list
+        assert campaigns == []

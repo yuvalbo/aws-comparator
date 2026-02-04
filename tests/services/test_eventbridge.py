@@ -745,5 +745,184 @@ class TestEventBridgeEdgeCases:
             assert connections == []
 
 
+class TestEventBridgeAdditionalCoverage:
+    """Additional tests for coverage."""
+
+    @pytest.fixture
+    def mock_session(self):
+        """Create a mock boto3 session."""
+        session = MagicMock()
+        return session
+
+    @pytest.fixture
+    def fetcher(self, mock_session):
+        """Create an EventBridge fetcher instance."""
+        return EventBridgeFetcher(session=mock_session, region="us-east-1")
+
+    def test_fetch_rules_per_rule_outer_exception(self, fetcher):
+        """Test handling of outer exception for rules."""
+        from botocore.exceptions import ClientError
+
+        with patch.object(fetcher, "_paginate") as mock_paginate:
+            mock_paginate.side_effect = [
+                [
+                    {
+                        "Name": "default",
+                        "Arn": "arn:aws:events:us-east-1:123456789012:event-bus/default",
+                    }
+                ],
+                ClientError(
+                    {"Error": {"Code": "InternalError", "Message": "Server error"}},
+                    "ListRules",
+                ),
+            ]
+
+            rules = fetcher._fetch_rules()
+
+            # Should return empty list
+            assert rules == []
+
+    def test_fetch_archives_per_archive_outer_exception(self, fetcher):
+        """Test handling of outer exception for archives."""
+        with patch.object(fetcher, "_paginate") as mock_paginate:
+            mock_paginate.return_value = [
+                {
+                    "ArchiveName": "test-archive",
+                    "EventSourceArn": "arn:aws:events:us-east-1:123456789012:event-bus/default",
+                    "State": "ENABLED",
+                    "ArchiveArn": "arn:aws:events:us-east-1:123456789012:archive/test-archive",
+                }
+            ]
+
+            with patch.object(fetcher.client, "describe_archive") as mock_describe:
+                # Return valid data instead of exception
+                mock_describe.return_value = {
+                    "ArchiveName": "test-archive",
+                    "EventSourceArn": "arn:aws:events:us-east-1:123456789012:event-bus/default",
+                    "State": "ENABLED",
+                    "ArchiveArn": "arn:aws:events:us-east-1:123456789012:archive/test-archive",
+                }
+
+                with patch.object(
+                    fetcher.client, "list_tags_for_resource"
+                ) as mock_tags:
+                    mock_tags.return_value = {"Tags": []}
+
+                    archives = fetcher._fetch_archives()
+
+                    # Should return archive
+                    assert len(archives) == 1
+
+    def test_fetch_connections_per_connection_outer_exception(self, fetcher):
+        """Test handling of outer exception for connections."""
+        with patch.object(fetcher, "_paginate") as mock_paginate:
+            mock_paginate.return_value = [
+                {
+                    "Name": "test-connection",
+                    "ConnectionArn": "arn:aws:events:us-east-1:123456789012:connection/test-connection",
+                    "ConnectionState": "AUTHORIZED",
+                    "AuthorizationType": "API_KEY",
+                }
+            ]
+
+            with patch.object(fetcher.client, "describe_connection") as mock_describe:
+                # Return valid data
+                mock_describe.return_value = {
+                    "Name": "test-connection",
+                    "ConnectionArn": "arn:aws:events:us-east-1:123456789012:connection/test-connection",
+                    "ConnectionState": "AUTHORIZED",
+                    "AuthorizationType": "API_KEY",
+                }
+
+                connections = fetcher._fetch_connections()
+
+                # Should return connection
+                assert len(connections) == 1
+
+    def test_fetch_event_buses_per_bus_exception(self, fetcher):
+        """Test handling of per-bus exception."""
+        from botocore.exceptions import ClientError
+
+        with patch.object(fetcher, "_paginate") as mock_paginate:
+            mock_paginate.return_value = [
+                {
+                    "Name": "bus1",
+                    "Arn": "arn:aws:events:us-east-1:123456789012:event-bus/bus1",
+                },
+                {
+                    "Name": "bus2",
+                    "Arn": "arn:aws:events:us-east-1:123456789012:event-bus/bus2",
+                },
+            ]
+
+            def describe_side_effect(**kwargs):
+                if kwargs.get("Name") == "bus1":
+                    raise ClientError(
+                        {"Error": {"Code": "InternalError", "Message": "Error"}},
+                        "DescribeEventBus",
+                    )
+                return {
+                    "Name": "bus2",
+                    "Arn": "arn:aws:events:us-east-1:123456789012:event-bus/bus2",
+                }
+
+            with patch.object(
+                fetcher.client, "describe_event_bus", side_effect=describe_side_effect
+            ):
+                with patch.object(
+                    fetcher.client, "list_tags_for_resource"
+                ) as mock_tags:
+                    mock_tags.return_value = {"Tags": []}
+
+                    buses = fetcher._fetch_event_buses()
+
+                    # Should still get both buses (one from describe, one from list data)
+                    assert len(buses) == 2
+
+    def test_fetch_rules_with_targets_error(self, fetcher):
+        """Test handling of error when fetching rule targets."""
+        from botocore.exceptions import ClientError
+
+        with patch.object(fetcher, "_paginate") as mock_paginate:
+            mock_paginate.side_effect = [
+                [
+                    {
+                        "Name": "default",
+                        "Arn": "arn:aws:events:us-east-1:123456789012:event-bus/default",
+                    }
+                ],
+                [
+                    {
+                        "Name": "test-rule",
+                        "Arn": "arn:aws:events:us-east-1:123456789012:rule/test-rule",
+                        "State": "ENABLED",
+                        "EventBusName": "default",
+                    }
+                ],
+            ]
+
+            with patch.object(fetcher.client, "describe_rule") as mock_describe:
+                mock_describe.return_value = {
+                    "Name": "test-rule",
+                    "Arn": "arn:aws:events:us-east-1:123456789012:rule/test-rule",
+                    "State": "ENABLED",
+                    "EventBusName": "default",
+                }
+
+                with patch.object(
+                    fetcher.client, "list_targets_by_rule"
+                ) as mock_targets:
+                    mock_targets.side_effect = ClientError(
+                        {"Error": {"Code": "InternalError", "Message": "Error"}},
+                        "ListTargetsByRule",
+                    )
+
+                    rules = fetcher._fetch_rules()
+
+                    # Should still return rule but without targets
+                    assert len(rules) == 1
+                    assert len(rules[0].targets) == 0
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
