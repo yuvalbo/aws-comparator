@@ -161,8 +161,12 @@ class TestVersionCommand:
         runner = CliRunner()
         result = runner.invoke(cli, ["version"])
         assert result.exit_code == 0
-        assert VERSION in result.output
-        assert "aws-comparator" in result.output
+        # Strip ANSI escape codes for comparison (Rich adds color formatting)
+        import re
+
+        clean_output = re.sub(r"\x1b\[[0-9;]*m", "", result.output)
+        assert VERSION in clean_output
+        assert "aws-comparator" in clean_output
 
 
 class TestListServicesCommand:
