@@ -185,3 +185,4 @@ extraPaths = ["src"]
 typeCheckingMode = "basic"
 reportMissingImports = false
 reportMissingTypeStubs = false
+reportCallIssue = false

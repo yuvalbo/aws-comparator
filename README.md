@@ -165,6 +165,13 @@ aws-comparator compare -a1 123456789012 -a2 987654321098 \
   --region eu-west-1
 ```
 
+**Cross-region comparison (compare different regions):**
+```bash
+aws-comparator compare -a1 123456789012 -a2 987654321098 \
+  -p1 prod-profile -p2 staging-profile \
+  --region1 us-east-1 --region2 eu-west-1
+```
+
 ## Supported Services
 
 The following 11 AWS services are currently supported:
@@ -229,7 +236,9 @@ aws-comparator compare [OPTIONS]
 
 | Option | Description |
 |--------|-------------|
-| `-r, --region TEXT` | AWS region to compare (default: us-east-1) |
+| `-r, --region TEXT` | AWS region for both accounts (default: us-east-1) |
+| `--region1 TEXT` | Override region for account1 (for cross-region comparison) |
+| `--region2 TEXT` | Override region for account2 (for cross-region comparison) |
 | `-s, --services TEXT` | Comma-separated list of services to compare (default: all) |
 
 **Output Options:**

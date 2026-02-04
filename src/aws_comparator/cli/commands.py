@@ -121,7 +121,17 @@ def cli(ctx: click.Context) -> None:
 @click.option(
     "--region", "-r",
     default="us-east-1",
-    help="AWS region to compare (default: us-east-1).",
+    help="AWS region for both accounts (default: us-east-1).",
+)
+@click.option(
+    "--region1",
+    default=None,
+    help="Override region for account1 (for cross-region comparison).",
+)
+@click.option(
+    "--region2",
+    default=None,
+    help="Override region for account2 (for cross-region comparison).",
 )
 @click.option(
     "--services", "-s",
@@ -173,6 +183,8 @@ def compare(  # noqa: C901
     role1: Optional[str],
     role2: Optional[str],
     region: str,
+    region1: Optional[str],
+    region2: Optional[str],
     services: Optional[str],
     output_format: str,
     output_file: Optional[str],
@@ -190,6 +202,11 @@ def compare(  # noqa: C901
 
     # Create console with color settings
     output_console = Console(force_terminal=not no_color, no_color=no_color)
+
+    # Determine effective regions for each account
+    # region1/region2 override the base --region option
+    effective_region1 = region1 if region1 is not None else region
+    effective_region2 = region2 if region2 is not None else region
 
     try:
         # Parse services
@@ -216,14 +233,14 @@ def compare(  # noqa: C901
             account_id=account1,
             profile=profile1,
             role_arn=role1,
-            region=region,
+            region=effective_region1,
         )
 
         account2_config = AccountConfig(
             account_id=account2,
             profile=profile2,
             role_arn=role2,
-            region=region,
+            region=effective_region2,
         )
 
         # Build comparison configuration
@@ -243,7 +260,14 @@ def compare(  # noqa: C901
             output_console.print(
                 f"[bold]Comparing AWS accounts:[/bold] {account1} vs {account2}"
             )
-            output_console.print(f"[bold]Region:[/bold] {region}")
+            # Show region info - use different format if cross-region comparison
+            if effective_region1 == effective_region2:
+                output_console.print(f"[bold]Region:[/bold] {effective_region1}")
+            else:
+                output_console.print(
+                    f"[bold]Region 1:[/bold] {effective_region1}  "
+                    f"[bold]Region 2:[/bold] {effective_region2}"
+                )
             if services_list:
                 output_console.print(
                     f"[bold]Services:[/bold] {', '.join(services_list)}"

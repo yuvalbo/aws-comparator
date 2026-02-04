@@ -415,17 +415,18 @@ class ComparisonOrchestrator:
         services_compared: list[str] = []
 
         total_services = len(services_to_compare)
-        region = self.config.account1.region
+        region1 = self.config.account1.region
+        region2 = self.config.account2.region
 
         if self.config.parallel_execution:
             # Parallel execution
             results, errors, services_compared = self._compare_services_parallel(
-                services_to_compare, region, total_services
+                services_to_compare, region1, region2, total_services
             )
         else:
             # Sequential execution
             results, errors, services_compared = self._compare_services_sequential(
-                services_to_compare, region, total_services
+                services_to_compare, region1, region2, total_services
             )
 
         execution_time = time.time() - start_time
@@ -439,10 +440,13 @@ class ComparisonOrchestrator:
             f"services in {execution_time:.2f}s"
         )
 
+        # For backward compatibility, use region1 as the main region field
         return ComparisonReport(
             account1_id=self.config.account1.account_id,
             account2_id=self.config.account2.account_id,
-            region=region,
+            region=region1,
+            region1=region1,
+            region2=region2,
             services_compared=services_compared,
             timestamp=datetime.utcnow(),
             results=results,
@@ -453,7 +457,8 @@ class ComparisonOrchestrator:
     def _compare_services_parallel(
         self,
         services: list[str],
-        region: str,
+        region1: str,
+        region2: str,
         total_services: int,
     ) -> tuple[list[ServiceComparisonResult], list[ServiceError], list[str]]:
         """
@@ -461,7 +466,8 @@ class ComparisonOrchestrator:
 
         Args:
             services: List of services to compare.
-            region: AWS region.
+            region1: AWS region for account 1.
+            region2: AWS region for account 2.
             total_services: Total number of services for progress reporting.
 
         Returns:
@@ -470,6 +476,10 @@ class ComparisonOrchestrator:
         results: list[ServiceComparisonResult] = []
         errors: list[ServiceError] = []
         services_compared: list[str] = []
+
+        # Sessions must be initialized before calling this method
+        assert self._session1 is not None, "Session 1 not initialized"
+        assert self._session2 is not None, "Session 2 not initialized"
 
         max_workers = min(self.config.max_workers, len(services) * 2)
 
@@ -483,7 +493,7 @@ class ComparisonOrchestrator:
                     self._fetch_service_data,
                     service_name,
                     self._session1,
-                    region,
+                    region1,
                 )
                 fetch_futures[(service_name, 1)] = future1
 
@@ -492,7 +502,7 @@ class ComparisonOrchestrator:
                     self._fetch_service_data,
                     service_name,
                     self._session2,
-                    region,
+                    region2,
                 )
                 fetch_futures[(service_name, 2)] = future2
 
@@ -559,7 +569,8 @@ class ComparisonOrchestrator:
     def _compare_services_sequential(
         self,
         services: list[str],
-        region: str,
+        region1: str,
+        region2: str,
         total_services: int,
     ) -> tuple[list[ServiceComparisonResult], list[ServiceError], list[str]]:
         """
@@ -567,7 +578,8 @@ class ComparisonOrchestrator:
 
         Args:
             services: List of services to compare.
-            region: AWS region.
+            region1: AWS region for account 1.
+            region2: AWS region for account 2.
             total_services: Total number of services for progress reporting.
 
         Returns:
@@ -576,6 +588,10 @@ class ComparisonOrchestrator:
         results: list[ServiceComparisonResult] = []
         errors: list[ServiceError] = []
         services_compared: list[str] = []
+
+        # Sessions must be initialized before calling this method
+        assert self._session1 is not None, "Session 1 not initialized"
+        assert self._session2 is not None, "Session 2 not initialized"
 
         for idx, service_name in enumerate(services, 1):
             if self.progress_callback:
@@ -586,10 +602,10 @@ class ComparisonOrchestrator:
 
                 # Fetch from both accounts
                 _, data1, error1 = self._fetch_service_data(
-                    service_name, self._session1, region
+                    service_name, self._session1, region1
                 )
                 _, data2, error2 = self._fetch_service_data(
-                    service_name, self._session2, region
+                    service_name, self._session2, region2
                 )
 
                 # Compare

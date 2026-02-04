@@ -7,8 +7,9 @@ including changes, severity levels, and aggregated reports.
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field, ConfigDict, computed_field
+from typing import Any, Optional
+
+from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 
 class ChangeType(str, Enum):
@@ -95,15 +96,15 @@ class ResourceTypeComparison(BaseModel):
     resource_type: str = Field(..., description="Type of resource")
     account1_count: int = Field(ge=0, description="Count in first account")
     account2_count: int = Field(ge=0, description="Count in second account")
-    added: List[ResourceChange] = Field(
+    added: list[ResourceChange] = Field(
         default_factory=list,
         description="Resources added in account2"
     )
-    removed: List[ResourceChange] = Field(
+    removed: list[ResourceChange] = Field(
         default_factory=list,
         description="Resources removed from account2"
     )
-    modified: List[ResourceChange] = Field(
+    modified: list[ResourceChange] = Field(
         default_factory=list,
         description="Resources modified between accounts"
     )
@@ -148,11 +149,11 @@ class ServiceComparisonResult(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     service_name: str = Field(..., description="AWS service name")
-    resource_comparisons: Dict[str, ResourceTypeComparison] = Field(
+    resource_comparisons: dict[str, ResourceTypeComparison] = Field(
         default_factory=dict,
         description="Comparisons for each resource type"
     )
-    errors: List[str] = Field(
+    errors: list[str] = Field(
         default_factory=list,
         description="Errors encountered during comparison"
     )
@@ -179,7 +180,7 @@ class ServiceComparisonResult(BaseModel):
 
     def __str__(self) -> str:
         """Return string representation of service result."""
-        status = "✗ with errors" if self.has_errors else "✓"
+        status = "with errors" if self.has_errors else "ok"
         return f"{self.service_name} {status}: {self.total_changes} changes"
 
     def __repr__(self) -> str:
@@ -205,13 +206,13 @@ class ReportSummary(BaseModel):
     total_changes: int = Field(ge=0, description="Total number of changes")
     total_resources_account1: int = Field(ge=0, description="Resources in account1")
     total_resources_account2: int = Field(ge=0, description="Resources in account2")
-    changes_by_severity: Dict[str, int] = Field(
+    changes_by_severity: dict[str, int] = Field(
         default_factory=lambda: {
             severity.value: 0 for severity in ChangeSeverity
         },
         description="Count of changes by severity level"
     )
-    services_with_errors: List[str] = Field(
+    services_with_errors: list[str] = Field(
         default_factory=list,
         description="Services that had errors"
     )
@@ -279,23 +280,25 @@ class ComparisonReport(BaseModel):
 
     account1_id: str = Field(..., pattern=r'^\d{12}$', description="First account ID")
     account2_id: str = Field(..., pattern=r'^\d{12}$', description="Second account ID")
-    region: str = Field(..., description="AWS region")
-    services_compared: List[str] = Field(..., description="Services compared")
+    region: str = Field(..., description="AWS region (deprecated, use region1/region2)")
+    region1: Optional[str] = Field(None, description="AWS region for account 1")
+    region2: Optional[str] = Field(None, description="AWS region for account 2")
+    services_compared: list[str] = Field(..., description="Services compared")
     timestamp: datetime = Field(
         default_factory=datetime.utcnow,
         description="When comparison was performed"
     )
-    results: List[ServiceComparisonResult] = Field(
+    results: list[ServiceComparisonResult] = Field(
         default_factory=list,
         description="Results for each service"
     )
     summary: ReportSummary = Field(..., description="Summary statistics")
-    errors: List[ServiceError] = Field(
+    errors: list[ServiceError] = Field(
         default_factory=list,
         description="Errors encountered"
     )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Export as dictionary.
 
@@ -322,7 +325,7 @@ class ComparisonReport(BaseModel):
     def get_changes_by_severity(
         self,
         min_severity: ChangeSeverity = ChangeSeverity.INFO
-    ) -> List[ResourceChange]:
+    ) -> list[ResourceChange]:
         """
         Get all changes at or above a minimum severity level.
 
@@ -341,7 +344,7 @@ class ComparisonReport(BaseModel):
         }
         min_level = severity_order[min_severity]
 
-        changes: List[ResourceChange] = []
+        changes: list[ResourceChange] = []
         for result in self.results:
             for resource_comp in result.resource_comparisons.values():
                 for change_list in [resource_comp.added, resource_comp.removed, resource_comp.modified]:

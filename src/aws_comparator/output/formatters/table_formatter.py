@@ -264,9 +264,12 @@ class TableFormatter(BaseFormatter):
 
         # Report metadata
         if isinstance(report, ComparisonReport):
-            console.print(f"Account 1: {report.account1_id}")
-            console.print(f"Account 2: {report.account2_id}")
-            console.print(f"Region: {report.region}")
+            # Determine regions to display
+            region1 = report.region1 if report.region1 else report.region
+            region2 = report.region2 if report.region2 else report.region
+
+            console.print(f"Account 1: {report.account1_id} ({region1})")
+            console.print(f"Account 2: {report.account2_id} ({region2})")
             console.print(f"Timestamp: {report.timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
         else:
             console.print(f"Service: {report.service_name}")
