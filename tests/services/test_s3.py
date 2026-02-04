@@ -1,4 +1,5 @@
 """Tests for S3 service fetcher."""
+
 from unittest.mock import MagicMock
 
 import boto3

@@ -14,6 +14,7 @@ from aws_comparator.models.common import AWSResource
 
 class Runtime(str, Enum):
     """Lambda function runtimes."""
+
     PYTHON_3_8 = "python3.8"
     PYTHON_3_9 = "python3.9"
     PYTHON_3_10 = "python3.10"
@@ -36,12 +37,14 @@ class Runtime(str, Enum):
 
 class PackageType(str, Enum):
     """Lambda package types."""
+
     ZIP = "Zip"
     IMAGE = "Image"
 
 
 class State(str, Enum):
     """Lambda function states."""
+
     PENDING = "Pending"
     ACTIVE = "Active"
     INACTIVE = "Inactive"
@@ -50,6 +53,7 @@ class State(str, Enum):
 
 class VpcConfig(BaseModel):
     """Lambda VPC configuration."""
+
     model_config = ConfigDict(extra="ignore")
 
     subnet_ids: list[str] = Field(default_factory=list, description="VPC subnet IDs")
@@ -61,6 +65,7 @@ class VpcConfig(BaseModel):
 
 class Environment(BaseModel):
     """Lambda environment variables."""
+
     model_config = ConfigDict(extra="ignore")
 
     variables: dict[str, str] = Field(
@@ -70,6 +75,7 @@ class Environment(BaseModel):
 
 class DeadLetterConfig(BaseModel):
     """Lambda dead letter queue configuration."""
+
     model_config = ConfigDict(extra="ignore")
 
     target_arn: str = Field(..., description="Target ARN for failed invocations")
@@ -77,6 +83,7 @@ class DeadLetterConfig(BaseModel):
 
 class TracingConfig(BaseModel):
     """Lambda X-Ray tracing configuration."""
+
     model_config = ConfigDict(extra="ignore")
 
     mode: str = Field(
@@ -90,6 +97,7 @@ class LambdaFunction(AWSResource):
 
     Represents an AWS Lambda function with all its configuration properties.
     """
+
     model_config = ConfigDict(extra="ignore")
 
     # Basic properties
@@ -102,7 +110,9 @@ class LambdaFunction(AWSResource):
     # Code configuration
     code_size: int = Field(..., ge=0, description="Code size in bytes")
     code_sha256: str = Field(..., description="SHA256 hash of code")
-    package_type: PackageType = Field(default=PackageType.ZIP, description="Package type")
+    package_type: PackageType = Field(
+        default=PackageType.ZIP, description="Package type"
+    )
 
     # Execution configuration
     description: Optional[str] = Field(None, description="Function description")
@@ -125,8 +135,7 @@ class LambdaFunction(AWSResource):
 
     # Dead letter queue
     dead_letter_config: Optional[DeadLetterConfig] = Field(
-        None,
-        description="Dead letter configuration"
+        None, description="Dead letter configuration"
     )
 
     # Tracing
@@ -139,37 +148,30 @@ class LambdaFunction(AWSResource):
 
     # File systems
     file_system_configs: list[dict[str, Any]] = Field(
-        default_factory=list,
-        description="EFS file system configurations"
+        default_factory=list, description="EFS file system configurations"
     )
 
     # Image config (for container images)
     image_config_response: Optional[dict[str, Any]] = Field(
-        None,
-        description="Container image configuration"
+        None, description="Container image configuration"
     )
 
     # Architectures
     architectures: list[str] = Field(
-        default_factory=lambda: ["x86_64"],
-        description="Instruction set architectures"
+        default_factory=lambda: ["x86_64"], description="Instruction set architectures"
     )
 
     # Ephemeral storage
     ephemeral_storage_size: int = Field(
-        default=512,
-        ge=512,
-        le=10240,
-        description="Ephemeral storage size in MB"
+        default=512, ge=512, le=10240, description="Ephemeral storage size in MB"
     )
 
     # Reserved concurrent executions
     reserved_concurrent_executions: Optional[int] = Field(
-        None,
-        description="Reserved concurrent executions"
+        None, description="Reserved concurrent executions"
     )
 
-    @field_validator('function_name')
+    @field_validator("function_name")
     @classmethod
     def validate_function_name(cls, v: str) -> str:
         """
@@ -192,9 +194,7 @@ class LambdaFunction(AWSResource):
 
     @classmethod
     def from_aws_response(
-        cls,
-        function_data: dict[str, Any],
-        tags: Optional[dict[str, str]] = None
+        cls, function_data: dict[str, Any], tags: Optional[dict[str, str]] = None
     ) -> "LambdaFunction":
         """
         Create LambdaFunction instance from AWS API response.
@@ -207,84 +207,80 @@ class LambdaFunction(AWSResource):
             LambdaFunction instance
         """
         function_dict: dict[str, Any] = {
-            'function_name': function_data.get('FunctionName'),
-            'function_arn': function_data.get('FunctionArn'),
-            'arn': function_data.get('FunctionArn'),
-            'runtime': function_data.get('Runtime'),
-            'role': function_data.get('Role'),
-            'handler': function_data.get('Handler'),
-            'code_size': function_data.get('CodeSize', 0),
-            'code_sha256': function_data.get('CodeSha256'),
-            'description': function_data.get('Description'),
-            'timeout': function_data.get('Timeout', 3),
-            'memory_size': function_data.get('MemorySize', 128),
-            'last_modified': function_data.get('LastModified'),
-            'version': function_data.get('Version', '$LATEST'),
-            'tags': tags or {},
+            "function_name": function_data.get("FunctionName"),
+            "function_arn": function_data.get("FunctionArn"),
+            "arn": function_data.get("FunctionArn"),
+            "runtime": function_data.get("Runtime"),
+            "role": function_data.get("Role"),
+            "handler": function_data.get("Handler"),
+            "code_size": function_data.get("CodeSize", 0),
+            "code_sha256": function_data.get("CodeSha256"),
+            "description": function_data.get("Description"),
+            "timeout": function_data.get("Timeout", 3),
+            "memory_size": function_data.get("MemorySize", 128),
+            "last_modified": function_data.get("LastModified"),
+            "version": function_data.get("Version", "$LATEST"),
+            "tags": tags or {},
         }
 
         # Optional fields
-        if 'PackageType' in function_data:
-            function_dict['package_type'] = function_data['PackageType']
-        if 'LastUpdateStatus' in function_data:
-            function_dict['last_update_status'] = function_data['LastUpdateStatus']
-        if 'State' in function_data:
-            function_dict['state'] = function_data['State']
+        if "PackageType" in function_data:
+            function_dict["package_type"] = function_data["PackageType"]
+        if "LastUpdateStatus" in function_data:
+            function_dict["last_update_status"] = function_data["LastUpdateStatus"]
+        if "State" in function_data:
+            function_dict["state"] = function_data["State"]
 
         # VPC configuration
-        if 'VpcConfig' in function_data:
-            vpc = function_data['VpcConfig']
-            function_dict['vpc_config'] = {
-                'subnet_ids': vpc.get('SubnetIds', []),
-                'security_group_ids': vpc.get('SecurityGroupIds', []),
-                'vpc_id': vpc.get('VpcId')
+        if "VpcConfig" in function_data:
+            vpc = function_data["VpcConfig"]
+            function_dict["vpc_config"] = {
+                "subnet_ids": vpc.get("SubnetIds", []),
+                "security_group_ids": vpc.get("SecurityGroupIds", []),
+                "vpc_id": vpc.get("VpcId"),
             }
 
         # Environment
-        env_data = function_data.get('Environment', {})
-        if 'Variables' in env_data:
-            function_dict['environment'] = {
-                'variables': env_data['Variables']
-            }
+        env_data = function_data.get("Environment", {})
+        if "Variables" in env_data:
+            function_dict["environment"] = {"variables": env_data["Variables"]}
 
         # Dead letter config
-        dlc_data = function_data.get('DeadLetterConfig', {})
-        if 'TargetArn' in dlc_data:
-            function_dict['dead_letter_config'] = {
-                'target_arn': dlc_data['TargetArn']
-            }
+        dlc_data = function_data.get("DeadLetterConfig", {})
+        if "TargetArn" in dlc_data:
+            function_dict["dead_letter_config"] = {"target_arn": dlc_data["TargetArn"]}
 
         # Tracing
-        if 'TracingConfig' in function_data:
-            function_dict['tracing_config'] = {
-                'mode': function_data['TracingConfig'].get('Mode', 'PassThrough')
+        if "TracingConfig" in function_data:
+            function_dict["tracing_config"] = {
+                "mode": function_data["TracingConfig"].get("Mode", "PassThrough")
             }
 
         # Layers
-        if 'Layers' in function_data:
-            function_dict['layers'] = [
-                layer['Arn'] for layer in function_data['Layers']
+        if "Layers" in function_data:
+            function_dict["layers"] = [
+                layer["Arn"] for layer in function_data["Layers"]
             ]
 
         # File systems
-        if 'FileSystemConfigs' in function_data:
-            function_dict['file_system_configs'] = function_data['FileSystemConfigs']
+        if "FileSystemConfigs" in function_data:
+            function_dict["file_system_configs"] = function_data["FileSystemConfigs"]
 
         # Image config
-        if 'ImageConfigResponse' in function_data:
-            function_dict['image_config_response'] = function_data[
-                'ImageConfigResponse'
+        if "ImageConfigResponse" in function_data:
+            function_dict["image_config_response"] = function_data[
+                "ImageConfigResponse"
             ]
 
         # Architectures
-        if 'Architectures' in function_data:
-            function_dict['architectures'] = function_data['Architectures']
+        if "Architectures" in function_data:
+            function_dict["architectures"] = function_data["Architectures"]
 
         # Ephemeral storage
-        if 'EphemeralStorage' in function_data:
-            function_dict['ephemeral_storage_size'] = function_data[
-                'EphemeralStorage'
-            ].get('Size', 512)
+        if "EphemeralStorage" in function_data:
+            function_dict["ephemeral_storage_size"] = function_data[
+                "EphemeralStorage"
+            ].get("Size", 512)
 
         return cls(**function_dict)
 
@@ -300,6 +296,7 @@ class LambdaLayer(AWSResource):
 
     Represents an AWS Lambda layer with its configuration.
     """
+
     model_config = ConfigDict(extra="ignore")
 
     layer_name: str = Field(..., description="Layer name")
@@ -309,12 +306,10 @@ class LambdaLayer(AWSResource):
     description: Optional[str] = Field(None, description="Layer description")
     created_date: str = Field(..., description="Creation date")
     compatible_runtimes: list[Runtime] = Field(
-        default_factory=list,
-        description="Compatible runtimes"
+        default_factory=list, description="Compatible runtimes"
     )
     compatible_architectures: list[str] = Field(
-        default_factory=list,
-        description="Compatible architectures"
+        default_factory=list, description="Compatible architectures"
     )
     license_info: Optional[str] = Field(None, description="License information")
 
@@ -330,18 +325,16 @@ class LambdaLayer(AWSResource):
             LambdaLayer instance
         """
         layer_dict: dict[str, Any] = {
-            'layer_name': layer_data.get('LayerName'),
-            'layer_arn': layer_data.get('LayerArn'),
-            'layer_version_arn': layer_data.get('LayerVersionArn'),
-            'arn': layer_data.get('LayerVersionArn'),
-            'version': layer_data.get('Version'),
-            'description': layer_data.get('Description'),
-            'created_date': layer_data.get('CreatedDate'),
-            'compatible_runtimes': layer_data.get('CompatibleRuntimes', []),
-            'compatible_architectures': layer_data.get(
-                'CompatibleArchitectures', []
-            ),
-            'license_info': layer_data.get('LicenseInfo')
+            "layer_name": layer_data.get("LayerName"),
+            "layer_arn": layer_data.get("LayerArn"),
+            "layer_version_arn": layer_data.get("LayerVersionArn"),
+            "arn": layer_data.get("LayerVersionArn"),
+            "version": layer_data.get("Version"),
+            "description": layer_data.get("Description"),
+            "created_date": layer_data.get("CreatedDate"),
+            "compatible_runtimes": layer_data.get("CompatibleRuntimes", []),
+            "compatible_architectures": layer_data.get("CompatibleArchitectures", []),
+            "license_info": layer_data.get("LicenseInfo"),
         }
 
         return cls(**layer_dict)

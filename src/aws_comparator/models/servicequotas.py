@@ -17,17 +17,18 @@ class UsageMetric(BaseModel):
 
     Provides information about how to measure quota usage via CloudWatch metrics.
     """
+
     model_config = ConfigDict(extra="ignore")
 
-    metric_namespace: Optional[str] = Field(None, description="CloudWatch metric namespace")
+    metric_namespace: Optional[str] = Field(
+        None, description="CloudWatch metric namespace"
+    )
     metric_name: Optional[str] = Field(None, description="CloudWatch metric name")
     metric_dimensions: Optional[dict[str, str]] = Field(
-        None,
-        description="CloudWatch metric dimensions"
+        None, description="CloudWatch metric dimensions"
     )
     metric_statistic_recommendation: Optional[str] = Field(
-        None,
-        description="Recommended statistic (e.g., 'Maximum', 'Sum')"
+        None, description="Recommended statistic (e.g., 'Maximum', 'Sum')"
     )
 
     def __str__(self) -> str:
@@ -44,6 +45,7 @@ class ServiceQuota(AWSResource):
     Represents a service quota (limit) for an AWS service, including its
     current value, whether it's adjustable, and usage metrics.
     """
+
     model_config = ConfigDict(extra="ignore")
 
     # Service identification
@@ -58,25 +60,22 @@ class ServiceQuota(AWSResource):
     value: float = Field(..., description="Current quota value")
     unit: str = Field(default="None", description="Unit of measurement")
     adjustable: bool = Field(default=False, description="Whether quota is adjustable")
-    global_quota: bool = Field(default=False, description="Whether quota is global (not regional)")
+    global_quota: bool = Field(
+        default=False, description="Whether quota is global (not regional)"
+    )
 
     # Usage tracking
     usage_metric: Optional[UsageMetric] = Field(
-        None,
-        description="CloudWatch metric for tracking quota usage"
+        None, description="CloudWatch metric for tracking quota usage"
     )
 
     # Default value comparison
     is_default: bool = Field(
-        default=True,
-        description="Whether quota is at default value"
+        default=True, description="Whether quota is at default value"
     )
-    default_value: Optional[float] = Field(
-        None,
-        description="Default AWS quota value"
-    )
+    default_value: Optional[float] = Field(None, description="Default AWS quota value")
 
-    @field_validator('value')
+    @field_validator("value")
     @classmethod
     def validate_value(cls, v: float) -> float:
         """
@@ -97,9 +96,7 @@ class ServiceQuota(AWSResource):
 
     @classmethod
     def from_aws_response(
-        cls,
-        quota_data: dict[str, Any],
-        default_value: Optional[float] = None
+        cls, quota_data: dict[str, Any], default_value: Optional[float] = None
     ) -> "ServiceQuota":
         """
         Create ServiceQuota instance from AWS API response.
@@ -112,31 +109,33 @@ class ServiceQuota(AWSResource):
             ServiceQuota instance
         """
         quota_dict = {
-            'service_code': quota_data['ServiceCode'],
-            'service_name': quota_data['ServiceName'],
-            'quota_code': quota_data['QuotaCode'],
-            'quota_name': quota_data['QuotaName'],
-            'arn': quota_data.get('QuotaArn'),
-            'value': float(quota_data['Value']),
-            'unit': quota_data.get('Unit', 'None'),
-            'adjustable': quota_data.get('Adjustable', False),
-            'global_quota': quota_data.get('GlobalQuota', False),
+            "service_code": quota_data["ServiceCode"],
+            "service_name": quota_data["ServiceName"],
+            "quota_code": quota_data["QuotaCode"],
+            "quota_name": quota_data["QuotaName"],
+            "arn": quota_data.get("QuotaArn"),
+            "value": float(quota_data["Value"]),
+            "unit": quota_data.get("Unit", "None"),
+            "adjustable": quota_data.get("Adjustable", False),
+            "global_quota": quota_data.get("GlobalQuota", False),
         }
 
         # Parse usage metric if present
-        if 'UsageMetric' in quota_data and quota_data['UsageMetric']:
-            usage_metric_data = quota_data['UsageMetric']
-            quota_dict['usage_metric'] = UsageMetric(
-                metric_namespace=usage_metric_data.get('MetricNamespace'),
-                metric_name=usage_metric_data.get('MetricName'),
-                metric_dimensions=usage_metric_data.get('MetricDimensions', {}),
-                metric_statistic_recommendation=usage_metric_data.get('MetricStatisticRecommendation')
+        if "UsageMetric" in quota_data and quota_data["UsageMetric"]:
+            usage_metric_data = quota_data["UsageMetric"]
+            quota_dict["usage_metric"] = UsageMetric(
+                metric_namespace=usage_metric_data.get("MetricNamespace"),
+                metric_name=usage_metric_data.get("MetricName"),
+                metric_dimensions=usage_metric_data.get("MetricDimensions", {}),
+                metric_statistic_recommendation=usage_metric_data.get(
+                    "MetricStatisticRecommendation"
+                ),
             )
 
         # Set default value comparison
         if default_value is not None:
-            quota_dict['default_value'] = default_value
-            quota_dict['is_default'] = abs(quota_dict['value'] - default_value) < 0.01
+            quota_dict["default_value"] = default_value
+            quota_dict["is_default"] = abs(quota_dict["value"] - default_value) < 0.01
 
         return cls(**quota_dict)
 
@@ -189,23 +188,33 @@ class QuotaComparison(BaseModel):
 
     Represents differences in quota values between two AWS accounts.
     """
+
     model_config = ConfigDict(extra="forbid")
 
     service_code: str = Field(..., description="Service code")
     quota_code: str = Field(..., description="Quota code")
     quota_name: str = Field(..., description="Quota name")
 
-    account1_value: Optional[float] = Field(None, description="Quota value in account 1")
-    account2_value: Optional[float] = Field(None, description="Quota value in account 2")
-
-    difference: Optional[float] = Field(None, description="Difference (account2 - account1)")
-    percentage_difference: Optional[float] = Field(
-        None,
-        description="Percentage difference"
+    account1_value: Optional[float] = Field(
+        None, description="Quota value in account 1"
+    )
+    account2_value: Optional[float] = Field(
+        None, description="Quota value in account 2"
     )
 
-    only_in_account1: bool = Field(default=False, description="Quota only exists in account 1")
-    only_in_account2: bool = Field(default=False, description="Quota only exists in account 2")
+    difference: Optional[float] = Field(
+        None, description="Difference (account2 - account1)"
+    )
+    percentage_difference: Optional[float] = Field(
+        None, description="Percentage difference"
+    )
+
+    only_in_account1: bool = Field(
+        default=False, description="Quota only exists in account 1"
+    )
+    only_in_account2: bool = Field(
+        default=False, description="Quota only exists in account 2"
+    )
     values_differ: bool = Field(default=False, description="Quota values differ")
 
     adjustable: bool = Field(default=False, description="Whether quota is adjustable")
@@ -231,6 +240,7 @@ class ServiceInfo(BaseModel):
 
     Basic metadata about a service available in Service Quotas API.
     """
+
     model_config = ConfigDict(extra="ignore")
 
     service_code: str = Field(..., description="Service code")
@@ -248,8 +258,8 @@ class ServiceInfo(BaseModel):
             ServiceInfo instance
         """
         return cls(
-            service_code=service_data['ServiceCode'],
-            service_name=service_data['ServiceName']
+            service_code=service_data["ServiceCode"],
+            service_name=service_data["ServiceName"],
         )
 
     def __str__(self) -> str:

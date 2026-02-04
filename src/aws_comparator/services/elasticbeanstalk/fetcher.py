@@ -21,9 +21,14 @@ from aws_comparator.services.base import BaseServiceFetcher
 
 
 @ServiceRegistry.register(
-    'elasticbeanstalk',
-    description='AWS Elastic Beanstalk',
-    resource_types=['applications', 'environments', 'configuration_templates', 'application_versions']
+    "elasticbeanstalk",
+    description="AWS Elastic Beanstalk",
+    resource_types=[
+        "applications",
+        "environments",
+        "configuration_templates",
+        "application_versions",
+    ],
 )
 class ElasticBeanstalkFetcher(BaseServiceFetcher):
     """
@@ -45,7 +50,7 @@ class ElasticBeanstalkFetcher(BaseServiceFetcher):
         Returns:
             Configured boto3 Elastic Beanstalk client
         """
-        return self.session.client('elasticbeanstalk', region_name=self.region)
+        return self.session.client("elasticbeanstalk", region_name=self.region)
 
     def fetch_resources(self) -> dict[str, list[AWSResource]]:
         """
@@ -55,15 +60,13 @@ class ElasticBeanstalkFetcher(BaseServiceFetcher):
             Dictionary mapping resource types to lists of resources
         """
         return {
-            'applications': self._safe_fetch('applications', self._fetch_applications),
-            'environments': self._safe_fetch('environments', self._fetch_environments),
-            'configuration_templates': self._safe_fetch(
-                'configuration_templates',
-                self._fetch_configuration_templates
+            "applications": self._safe_fetch("applications", self._fetch_applications),
+            "environments": self._safe_fetch("environments", self._fetch_environments),
+            "configuration_templates": self._safe_fetch(
+                "configuration_templates", self._fetch_configuration_templates
             ),
-            'application_versions': self._safe_fetch(
-                'application_versions',
-                self._fetch_application_versions
+            "application_versions": self._safe_fetch(
+                "application_versions", self._fetch_application_versions
             ),
         }
 
@@ -74,7 +77,12 @@ class ElasticBeanstalkFetcher(BaseServiceFetcher):
         Returns:
             List of resource type names
         """
-        return ['applications', 'environments', 'configuration_templates', 'application_versions']
+        return [
+            "applications",
+            "environments",
+            "configuration_templates",
+            "application_versions",
+        ]
 
     def _fetch_applications(self) -> list[Application]:
         """
@@ -88,7 +96,7 @@ class ElasticBeanstalkFetcher(BaseServiceFetcher):
         try:
             # Describe all applications
             response = self.client.describe_applications()
-            app_list = response.get('Applications', [])
+            app_list = response.get("Applications", [])
 
             self.logger.info(f"Found {len(app_list)} Elastic Beanstalk applications")
 
@@ -98,32 +106,30 @@ class ElasticBeanstalkFetcher(BaseServiceFetcher):
                     application = Application.from_aws_response(app_data)
                     applications.append(application)
 
-                    app_name = app_data.get('ApplicationName', 'unknown')
+                    app_name = app_data.get("ApplicationName", "unknown")
                     self.logger.debug(f"Fetched application: {app_name}")
 
                 except ClientError as e:
-                    error_code = e.response.get('Error', {}).get('Code', '')
-                    app_name = app_data.get('ApplicationName', 'unknown')
-                    if error_code in ['AccessDenied', 'ResourceNotFoundException']:
+                    error_code = e.response.get("Error", {}).get("Code", "")
+                    app_name = app_data.get("ApplicationName", "unknown")
+                    if error_code in ["AccessDenied", "ResourceNotFoundException"]:
                         self.logger.warning(
                             f"Cannot access application {app_name}: {error_code}"
                         )
                     else:
                         self.logger.error(
-                            f"Error fetching application {app_name}: {e}",
-                            exc_info=True
+                            f"Error fetching application {app_name}: {e}", exc_info=True
                         )
                 except Exception as e:
-                    app_name = app_data.get('ApplicationName', 'unknown')
+                    app_name = app_data.get("ApplicationName", "unknown")
                     self.logger.error(
                         f"Unexpected error processing application {app_name}: {e}",
-                        exc_info=True
+                        exc_info=True,
                     )
 
         except Exception as e:
             self.logger.error(
-                f"Failed to list Elastic Beanstalk applications: {e}",
-                exc_info=True
+                f"Failed to list Elastic Beanstalk applications: {e}", exc_info=True
             )
 
         return applications
@@ -140,7 +146,7 @@ class ElasticBeanstalkFetcher(BaseServiceFetcher):
         try:
             # Describe all environments (across all applications)
             response = self.client.describe_environments(IncludeDeleted=False)
-            env_list = response.get('Environments', [])
+            env_list = response.get("Environments", [])
 
             self.logger.info(f"Found {len(env_list)} Elastic Beanstalk environments")
 
@@ -150,32 +156,30 @@ class ElasticBeanstalkFetcher(BaseServiceFetcher):
                     environment = Environment.from_aws_response(env_data)
                     environments.append(environment)
 
-                    env_name = env_data.get('EnvironmentName', 'unknown')
+                    env_name = env_data.get("EnvironmentName", "unknown")
                     self.logger.debug(f"Fetched environment: {env_name}")
 
                 except ClientError as e:
-                    error_code = e.response.get('Error', {}).get('Code', '')
-                    env_name = env_data.get('EnvironmentName', 'unknown')
-                    if error_code in ['AccessDenied', 'ResourceNotFoundException']:
+                    error_code = e.response.get("Error", {}).get("Code", "")
+                    env_name = env_data.get("EnvironmentName", "unknown")
+                    if error_code in ["AccessDenied", "ResourceNotFoundException"]:
                         self.logger.warning(
                             f"Cannot access environment {env_name}: {error_code}"
                         )
                     else:
                         self.logger.error(
-                            f"Error fetching environment {env_name}: {e}",
-                            exc_info=True
+                            f"Error fetching environment {env_name}: {e}", exc_info=True
                         )
                 except Exception as e:
-                    env_name = env_data.get('EnvironmentName', 'unknown')
+                    env_name = env_data.get("EnvironmentName", "unknown")
                     self.logger.error(
                         f"Unexpected error processing environment {env_name}: {e}",
-                        exc_info=True
+                        exc_info=True,
                     )
 
         except Exception as e:
             self.logger.error(
-                f"Failed to list Elastic Beanstalk environments: {e}",
-                exc_info=True
+                f"Failed to list Elastic Beanstalk environments: {e}", exc_info=True
             )
 
         return environments
@@ -195,11 +199,11 @@ class ElasticBeanstalkFetcher(BaseServiceFetcher):
         try:
             # First, get all applications
             response = self.client.describe_applications()
-            app_list = response.get('Applications', [])
+            app_list = response.get("Applications", [])
 
             for app_data in app_list:
-                app_name = app_data.get('ApplicationName')
-                template_names = app_data.get('ConfigurationTemplates', [])
+                app_name = app_data.get("ApplicationName")
+                template_names = app_data.get("ConfigurationTemplates", [])
 
                 if not template_names:
                     continue
@@ -208,15 +212,18 @@ class ElasticBeanstalkFetcher(BaseServiceFetcher):
                 for template_name in template_names:
                     try:
                         config_response = self.client.describe_configuration_settings(
-                            ApplicationName=app_name,
-                            TemplateName=template_name
+                            ApplicationName=app_name, TemplateName=template_name
                         )
 
-                        config_settings = config_response.get('ConfigurationSettings', [])
+                        config_settings = config_response.get(
+                            "ConfigurationSettings", []
+                        )
                         if config_settings:
                             # Usually returns one configuration setting
                             config_data = config_settings[0]
-                            template = ConfigurationTemplate.from_aws_response(config_data)
+                            template = ConfigurationTemplate.from_aws_response(
+                                config_data
+                            )
                             templates.append(template)
 
                             self.logger.debug(
@@ -225,8 +232,8 @@ class ElasticBeanstalkFetcher(BaseServiceFetcher):
                             )
 
                     except ClientError as e:
-                        error_code = e.response.get('Error', {}).get('Code', '')
-                        if error_code in ['AccessDenied', 'ResourceNotFoundException']:
+                        error_code = e.response.get("Error", {}).get("Code", "")
+                        if error_code in ["AccessDenied", "ResourceNotFoundException"]:
                             self.logger.warning(
                                 f"Cannot access template {template_name} "
                                 f"for application {app_name}: {error_code}"
@@ -235,21 +242,20 @@ class ElasticBeanstalkFetcher(BaseServiceFetcher):
                             self.logger.error(
                                 f"Error fetching template {template_name} "
                                 f"for application {app_name}: {e}",
-                                exc_info=True
+                                exc_info=True,
                             )
                     except Exception as e:
                         self.logger.error(
                             f"Unexpected error processing template {template_name} "
                             f"for application {app_name}: {e}",
-                            exc_info=True
+                            exc_info=True,
                         )
 
             self.logger.info(f"Found {len(templates)} configuration templates")
 
         except Exception as e:
             self.logger.error(
-                f"Failed to list configuration templates: {e}",
-                exc_info=True
+                f"Failed to list configuration templates: {e}", exc_info=True
             )
 
         return templates
@@ -269,11 +275,11 @@ class ElasticBeanstalkFetcher(BaseServiceFetcher):
         try:
             # First, get all applications
             response = self.client.describe_applications()
-            app_list = response.get('Applications', [])
+            app_list = response.get("Applications", [])
 
             for app_data in app_list:
-                app_name = app_data.get('ApplicationName')
-                version_labels = app_data.get('Versions', [])
+                app_name = app_data.get("ApplicationName")
+                version_labels = app_data.get("Versions", [])
 
                 if not version_labels:
                     continue
@@ -284,50 +290,49 @@ class ElasticBeanstalkFetcher(BaseServiceFetcher):
                         ApplicationName=app_name
                     )
 
-                    version_list = versions_response.get('ApplicationVersions', [])
+                    version_list = versions_response.get("ApplicationVersions", [])
 
                     for version_data in version_list:
                         try:
                             version = ApplicationVersion.from_aws_response(version_data)
                             versions.append(version)
 
-                            version_label = version_data.get('VersionLabel', 'unknown')
+                            version_label = version_data.get("VersionLabel", "unknown")
                             self.logger.debug(
                                 f"Fetched application version: {version_label} "
                                 f"for application {app_name}"
                             )
 
                         except Exception as e:
-                            version_label = version_data.get('VersionLabel', 'unknown')
+                            version_label = version_data.get("VersionLabel", "unknown")
                             self.logger.error(
                                 f"Unexpected error processing version {version_label} "
                                 f"for application {app_name}: {e}",
-                                exc_info=True
+                                exc_info=True,
                             )
 
                 except ClientError as e:
-                    error_code = e.response.get('Error', {}).get('Code', '')
-                    if error_code in ['AccessDenied', 'ResourceNotFoundException']:
+                    error_code = e.response.get("Error", {}).get("Code", "")
+                    if error_code in ["AccessDenied", "ResourceNotFoundException"]:
                         self.logger.warning(
                             f"Cannot access versions for application {app_name}: {error_code}"
                         )
                     else:
                         self.logger.error(
                             f"Error fetching versions for application {app_name}: {e}",
-                            exc_info=True
+                            exc_info=True,
                         )
                 except Exception as e:
                     self.logger.error(
                         f"Unexpected error fetching versions for application {app_name}: {e}",
-                        exc_info=True
+                        exc_info=True,
                     )
 
             self.logger.info(f"Found {len(versions)} application versions")
 
         except Exception as e:
             self.logger.error(
-                f"Failed to list application versions: {e}",
-                exc_info=True
+                f"Failed to list application versions: {e}", exc_info=True
             )
 
         return versions

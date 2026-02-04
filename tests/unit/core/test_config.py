@@ -22,9 +22,7 @@ class TestAccountConfig:
     def test_valid_account_config(self):
         """Test creating valid account configuration."""
         config = AccountConfig(  # type: ignore[call-arg]
-            account_id="123456789012",
-            profile="test-profile",
-            region="us-east-1"
+            account_id="123456789012", profile="test-profile", region="us-east-1"
         )
 
         assert config.account_id == "123456789012"
@@ -40,7 +38,7 @@ class TestAccountConfig:
         with pytest.raises(ValidationError):
             AccountConfig(  # type: ignore[call-arg]
                 account_id="123",  # Too short - doesn't match r'^\d{12}$' pattern
-                region="us-east-1"
+                region="us-east-1",
             )
 
     def test_default_region(self):
@@ -51,8 +49,7 @@ class TestAccountConfig:
     def test_str_representation(self):
         """Test string representation."""
         config = AccountConfig(  # type: ignore[call-arg]
-            account_id="123456789012",
-            profile="test"
+            account_id="123456789012", profile="test"
         )
         assert "123456789012" in str(config)
 
@@ -73,7 +70,7 @@ class TestServiceFilterConfig:
         config = ServiceFilterConfig(  # type: ignore[call-arg]
             enabled=True,
             resource_types=["instances", "volumes"],
-            exclude_tags={"temporary": "true"}
+            exclude_tags={"temporary": "true"},
         )
 
         assert config.enabled is True
@@ -87,9 +84,7 @@ class TestComparisonConfig:
     def test_valid_comparison_config(self, account1_config, account2_config):
         """Test creating valid comparison configuration."""
         config = ComparisonConfig(  # type: ignore[call-arg]
-            account1=account1_config,
-            account2=account2_config,
-            services=["ec2", "s3"]
+            account1=account1_config, account2=account2_config, services=["ec2", "s3"]
         )
 
         assert config.account1.account_id == "123456789012"
@@ -99,8 +94,7 @@ class TestComparisonConfig:
     def test_default_values(self, account1_config, account2_config):
         """Test default configuration values."""
         config = ComparisonConfig(  # type: ignore[call-arg]
-            account1=account1_config,
-            account2=account2_config
+            account1=account1_config, account2=account2_config
         )
 
         assert config.output_format == OutputFormat.TABLE
@@ -114,7 +108,7 @@ class TestComparisonConfig:
             ComparisonConfig(  # type: ignore[call-arg]
                 account1=account1_config,
                 account2=account2_config,
-                services=["ec2", "invalid-service"]
+                services=["ec2", "invalid-service"],
             )
         assert "Invalid services" in str(exc_info.value)
 
@@ -148,8 +142,12 @@ class TestComparisonConfig:
 
         # Load
         loaded_config = ComparisonConfig.from_file(config_file)
-        assert loaded_config.account1.account_id == comparison_config.account1.account_id
-        assert loaded_config.account2.account_id == comparison_config.account2.account_id
+        assert (
+            loaded_config.account1.account_id == comparison_config.account1.account_id
+        )
+        assert (
+            loaded_config.account2.account_id == comparison_config.account2.account_id
+        )
 
 
 class TestLoadConfig:
@@ -157,10 +155,7 @@ class TestLoadConfig:
 
     def test_load_config_with_accounts(self):
         """Test loading configuration with account IDs."""
-        config = load_config(
-            account1_id="123456789012",
-            account2_id="987654321098"
-        )
+        config = load_config(account1_id="123456789012", account2_id="987654321098")
 
         assert config.account1.account_id == "123456789012"
         assert config.account2.account_id == "987654321098"
@@ -183,7 +178,7 @@ class TestLoadConfig:
             account1_id="123456789012",
             account2_id="987654321098",
             max_workers=20,
-            parallel_execution=False
+            parallel_execution=False,
         )
 
         assert config.max_workers == 20

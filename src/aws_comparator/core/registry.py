@@ -38,7 +38,7 @@ class ServiceRegistry:
         cls,
         service_name: str,
         description: Optional[str] = None,
-        resource_types: Optional[list[str]] = None
+        resource_types: Optional[list[str]] = None,
     ) -> Callable[[type[Any]], type[Any]]:
         """
         Decorator to register a service fetcher.
@@ -56,6 +56,7 @@ class ServiceRegistry:
             ... class EC2Fetcher(BaseServiceFetcher):
             ...     pass
         """
+
         def decorator(fetcher_class: type[Any]) -> type[Any]:
             if service_name in cls._registry:
                 logger.warning(
@@ -67,24 +68,21 @@ class ServiceRegistry:
 
             # Store metadata
             cls._metadata[service_name] = {
-                'name': service_name,
-                'class': fetcher_class.__name__,
-                'description': description or f"{service_name.upper()} service",
-                'resource_types': resource_types or [],
+                "name": service_name,
+                "class": fetcher_class.__name__,
+                "description": description or f"{service_name.upper()} service",
+                "resource_types": resource_types or [],
             }
 
-            logger.debug(f"Registered service: {service_name} ({fetcher_class.__name__})")
+            logger.debug(
+                f"Registered service: {service_name} ({fetcher_class.__name__})"
+            )
             return fetcher_class
 
         return decorator
 
     @classmethod
-    def get_fetcher(
-        cls,
-        service_name: str,
-        session: Any,
-        region: str
-    ) -> Any:
+    def get_fetcher(cls, service_name: str, session: Any, region: str) -> Any:
         """
         Get an instance of a registered service fetcher.
 

@@ -1,4 +1,5 @@
 """Tests for resource comparator module."""
+
 from datetime import datetime
 from typing import Optional
 
@@ -400,8 +401,7 @@ class TestResourceComparatorFilterBySeverity:
 
         assert len(result) == 2
         assert all(
-            c.severity in [ChangeSeverity.HIGH, ChangeSeverity.CRITICAL]
-            for c in result
+            c.severity in [ChangeSeverity.HIGH, ChangeSeverity.CRITICAL] for c in result
         )
 
     def test_filter_by_severity_empty(self, comparator):

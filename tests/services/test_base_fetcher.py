@@ -1,4 +1,5 @@
 """Tests for base service fetcher module."""
+
 from typing import Any
 from unittest.mock import MagicMock
 

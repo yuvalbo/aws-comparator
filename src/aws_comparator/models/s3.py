@@ -15,6 +15,7 @@ from aws_comparator.models.common import AWSResource
 
 class BucketVersioningStatus(str, Enum):
     """S3 bucket versioning status."""
+
     ENABLED = "Enabled"
     SUSPENDED = "Suspended"
     DISABLED = "Disabled"
@@ -22,6 +23,7 @@ class BucketVersioningStatus(str, Enum):
 
 class BucketCannedACL(str, Enum):
     """S3 bucket canned ACLs."""
+
     PRIVATE = "private"
     PUBLIC_READ = "public-read"
     PUBLIC_READ_WRITE = "public-read-write"
@@ -30,21 +32,19 @@ class BucketCannedACL(str, Enum):
 
 class ServerSideEncryptionAlgorithm(str, Enum):
     """S3 server-side encryption algorithms."""
+
     AES256 = "AES256"
     AWS_KMS = "aws:kms"
 
 
 class PublicAccessBlockConfiguration(BaseModel):
     """S3 bucket public access block configuration."""
+
     model_config = ConfigDict(extra="ignore")
 
     block_public_acls: bool = Field(default=False, description="Block public ACLs")
-    ignore_public_acls: bool = Field(
-        default=False, description="Ignore public ACLs"
-    )
-    block_public_policy: bool = Field(
-        default=False, description="Block public policy"
-    )
+    ignore_public_acls: bool = Field(default=False, description="Ignore public ACLs")
+    block_public_policy: bool = Field(default=False, description="Block public policy")
     restrict_public_buckets: bool = Field(
         default=False, description="Restrict public buckets"
     )
@@ -52,11 +52,11 @@ class PublicAccessBlockConfiguration(BaseModel):
 
 class BucketEncryption(BaseModel):
     """S3 bucket encryption configuration."""
+
     model_config = ConfigDict(extra="ignore")
 
     sse_algorithm: ServerSideEncryptionAlgorithm = Field(
-        ...,
-        description="Server-side encryption algorithm"
+        ..., description="Server-side encryption algorithm"
     )
     kms_master_key_id: Optional[str] = Field(
         None, description="KMS key ID for encryption"
@@ -66,6 +66,7 @@ class BucketEncryption(BaseModel):
 
 class LifecycleRule(BaseModel):
     """S3 bucket lifecycle rule."""
+
     model_config = ConfigDict(extra="ignore")
 
     id: Optional[str] = Field(None, description="Rule ID")
@@ -80,6 +81,7 @@ class LifecycleRule(BaseModel):
 
 class ReplicationRule(BaseModel):
     """S3 bucket replication rule."""
+
     model_config = ConfigDict(extra="ignore")
 
     id: Optional[str] = Field(None, description="Rule ID")
@@ -97,6 +99,7 @@ class S3Bucket(AWSResource):
 
     Represents an AWS S3 bucket with all its configuration properties.
     """
+
     model_config = ConfigDict(extra="ignore")
 
     # Basic properties
@@ -112,8 +115,7 @@ class S3Bucket(AWSResource):
 
     # Versioning
     versioning_status: BucketVersioningStatus = Field(
-        default=BucketVersioningStatus.DISABLED,
-        description="Versioning status"
+        default=BucketVersioningStatus.DISABLED, description="Versioning status"
     )
     mfa_delete: Optional[str] = Field(None, description="MFA delete status")
 
@@ -124,8 +126,7 @@ class S3Bucket(AWSResource):
 
     # Public access
     public_access_block: Optional[PublicAccessBlockConfiguration] = Field(
-        None,
-        description="Public access block configuration"
+        None, description="Public access block configuration"
     )
 
     # Logging
@@ -139,14 +140,12 @@ class S3Bucket(AWSResource):
 
     # Lifecycle
     lifecycle_rules: list[LifecycleRule] = Field(
-        default_factory=list,
-        description="Lifecycle rules"
+        default_factory=list, description="Lifecycle rules"
     )
 
     # Replication
     replication_rules: list[ReplicationRule] = Field(
-        default_factory=list,
-        description="Replication rules"
+        default_factory=list, description="Replication rules"
     )
 
     # Website hosting
@@ -161,12 +160,9 @@ class S3Bucket(AWSResource):
     )
 
     # Policies
-    policy: Optional[dict[str, Any]] = Field(
-        None, description="Bucket policy document"
-    )
+    policy: Optional[dict[str, Any]] = Field(None, description="Bucket policy document")
     cors_rules: list[dict[str, Any]] = Field(
-        default_factory=list,
-        description="CORS configuration rules"
+        default_factory=list, description="CORS configuration rules"
     )
 
     # Additional properties
@@ -174,7 +170,7 @@ class S3Bucket(AWSResource):
     object_lock_enabled: bool = Field(default=False, description="Object lock enabled")
     requester_pays: bool = Field(default=False, description="Requester pays enabled")
 
-    @field_validator('name')
+    @field_validator("name")
     @classmethod
     def validate_bucket_name(cls, v: str) -> str:
         """
@@ -201,7 +197,7 @@ class S3Bucket(AWSResource):
     def from_aws_response(
         cls,
         bucket_data: dict[str, Any],
-        additional_data: Optional[dict[str, Any]] = None
+        additional_data: Optional[dict[str, Any]] = None,
     ) -> "S3Bucket":
         """
         Create S3Bucket instance from AWS API response.
@@ -217,127 +213,129 @@ class S3Bucket(AWSResource):
 
         # Build the bucket model
         bucket_dict: dict[str, Any] = {
-            'name': bucket_data.get('Name'),
-            'creation_date': bucket_data.get('CreationDate'),
-            'arn': f"arn:aws:s3:::{bucket_data.get('Name')}",
+            "name": bucket_data.get("Name"),
+            "creation_date": bucket_data.get("CreationDate"),
+            "arn": f"arn:aws:s3:::{bucket_data.get('Name')}",
         }
 
         # Add location
-        if 'LocationConstraint' in additional_data:
-            bucket_dict['location'] = additional_data['LocationConstraint']
+        if "LocationConstraint" in additional_data:
+            bucket_dict["location"] = additional_data["LocationConstraint"]
 
         # Add versioning
-        if 'Versioning' in additional_data:
-            versioning = additional_data['Versioning']
-            status = versioning.get('Status', 'Disabled')
-            bucket_dict['versioning_status'] = status if status else 'Disabled'
-            bucket_dict['mfa_delete'] = versioning.get('MFADelete')
+        if "Versioning" in additional_data:
+            versioning = additional_data["Versioning"]
+            status = versioning.get("Status", "Disabled")
+            bucket_dict["versioning_status"] = status if status else "Disabled"
+            bucket_dict["mfa_delete"] = versioning.get("MFADelete")
 
         # Add encryption
-        if 'Encryption' in additional_data:
-            rules = additional_data['Encryption'].get('Rules', [])
+        if "Encryption" in additional_data:
+            rules = additional_data["Encryption"].get("Rules", [])
             if rules:
                 rule = rules[0]
-                sse = rule.get('ApplyServerSideEncryptionByDefault', {})
-                bucket_dict['encryption'] = {
-                    'sse_algorithm': sse.get('SSEAlgorithm', 'AES256'),
-                    'kms_master_key_id': sse.get('KMSMasterKeyID'),
-                    'bucket_key_enabled': rule.get('BucketKeyEnabled', False)
+                sse = rule.get("ApplyServerSideEncryptionByDefault", {})
+                bucket_dict["encryption"] = {
+                    "sse_algorithm": sse.get("SSEAlgorithm", "AES256"),
+                    "kms_master_key_id": sse.get("KMSMasterKeyID"),
+                    "bucket_key_enabled": rule.get("BucketKeyEnabled", False),
                 }
 
         # Add public access block
-        if 'PublicAccessBlock' in additional_data:
-            pab = additional_data['PublicAccessBlock']
-            bucket_dict['public_access_block'] = {
-                'block_public_acls': pab.get('BlockPublicAcls', False),
-                'ignore_public_acls': pab.get('IgnorePublicAcls', False),
-                'block_public_policy': pab.get('BlockPublicPolicy', False),
-                'restrict_public_buckets': pab.get('RestrictPublicBuckets', False)
+        if "PublicAccessBlock" in additional_data:
+            pab = additional_data["PublicAccessBlock"]
+            bucket_dict["public_access_block"] = {
+                "block_public_acls": pab.get("BlockPublicAcls", False),
+                "ignore_public_acls": pab.get("IgnorePublicAcls", False),
+                "block_public_policy": pab.get("BlockPublicPolicy", False),
+                "restrict_public_buckets": pab.get("RestrictPublicBuckets", False),
             }
 
         # Add logging
-        if 'Logging' in additional_data:
-            logging_config = additional_data['Logging'].get('LoggingEnabled', {})
+        if "Logging" in additional_data:
+            logging_config = additional_data["Logging"].get("LoggingEnabled", {})
             if logging_config:
-                bucket_dict['logging_enabled'] = True
-                bucket_dict['logging_target_bucket'] = logging_config.get(
-                    'TargetBucket'
+                bucket_dict["logging_enabled"] = True
+                bucket_dict["logging_target_bucket"] = logging_config.get(
+                    "TargetBucket"
                 )
-                bucket_dict['logging_target_prefix'] = logging_config.get(
-                    'TargetPrefix'
+                bucket_dict["logging_target_prefix"] = logging_config.get(
+                    "TargetPrefix"
                 )
 
         # Add lifecycle rules
-        if 'Lifecycle' in additional_data:
-            rules = additional_data['Lifecycle'].get('Rules', [])
-            bucket_dict['lifecycle_rules'] = [
+        if "Lifecycle" in additional_data:
+            rules = additional_data["Lifecycle"].get("Rules", [])
+            bucket_dict["lifecycle_rules"] = [
                 {
-                    'id': rule.get('ID'),
-                    'status': rule.get('Status'),
-                    'prefix': rule.get('Prefix'),
-                    'expiration_days': rule.get('Expiration', {}).get('Days'),
-                    'transition_days': (
-                        rule.get('Transitions', [{}])[0].get('Days')
-                        if rule.get('Transitions') else None
+                    "id": rule.get("ID"),
+                    "status": rule.get("Status"),
+                    "prefix": rule.get("Prefix"),
+                    "expiration_days": rule.get("Expiration", {}).get("Days"),
+                    "transition_days": (
+                        rule.get("Transitions", [{}])[0].get("Days")
+                        if rule.get("Transitions")
+                        else None
                     ),
-                    'transition_storage_class': (
-                        rule.get('Transitions', [{}])[0].get('StorageClass')
-                        if rule.get('Transitions') else None
-                    )
+                    "transition_storage_class": (
+                        rule.get("Transitions", [{}])[0].get("StorageClass")
+                        if rule.get("Transitions")
+                        else None
+                    ),
                 }
                 for rule in rules
             ]
 
         # Add replication rules
-        if 'Replication' in additional_data:
-            rules = additional_data['Replication'].get('Rules', [])
-            bucket_dict['replication_rules'] = [
+        if "Replication" in additional_data:
+            rules = additional_data["Replication"].get("Rules", [])
+            bucket_dict["replication_rules"] = [
                 {
-                    'id': rule.get('ID'),
-                    'status': rule.get('Status'),
-                    'priority': rule.get('Priority'),
-                    'destination_bucket': rule.get('Destination', {}).get('Bucket'),
-                    'destination_storage_class': rule.get(
-                        'Destination', {}
-                    ).get('StorageClass')
+                    "id": rule.get("ID"),
+                    "status": rule.get("Status"),
+                    "priority": rule.get("Priority"),
+                    "destination_bucket": rule.get("Destination", {}).get("Bucket"),
+                    "destination_storage_class": rule.get("Destination", {}).get(
+                        "StorageClass"
+                    ),
                 }
                 for rule in rules
             ]
 
         # Add website configuration
-        if 'Website' in additional_data:
-            website = additional_data['Website']
-            bucket_dict['website_enabled'] = True
-            bucket_dict['website_index_document'] = website.get(
-                'IndexDocument', {}
-            ).get('Suffix')
-            bucket_dict['website_error_document'] = website.get(
-                'ErrorDocument', {}
-            ).get('Key')
+        if "Website" in additional_data:
+            website = additional_data["Website"]
+            bucket_dict["website_enabled"] = True
+            bucket_dict["website_index_document"] = website.get(
+                "IndexDocument", {}
+            ).get("Suffix")
+            bucket_dict["website_error_document"] = website.get(
+                "ErrorDocument", {}
+            ).get("Key")
 
         # Add tags
-        if 'Tags' in additional_data:
-            tags_list = additional_data['Tags'].get('TagSet', [])
-            bucket_dict['tags'] = {tag['Key']: tag['Value'] for tag in tags_list}
+        if "Tags" in additional_data:
+            tags_list = additional_data["Tags"].get("TagSet", [])
+            bucket_dict["tags"] = {tag["Key"]: tag["Value"] for tag in tags_list}
 
         # Add policy
-        if 'Policy' in additional_data:
-            bucket_dict['policy'] = additional_data['Policy']
+        if "Policy" in additional_data:
+            bucket_dict["policy"] = additional_data["Policy"]
 
         # Add CORS
-        if 'Cors' in additional_data:
-            bucket_dict['cors_rules'] = additional_data['Cors'].get('CORSRules', [])
+        if "Cors" in additional_data:
+            bucket_dict["cors_rules"] = additional_data["Cors"].get("CORSRules", [])
 
         # Add object lock
-        if 'ObjectLock' in additional_data:
-            bucket_dict['object_lock_enabled'] = (
-                additional_data['ObjectLock'].get('ObjectLockEnabled') == 'Enabled'
+        if "ObjectLock" in additional_data:
+            bucket_dict["object_lock_enabled"] = (
+                additional_data["ObjectLock"].get("ObjectLockEnabled") == "Enabled"
             )
 
         # Add requester pays
-        if 'RequestPayment' in additional_data:
-            bucket_dict['requester_pays'] = (
-                additional_data['RequestPayment'].get('Payer') == 'Requester'
+        if "RequestPayment" in additional_data:
+            bucket_dict["requester_pays"] = (
+                additional_data["RequestPayment"].get("Payer") == "Requester"
             )
 
         return cls(**bucket_dict)

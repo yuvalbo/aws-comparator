@@ -19,21 +19,15 @@ class RotationRules(BaseModel):
 
     Defines how and when secrets should be rotated automatically.
     """
+
     model_config = ConfigDict(extra="ignore")
 
     automatically_after_days: Optional[int] = Field(
-        None,
-        ge=1,
-        le=365,
-        description="Number of days between automatic rotations"
+        None, ge=1, le=365, description="Number of days between automatic rotations"
     )
-    duration: Optional[str] = Field(
-        None,
-        description="Duration of the rotation window"
-    )
+    duration: Optional[str] = Field(None, description="Duration of the rotation window")
     schedule_expression: Optional[str] = Field(
-        None,
-        description="Rotation schedule expression (cron or rate)"
+        None, description="Rotation schedule expression (cron or rate)"
     )
 
 
@@ -48,6 +42,7 @@ class SecretMetadata(AWSResource):
     This is intentional by design to prevent accidental exposure of
     sensitive information during comparison operations.
     """
+
     model_config = ConfigDict(extra="ignore")
 
     # Basic properties
@@ -57,61 +52,51 @@ class SecretMetadata(AWSResource):
 
     # Encryption
     kms_key_id: Optional[str] = Field(
-        None,
-        description="KMS key ID used for encryption"
+        None, description="KMS key ID used for encryption"
     )
 
     # Rotation configuration
     rotation_enabled: bool = Field(
-        default=False,
-        description="Whether automatic rotation is enabled"
+        default=False, description="Whether automatic rotation is enabled"
     )
     rotation_lambda_arn: Optional[str] = Field(
-        None,
-        description="Lambda function ARN for rotation"
+        None, description="Lambda function ARN for rotation"
     )
     rotation_rules: Optional[RotationRules] = Field(
-        None,
-        description="Rotation schedule rules"
+        None, description="Rotation schedule rules"
     )
 
     # Timestamps
     last_rotated_date: Optional[datetime] = Field(
-        None,
-        description="Last rotation timestamp"
+        None, description="Last rotation timestamp"
     )
     last_changed_date: Optional[datetime] = Field(
-        None,
-        description="Last modification timestamp"
+        None, description="Last modification timestamp"
     )
     last_accessed_date: Optional[datetime] = Field(
-        None,
-        description="Last access timestamp (updated daily)"
+        None, description="Last access timestamp (updated daily)"
     )
     deleted_date: Optional[datetime] = Field(
-        None,
-        description="Deletion timestamp (if scheduled for deletion)"
+        None, description="Deletion timestamp (if scheduled for deletion)"
     )
 
     # Ownership
     owning_service: Optional[str] = Field(
-        None,
-        description="AWS service that owns this secret"
+        None, description="AWS service that owns this secret"
     )
 
     # Version information
     version_ids_to_stages: dict[str, list[str]] = Field(
         default_factory=dict,
-        description="Mapping of version IDs to their staging labels"
+        description="Mapping of version IDs to their staging labels",
     )
 
     # Replication (multi-region secrets)
     replication_status: Optional[list[dict[str, Any]]] = Field(
-        None,
-        description="Replication status for multi-region secrets"
+        None, description="Replication status for multi-region secrets"
     )
 
-    @field_validator('name')
+    @field_validator("name")
     @classmethod
     def validate_name(cls, v: str) -> str:
         """
@@ -134,9 +119,7 @@ class SecretMetadata(AWSResource):
 
     @classmethod
     def from_aws_response(
-        cls,
-        secret_data: dict[str, Any],
-        tags: Optional[dict[str, str]] = None
+        cls, secret_data: dict[str, Any], tags: Optional[dict[str, str]] = None
     ) -> "SecretMetadata":
         """
         Create SecretMetadata instance from AWS API response.
@@ -157,7 +140,7 @@ class SecretMetadata(AWSResource):
                        (indicating someone tried to pass secret values)
         """
         # SECURITY CHECK: Ensure no secret values are in the data
-        if 'SecretString' in secret_data or 'SecretBinary' in secret_data:
+        if "SecretString" in secret_data or "SecretBinary" in secret_data:
             raise ValueError(
                 "SECURITY VIOLATION: Attempted to create SecretMetadata with "
                 "actual secret values. Only metadata is allowed."
@@ -165,48 +148,50 @@ class SecretMetadata(AWSResource):
 
         # Parse tags from AWS response if not provided directly
         if tags is None:
-            tags_list = secret_data.get('Tags', [])
-            tags = {tag['Key']: tag['Value'] for tag in tags_list}
+            tags_list = secret_data.get("Tags", [])
+            tags = {tag["Key"]: tag["Value"] for tag in tags_list}
 
         secret_dict = {
-            'name': secret_data.get('Name'),
-            'arn': secret_data.get('ARN'),
-            'description': secret_data.get('Description'),
-            'kms_key_id': secret_data.get('KmsKeyId'),
-            'rotation_enabled': secret_data.get('RotationEnabled', False),
-            'rotation_lambda_arn': secret_data.get('RotationLambdaARN'),
-            'owning_service': secret_data.get('OwningService'),
-            'tags': tags,
+            "name": secret_data.get("Name"),
+            "arn": secret_data.get("ARN"),
+            "description": secret_data.get("Description"),
+            "kms_key_id": secret_data.get("KmsKeyId"),
+            "rotation_enabled": secret_data.get("RotationEnabled", False),
+            "rotation_lambda_arn": secret_data.get("RotationLambdaARN"),
+            "owning_service": secret_data.get("OwningService"),
+            "tags": tags,
         }
 
         # Rotation rules
-        if 'RotationRules' in secret_data and secret_data['RotationRules']:
-            rotation_rules = secret_data['RotationRules']
-            secret_dict['rotation_rules'] = {
-                'automatically_after_days': rotation_rules.get('AutomaticallyAfterDays'),
-                'duration': rotation_rules.get('Duration'),
-                'schedule_expression': rotation_rules.get('ScheduleExpression')
+        if "RotationRules" in secret_data and secret_data["RotationRules"]:
+            rotation_rules = secret_data["RotationRules"]
+            secret_dict["rotation_rules"] = {
+                "automatically_after_days": rotation_rules.get(
+                    "AutomaticallyAfterDays"
+                ),
+                "duration": rotation_rules.get("Duration"),
+                "schedule_expression": rotation_rules.get("ScheduleExpression"),
             }
 
         # Timestamps
-        if 'LastRotatedDate' in secret_data:
-            secret_dict['last_rotated_date'] = secret_data['LastRotatedDate']
-        if 'LastChangedDate' in secret_data:
-            secret_dict['last_changed_date'] = secret_data['LastChangedDate']
-        if 'LastAccessedDate' in secret_data:
-            secret_dict['last_accessed_date'] = secret_data['LastAccessedDate']
-        if 'DeletedDate' in secret_data:
-            secret_dict['deleted_date'] = secret_data['DeletedDate']
-        if 'CreatedDate' in secret_data:
-            secret_dict['created_date'] = secret_data['CreatedDate']
+        if "LastRotatedDate" in secret_data:
+            secret_dict["last_rotated_date"] = secret_data["LastRotatedDate"]
+        if "LastChangedDate" in secret_data:
+            secret_dict["last_changed_date"] = secret_data["LastChangedDate"]
+        if "LastAccessedDate" in secret_data:
+            secret_dict["last_accessed_date"] = secret_data["LastAccessedDate"]
+        if "DeletedDate" in secret_data:
+            secret_dict["deleted_date"] = secret_data["DeletedDate"]
+        if "CreatedDate" in secret_data:
+            secret_dict["created_date"] = secret_data["CreatedDate"]
 
         # Version IDs to stages
-        if 'VersionIdsToStages' in secret_data:
-            secret_dict['version_ids_to_stages'] = secret_data['VersionIdsToStages']
+        if "VersionIdsToStages" in secret_data:
+            secret_dict["version_ids_to_stages"] = secret_data["VersionIdsToStages"]
 
         # Replication status
-        if 'ReplicationStatus' in secret_data:
-            secret_dict['replication_status'] = secret_data['ReplicationStatus']
+        if "ReplicationStatus" in secret_data:
+            secret_dict["replication_status"] = secret_data["ReplicationStatus"]
 
         return cls(**secret_dict)
 

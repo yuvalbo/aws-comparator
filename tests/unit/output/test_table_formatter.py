@@ -1,4 +1,5 @@
 """Tests for Table formatter module."""
+
 import pytest
 
 from aws_comparator.models.comparison import (

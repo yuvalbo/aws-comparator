@@ -7,4 +7,4 @@ resources and their configurations.
 
 from aws_comparator.services.sns.fetcher import SNSFetcher
 
-__all__ = ['SNSFetcher']
+__all__ = ["SNSFetcher"]

@@ -7,4 +7,4 @@ and their configurations.
 
 from aws_comparator.services.sqs.fetcher import SQSFetcher
 
-__all__ = ['SQSFetcher']
+__all__ = ["SQSFetcher"]

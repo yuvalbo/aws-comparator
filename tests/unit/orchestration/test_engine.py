@@ -1,4 +1,5 @@
 """Tests for orchestration engine module."""
+
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -567,7 +568,12 @@ class TestCreateSessionClientError:
         mock_sts = MagicMock()
         mock_session.client.return_value = mock_sts
         mock_sts.get_caller_identity.side_effect = ClientError(
-            {"Error": {"Code": "SignatureDoesNotMatch", "Message": "Signature mismatch"}},
+            {
+                "Error": {
+                    "Code": "SignatureDoesNotMatch",
+                    "Message": "Signature mismatch",
+                }
+            },
             "GetCallerIdentity",
         )
 

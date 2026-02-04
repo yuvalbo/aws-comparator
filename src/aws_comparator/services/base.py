@@ -128,10 +128,7 @@ class BaseServiceFetcher(ABC):
         pass
 
     def _paginate(
-        self,
-        operation_name: str,
-        result_key: Optional[str] = None,
-        **kwargs: Any
+        self, operation_name: str, result_key: Optional[str] = None, **kwargs: Any
     ) -> list[dict[str, Any]]:
         """
         Generic pagination helper for AWS API calls.
@@ -157,9 +154,7 @@ class BaseServiceFetcher(ABC):
         """
         if not self.client:
             raise DataFetchError(
-                self.SERVICE_NAME,
-                operation_name,
-                "Client not initialized"
+                self.SERVICE_NAME, operation_name, "Client not initialized"
             )
 
         try:
@@ -176,9 +171,9 @@ class BaseServiceFetcher(ABC):
                         # Find the first key that contains a list
                         for key, value in page.items():
                             if isinstance(value, list) and key not in [
-                                'ResponseMetadata',
-                                'NextToken',
-                                'Marker'
+                                "ResponseMetadata",
+                                "NextToken",
+                                "Marker",
                             ]:
                                 result_key = key
                                 break
@@ -204,37 +199,29 @@ class BaseServiceFetcher(ABC):
                 return [response]
 
         except ClientError as e:
-            error_code = e.response.get('Error', {}).get('Code', '')
+            error_code = e.response.get("Error", {}).get("Code", "")
 
-            if error_code in ['AccessDenied', 'UnauthorizedOperation']:
+            if error_code in ["AccessDenied", "UnauthorizedOperation"]:
                 raise InsufficientPermissionsError(
                     self.SERVICE_NAME,
                     operation_name,
-                    f"{self.SERVICE_NAME}:{operation_name}"
+                    f"{self.SERVICE_NAME}:{operation_name}",
                 ) from e
             elif error_code in [
-                'Throttling', 'RequestLimitExceeded', 'TooManyRequestsException'
+                "Throttling",
+                "RequestLimitExceeded",
+                "TooManyRequestsException",
             ]:
-                raise ServiceThrottlingError(
-                    self.SERVICE_NAME, operation_name
-                ) from e
+                raise ServiceThrottlingError(self.SERVICE_NAME, operation_name) from e
             else:
                 raise DataFetchError(
-                    self.SERVICE_NAME,
-                    operation_name,
-                    f"{error_code}: {e}"
+                    self.SERVICE_NAME, operation_name, f"{error_code}: {e}"
                 ) from e
 
         except Exception as e:
-            raise DataFetchError(
-                self.SERVICE_NAME,
-                operation_name,
-                str(e)
-            ) from e
+            raise DataFetchError(self.SERVICE_NAME, operation_name, str(e)) from e
 
-    def _normalize_tags(
-        self, tags: Optional[list[dict[str, str]]]
-    ) -> dict[str, str]:
+    def _normalize_tags(self, tags: Optional[list[dict[str, str]]]) -> dict[str, str]:
         """
         Normalize AWS tags to consistent dictionary format.
 
@@ -258,8 +245,8 @@ class BaseServiceFetcher(ABC):
         normalized: dict[str, str] = {}
         for tag in tags:
             # Handle both 'Key'/'Value' and 'key'/'value' formats
-            key = tag.get('Key') or tag.get('key', '')
-            value = tag.get('Value') or tag.get('value', '')
+            key = tag.get("Key") or tag.get("key", "")
+            value = tag.get("Value") or tag.get("value", "")
 
             if key:
                 normalized[key] = value
@@ -267,9 +254,7 @@ class BaseServiceFetcher(ABC):
         return normalized
 
     def _safe_fetch(
-        self,
-        resource_type: str,
-        fetch_func: Callable[[], list[Any]]
+        self, resource_type: str, fetch_func: Callable[[], list[Any]]
     ) -> list[AWSResource]:
         """
         Safely execute a fetch function with error handling.
@@ -290,9 +275,7 @@ class BaseServiceFetcher(ABC):
             self.logger.info(f"Fetched {len(resources)} {resource_type}")
             return resources
         except InsufficientPermissionsError as e:
-            self.logger.warning(
-                f"Permission denied for {resource_type}: {e.message}"
-            )
+            self.logger.warning(f"Permission denied for {resource_type}: {e.message}")
             return []
         except ServiceThrottlingError as e:
             self.logger.warning(
@@ -300,14 +283,11 @@ class BaseServiceFetcher(ABC):
             )
             return []
         except DataFetchError as e:
-            self.logger.error(
-                f"Failed to fetch {resource_type}: {e.message}"
-            )
+            self.logger.error(f"Failed to fetch {resource_type}: {e.message}")
             return []
         except Exception as e:
             self.logger.error(
-                f"Unexpected error fetching {resource_type}: {e}",
-                exc_info=True
+                f"Unexpected error fetching {resource_type}: {e}", exc_info=True
             )
             return []
 

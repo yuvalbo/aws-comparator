@@ -1,4 +1,5 @@
 """Tests for core logging module."""
+
 import logging
 import tempfile
 from pathlib import Path
@@ -229,7 +230,9 @@ class TestLogOperationStart:
     def test_log_operation_start_with_context(self):
         """Test log_operation_start with context kwargs."""
         mock_logger = Mock()
-        log_operation_start(mock_logger, "fetch data", service="ec2", region="us-east-1")
+        log_operation_start(
+            mock_logger, "fetch data", service="ec2", region="us-east-1"
+        )
 
         mock_logger.info.assert_called_once()
         call_args = mock_logger.info.call_args.args[0]

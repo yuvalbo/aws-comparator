@@ -19,38 +19,39 @@ from aws_comparator.services.cloudwatch.fetcher import CloudWatchFetcher
 def aws_credentials():
     """Mock AWS credentials for moto."""
     import os
-    os.environ['AWS_ACCESS_KEY_ID'] = 'testing'
-    os.environ['AWS_SECRET_ACCESS_KEY'] = 'testing'
-    os.environ['AWS_SECURITY_TOKEN'] = 'testing'
-    os.environ['AWS_SESSION_TOKEN'] = 'testing'
-    os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'
+
+    os.environ["AWS_ACCESS_KEY_ID"] = "testing"
+    os.environ["AWS_SECRET_ACCESS_KEY"] = "testing"
+    os.environ["AWS_SECURITY_TOKEN"] = "testing"
+    os.environ["AWS_SESSION_TOKEN"] = "testing"
+    os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
 
 
 @pytest.fixture
 def cloudwatch_client(aws_credentials):
     """Create a mocked CloudWatch client."""
     with mock_aws():
-        yield boto3.client('cloudwatch', region_name='us-east-1')
+        yield boto3.client("cloudwatch", region_name="us-east-1")
 
 
 @pytest.fixture
 def logs_client(aws_credentials):
     """Create a mocked CloudWatch Logs client."""
     with mock_aws():
-        yield boto3.client('logs', region_name='us-east-1')
+        yield boto3.client("logs", region_name="us-east-1")
 
 
 @pytest.fixture
 def session(aws_credentials):
     """Create a mocked boto3 session."""
     with mock_aws():
-        yield boto3.Session(region_name='us-east-1')
+        yield boto3.Session(region_name="us-east-1")
 
 
 @pytest.fixture
 def cloudwatch_fetcher(session):
     """Create a CloudWatch fetcher instance."""
-    return CloudWatchFetcher(session=session, region='us-east-1')
+    return CloudWatchFetcher(session=session, region="us-east-1")
 
 
 class TestCloudWatchFetcher:
@@ -58,27 +59,27 @@ class TestCloudWatchFetcher:
 
     def test_service_name(self, cloudwatch_fetcher):
         """Test that SERVICE_NAME is correctly set."""
-        assert cloudwatch_fetcher.SERVICE_NAME == 'cloudwatch'
+        assert cloudwatch_fetcher.SERVICE_NAME == "cloudwatch"
 
     def test_get_resource_types(self, cloudwatch_fetcher):
         """Test get_resource_types returns correct resource types."""
         resource_types = cloudwatch_fetcher.get_resource_types()
-        assert 'alarms' in resource_types
-        assert 'log_groups' in resource_types
-        assert 'dashboards' in resource_types
+        assert "alarms" in resource_types
+        assert "log_groups" in resource_types
+        assert "dashboards" in resource_types
         assert len(resource_types) == 3
 
     def test_create_client(self, cloudwatch_fetcher):
         """Test that _create_client creates a CloudWatch client."""
         client = cloudwatch_fetcher._create_client()
         assert client is not None
-        assert client._service_model.service_name == 'cloudwatch'
+        assert client._service_model.service_name == "cloudwatch"
 
     def test_create_logs_client(self, cloudwatch_fetcher):
         """Test that _create_logs_client creates a CloudWatch Logs client."""
         client = cloudwatch_fetcher._create_logs_client()
         assert client is not None
-        assert client._service_model.service_name == 'logs'
+        assert client._service_model.service_name == "logs"
 
 
 class TestFetchAlarms:
@@ -94,28 +95,28 @@ class TestFetchAlarms:
         """Test fetching alarms with mocked data."""
         # Create a test alarm
         cloudwatch_client.put_metric_alarm(
-            AlarmName='TestAlarm',
-            ComparisonOperator='GreaterThanThreshold',
+            AlarmName="TestAlarm",
+            ComparisonOperator="GreaterThanThreshold",
             EvaluationPeriods=1,
-            MetricName='CPUUtilization',
-            Namespace='AWS/EC2',
+            MetricName="CPUUtilization",
+            Namespace="AWS/EC2",
             Period=300,
-            Statistic='Average',
+            Statistic="Average",
             Threshold=80.0,
             ActionsEnabled=True,
-            AlarmDescription='Test alarm for CPU utilization',
-            AlarmActions=['arn:aws:sns:us-east-1:123456789012:test-topic']
+            AlarmDescription="Test alarm for CPU utilization",
+            AlarmActions=["arn:aws:sns:us-east-1:123456789012:test-topic"],
         )
 
         alarms = cloudwatch_fetcher._fetch_alarms()
 
         assert len(alarms) == 1
         assert isinstance(alarms[0], CloudWatchAlarm)
-        assert alarms[0].alarm_name == 'TestAlarm'
-        assert alarms[0].metric_name == 'CPUUtilization'
-        assert alarms[0].namespace == 'AWS/EC2'
+        assert alarms[0].alarm_name == "TestAlarm"
+        assert alarms[0].metric_name == "CPUUtilization"
+        assert alarms[0].namespace == "AWS/EC2"
         assert alarms[0].threshold == 80.0
-        assert alarms[0].comparison_operator == 'GreaterThanThreshold'
+        assert alarms[0].comparison_operator == "GreaterThanThreshold"
         assert alarms[0].period == 300
         assert alarms[0].evaluation_periods == 1
         assert alarms[0].actions_enabled is True
@@ -123,53 +124,51 @@ class TestFetchAlarms:
     def test_fetch_alarms_with_dimensions(self, cloudwatch_fetcher, cloudwatch_client):
         """Test fetching alarms with dimensions."""
         cloudwatch_client.put_metric_alarm(
-            AlarmName='TestAlarmWithDimensions',
-            ComparisonOperator='GreaterThanThreshold',
+            AlarmName="TestAlarmWithDimensions",
+            ComparisonOperator="GreaterThanThreshold",
             EvaluationPeriods=2,
-            MetricName='CPUUtilization',
-            Namespace='AWS/EC2',
+            MetricName="CPUUtilization",
+            Namespace="AWS/EC2",
             Period=60,
-            Statistic='Average',
+            Statistic="Average",
             Threshold=90.0,
-            Dimensions=[
-                {'Name': 'InstanceId', 'Value': 'i-1234567890abcdef0'}
-            ]
+            Dimensions=[{"Name": "InstanceId", "Value": "i-1234567890abcdef0"}],
         )
 
         alarms = cloudwatch_fetcher._fetch_alarms()
 
         assert len(alarms) == 1
         assert len(alarms[0].dimensions) == 1
-        assert alarms[0].dimensions[0].name == 'InstanceId'
-        assert alarms[0].dimensions[0].value == 'i-1234567890abcdef0'
+        assert alarms[0].dimensions[0].name == "InstanceId"
+        assert alarms[0].dimensions[0].value == "i-1234567890abcdef0"
 
     def test_fetch_alarms_multiple(self, cloudwatch_fetcher, cloudwatch_client):
         """Test fetching multiple alarms."""
         # Create multiple test alarms
         for i in range(3):
             cloudwatch_client.put_metric_alarm(
-                AlarmName=f'TestAlarm{i}',
-                ComparisonOperator='GreaterThanThreshold',
+                AlarmName=f"TestAlarm{i}",
+                ComparisonOperator="GreaterThanThreshold",
                 EvaluationPeriods=1,
-                MetricName='CPUUtilization',
-                Namespace='AWS/EC2',
+                MetricName="CPUUtilization",
+                Namespace="AWS/EC2",
                 Period=300,
-                Statistic='Average',
-                Threshold=80.0 + i * 5
+                Statistic="Average",
+                Threshold=80.0 + i * 5,
             )
 
         alarms = cloudwatch_fetcher._fetch_alarms()
 
         assert len(alarms) == 3
         alarm_names = [alarm.alarm_name for alarm in alarms]
-        assert 'TestAlarm0' in alarm_names
-        assert 'TestAlarm1' in alarm_names
-        assert 'TestAlarm2' in alarm_names
+        assert "TestAlarm0" in alarm_names
+        assert "TestAlarm1" in alarm_names
+        assert "TestAlarm2" in alarm_names
 
-    @patch('aws_comparator.services.cloudwatch.fetcher.CloudWatchFetcher._paginate')
+    @patch("aws_comparator.services.cloudwatch.fetcher.CloudWatchFetcher._paginate")
     def test_fetch_alarms_error_handling(self, mock_paginate, cloudwatch_fetcher):
         """Test error handling when fetching alarms fails."""
-        mock_paginate.side_effect = Exception('Test error')
+        mock_paginate.side_effect = Exception("Test error")
 
         alarms = cloudwatch_fetcher._fetch_alarms()
 
@@ -189,20 +188,19 @@ class TestFetchLogGroups:
     def test_fetch_log_groups_with_data(self, cloudwatch_fetcher, logs_client):
         """Test fetching log groups with mocked data."""
         # Create a test log group
-        logs_client.create_log_group(logGroupName='/aws/lambda/test-function')
+        logs_client.create_log_group(logGroupName="/aws/lambda/test-function")
 
         log_groups = cloudwatch_fetcher._fetch_log_groups()
 
         assert len(log_groups) == 1
         assert isinstance(log_groups[0], LogGroup)
-        assert log_groups[0].log_group_name == '/aws/lambda/test-function'
+        assert log_groups[0].log_group_name == "/aws/lambda/test-function"
 
     def test_fetch_log_groups_with_retention(self, cloudwatch_fetcher, logs_client):
         """Test fetching log groups with retention settings."""
-        logs_client.create_log_group(logGroupName='/aws/lambda/test-function')
+        logs_client.create_log_group(logGroupName="/aws/lambda/test-function")
         logs_client.put_retention_policy(
-            logGroupName='/aws/lambda/test-function',
-            retentionInDays=7
+            logGroupName="/aws/lambda/test-function", retentionInDays=7
         )
 
         log_groups = cloudwatch_fetcher._fetch_log_groups()
@@ -214,9 +212,9 @@ class TestFetchLogGroups:
         """Test fetching multiple log groups."""
         # Create multiple test log groups
         log_group_names = [
-            '/aws/lambda/function1',
-            '/aws/lambda/function2',
-            '/aws/ecs/service1'
+            "/aws/lambda/function1",
+            "/aws/lambda/function2",
+            "/aws/ecs/service1",
         ]
 
         for log_group_name in log_group_names:
@@ -229,12 +227,16 @@ class TestFetchLogGroups:
         for expected_name in log_group_names:
             assert expected_name in fetched_names
 
-    @patch('aws_comparator.services.cloudwatch.fetcher.CloudWatchFetcher._create_logs_client')
-    def test_fetch_log_groups_error_handling(self, mock_logs_client, cloudwatch_fetcher):
+    @patch(
+        "aws_comparator.services.cloudwatch.fetcher.CloudWatchFetcher._create_logs_client"
+    )
+    def test_fetch_log_groups_error_handling(
+        self, mock_logs_client, cloudwatch_fetcher
+    ):
         """Test error handling when fetching log groups fails."""
         mock_client = Mock()
         mock_client.can_paginate.return_value = True
-        mock_client.get_paginator.side_effect = Exception('Test error')
+        mock_client.get_paginator.side_effect = Exception("Test error")
         mock_logs_client.return_value = mock_client
 
         log_groups = cloudwatch_fetcher._fetch_log_groups()
@@ -257,25 +259,23 @@ class TestFetchDashboards:
         # Create a test dashboard
         dashboard_body = '{"widgets": []}'
         cloudwatch_client.put_dashboard(
-            DashboardName='TestDashboard',
-            DashboardBody=dashboard_body
+            DashboardName="TestDashboard", DashboardBody=dashboard_body
         )
 
         dashboards = cloudwatch_fetcher._fetch_dashboards()
 
         assert len(dashboards) == 1
         assert isinstance(dashboards[0], Dashboard)
-        assert dashboards[0].dashboard_name == 'TestDashboard'
+        assert dashboards[0].dashboard_name == "TestDashboard"
 
     def test_fetch_dashboards_multiple(self, cloudwatch_fetcher, cloudwatch_client):
         """Test fetching multiple dashboards."""
         # Create multiple test dashboards
-        dashboard_names = ['Dashboard1', 'Dashboard2', 'Dashboard3']
+        dashboard_names = ["Dashboard1", "Dashboard2", "Dashboard3"]
 
         for name in dashboard_names:
             cloudwatch_client.put_dashboard(
-                DashboardName=name,
-                DashboardBody='{"widgets": []}'
+                DashboardName=name, DashboardBody='{"widgets": []}'
             )
 
         dashboards = cloudwatch_fetcher._fetch_dashboards()
@@ -285,10 +285,10 @@ class TestFetchDashboards:
         for expected_name in dashboard_names:
             assert expected_name in fetched_names
 
-    @patch('aws_comparator.services.cloudwatch.fetcher.CloudWatchFetcher._paginate')
+    @patch("aws_comparator.services.cloudwatch.fetcher.CloudWatchFetcher._paginate")
     def test_fetch_dashboards_error_handling(self, mock_paginate, cloudwatch_fetcher):
         """Test error handling when fetching dashboards fails."""
-        mock_paginate.side_effect = Exception('Test error')
+        mock_paginate.side_effect = Exception("Test error")
 
         dashboards = cloudwatch_fetcher._fetch_dashboards()
 
@@ -304,49 +304,45 @@ class TestFetchResources:
         resources = cloudwatch_fetcher.fetch_resources()
 
         assert isinstance(resources, dict)
-        assert 'alarms' in resources
-        assert 'log_groups' in resources
-        assert 'dashboards' in resources
+        assert "alarms" in resources
+        assert "log_groups" in resources
+        assert "dashboards" in resources
 
     def test_fetch_resources_with_data(
-        self,
-        cloudwatch_fetcher,
-        cloudwatch_client,
-        logs_client
+        self, cloudwatch_fetcher, cloudwatch_client, logs_client
     ):
         """Test fetch_resources with mocked data."""
         # Create test data
         cloudwatch_client.put_metric_alarm(
-            AlarmName='TestAlarm',
-            ComparisonOperator='GreaterThanThreshold',
+            AlarmName="TestAlarm",
+            ComparisonOperator="GreaterThanThreshold",
             EvaluationPeriods=1,
-            MetricName='CPUUtilization',
-            Namespace='AWS/EC2',
+            MetricName="CPUUtilization",
+            Namespace="AWS/EC2",
             Period=300,
-            Statistic='Average',
-            Threshold=80.0
+            Statistic="Average",
+            Threshold=80.0,
         )
 
-        logs_client.create_log_group(logGroupName='/aws/lambda/test')
+        logs_client.create_log_group(logGroupName="/aws/lambda/test")
 
         cloudwatch_client.put_dashboard(
-            DashboardName='TestDashboard',
-            DashboardBody='{"widgets": []}'
+            DashboardName="TestDashboard", DashboardBody='{"widgets": []}'
         )
 
         resources = cloudwatch_fetcher.fetch_resources()
 
-        assert len(resources['alarms']) == 1
-        assert len(resources['log_groups']) == 1
-        assert len(resources['dashboards']) == 1
+        assert len(resources["alarms"]) == 1
+        assert len(resources["log_groups"]) == 1
+        assert len(resources["dashboards"]) == 1
 
     def test_fetch_resources_empty(self, cloudwatch_fetcher):
         """Test fetch_resources when no resources exist."""
         resources = cloudwatch_fetcher.fetch_resources()
 
-        assert len(resources['alarms']) == 0
-        assert len(resources['log_groups']) == 0
-        assert len(resources['dashboards']) == 0
+        assert len(resources["alarms"]) == 0
+        assert len(resources["log_groups"]) == 0
+        assert len(resources["dashboards"]) == 0
 
 
 class TestCloudWatchModels:
@@ -355,52 +351,50 @@ class TestCloudWatchModels:
     def test_cloudwatch_alarm_from_aws_response(self):
         """Test CloudWatchAlarm.from_aws_response method."""
         alarm_data = {
-            'AlarmName': 'TestAlarm',
-            'AlarmArn': 'arn:aws:cloudwatch:us-east-1:123456789012:alarm:TestAlarm',
-            'AlarmDescription': 'Test alarm description',
-            'MetricName': 'CPUUtilization',
-            'Namespace': 'AWS/EC2',
-            'Statistic': 'Average',
-            'Dimensions': [
-                {'Name': 'InstanceId', 'Value': 'i-1234567890abcdef0'}
-            ],
-            'Period': 300,
-            'EvaluationPeriods': 2,
-            'Threshold': 80.0,
-            'ComparisonOperator': 'GreaterThanThreshold',
-            'StateValue': 'OK',
-            'ActionsEnabled': True,
-            'AlarmActions': ['arn:aws:sns:us-east-1:123456789012:test-topic'],
-            'OKActions': [],
-            'InsufficientDataActions': []
+            "AlarmName": "TestAlarm",
+            "AlarmArn": "arn:aws:cloudwatch:us-east-1:123456789012:alarm:TestAlarm",
+            "AlarmDescription": "Test alarm description",
+            "MetricName": "CPUUtilization",
+            "Namespace": "AWS/EC2",
+            "Statistic": "Average",
+            "Dimensions": [{"Name": "InstanceId", "Value": "i-1234567890abcdef0"}],
+            "Period": 300,
+            "EvaluationPeriods": 2,
+            "Threshold": 80.0,
+            "ComparisonOperator": "GreaterThanThreshold",
+            "StateValue": "OK",
+            "ActionsEnabled": True,
+            "AlarmActions": ["arn:aws:sns:us-east-1:123456789012:test-topic"],
+            "OKActions": [],
+            "InsufficientDataActions": [],
         }
 
         alarm = CloudWatchAlarm.from_aws_response(alarm_data)
 
-        assert alarm.alarm_name == 'TestAlarm'
-        assert alarm.metric_name == 'CPUUtilization'
-        assert alarm.namespace == 'AWS/EC2'
+        assert alarm.alarm_name == "TestAlarm"
+        assert alarm.metric_name == "CPUUtilization"
+        assert alarm.namespace == "AWS/EC2"
         assert alarm.period == 300
         assert alarm.evaluation_periods == 2
         assert alarm.threshold == 80.0
-        assert alarm.comparison_operator == 'GreaterThanThreshold'
-        assert alarm.state_value == 'OK'
+        assert alarm.comparison_operator == "GreaterThanThreshold"
+        assert alarm.state_value == "OK"
         assert len(alarm.dimensions) == 1
 
     def test_log_group_from_aws_response(self):
         """Test LogGroup.from_aws_response method."""
         log_group_data = {
-            'logGroupName': '/aws/lambda/test-function',
-            'arn': 'arn:aws:logs:us-east-1:123456789012:log-group:/aws/lambda/test-function',
-            'creationTime': 1640995200000,  # Unix timestamp in milliseconds
-            'retentionInDays': 7,
-            'metricFilterCount': 2,
-            'storedBytes': 1048576
+            "logGroupName": "/aws/lambda/test-function",
+            "arn": "arn:aws:logs:us-east-1:123456789012:log-group:/aws/lambda/test-function",
+            "creationTime": 1640995200000,  # Unix timestamp in milliseconds
+            "retentionInDays": 7,
+            "metricFilterCount": 2,
+            "storedBytes": 1048576,
         }
 
         log_group = LogGroup.from_aws_response(log_group_data)
 
-        assert log_group.log_group_name == '/aws/lambda/test-function'
+        assert log_group.log_group_name == "/aws/lambda/test-function"
         assert log_group.retention_in_days == 7
         assert log_group.metric_filter_count == 2
         assert log_group.stored_bytes == 1048576
@@ -409,32 +403,30 @@ class TestCloudWatchModels:
     def test_dashboard_from_aws_response(self):
         """Test Dashboard.from_aws_response method."""
         dashboard_data = {
-            'DashboardName': 'TestDashboard',
-            'DashboardArn': 'arn:aws:cloudwatch::123456789012:dashboard/TestDashboard',
-            'LastModified': datetime.now(timezone.utc),
-            'Size': 1024
+            "DashboardName": "TestDashboard",
+            "DashboardArn": "arn:aws:cloudwatch::123456789012:dashboard/TestDashboard",
+            "LastModified": datetime.now(timezone.utc),
+            "Size": 1024,
         }
 
         dashboard = Dashboard.from_aws_response(dashboard_data)
 
-        assert dashboard.dashboard_name == 'TestDashboard'
-        assert dashboard.dashboard_arn == dashboard_data['DashboardArn']
+        assert dashboard.dashboard_name == "TestDashboard"
+        assert dashboard.dashboard_arn == dashboard_data["DashboardArn"]
         assert dashboard.size == 1024
 
     def test_dashboard_from_aws_response_with_details(self):
         """Test Dashboard.from_aws_response with dashboard details."""
         dashboard_data = {
-            'DashboardName': 'TestDashboard',
-            'DashboardArn': 'arn:aws:cloudwatch::123456789012:dashboard/TestDashboard',
-            'LastModified': datetime.now(timezone.utc),
-            'Size': 1024
+            "DashboardName": "TestDashboard",
+            "DashboardArn": "arn:aws:cloudwatch::123456789012:dashboard/TestDashboard",
+            "LastModified": datetime.now(timezone.utc),
+            "Size": 1024,
         }
 
-        dashboard_details = {
-            'DashboardBody': '{"widgets": []}'
-        }
+        dashboard_details = {"DashboardBody": '{"widgets": []}'}
 
         dashboard = Dashboard.from_aws_response(dashboard_data, dashboard_details)
 
-        assert dashboard.dashboard_name == 'TestDashboard'
+        assert dashboard.dashboard_name == "TestDashboard"
         assert dashboard.dashboard_body == '{"widgets": []}'

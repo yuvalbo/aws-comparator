@@ -1,4 +1,5 @@
 """Tests for JSON formatter module."""
+
 import json
 from datetime import datetime
 

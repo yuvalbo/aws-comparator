@@ -16,12 +16,14 @@ from aws_comparator.models.common import AWSResource
 
 class RuleState(str, Enum):
     """EventBridge rule state."""
+
     ENABLED = "ENABLED"
     DISABLED = "DISABLED"
 
 
 class ConnectionState(str, Enum):
     """EventBridge connection state."""
+
     CREATING = "CREATING"
     UPDATING = "UPDATING"
     DELETING = "DELETING"
@@ -33,6 +35,7 @@ class ConnectionState(str, Enum):
 
 class AuthorizationType(str, Enum):
     """EventBridge connection authorization type."""
+
     BASIC = "BASIC"
     OAUTH_CLIENT_CREDENTIALS = "OAUTH_CLIENT_CREDENTIALS"
     API_KEY = "API_KEY"
@@ -41,6 +44,7 @@ class AuthorizationType(str, Enum):
 
 class ArchiveState(str, Enum):
     """EventBridge archive state."""
+
     ENABLED = "ENABLED"
     DISABLED = "DISABLED"
     CREATING = "CREATING"
@@ -49,11 +53,11 @@ class ArchiveState(str, Enum):
 
 class InputTransformer(BaseModel):
     """EventBridge rule target input transformer."""
+
     model_config = ConfigDict(extra="ignore")
 
     input_paths_map: dict[str, str] = Field(
-        default_factory=dict,
-        description="Map of JSON path to variable name"
+        default_factory=dict, description="Map of JSON path to variable name"
     )
     input_template: str = Field(..., description="Input template")
 
@@ -64,24 +68,26 @@ class Target(BaseModel):
 
     Represents a target for an EventBridge rule (Lambda, SQS, SNS, etc.).
     """
+
     model_config = ConfigDict(extra="ignore")
 
     id: str = Field(..., description="Target ID")
     arn: str = Field(..., description="Target ARN")
-    role_arn: Optional[str] = Field(None, description="IAM role ARN for target invocation")
+    role_arn: Optional[str] = Field(
+        None, description="IAM role ARN for target invocation"
+    )
     input: Optional[str] = Field(None, description="Static input to the target")
-    input_path: Optional[str] = Field(None, description="JSONPath to select part of event")
+    input_path: Optional[str] = Field(
+        None, description="JSONPath to select part of event"
+    )
     input_transformer: Optional[InputTransformer] = Field(
-        None,
-        description="Input transformer configuration"
+        None, description="Input transformer configuration"
     )
     dead_letter_config: Optional[dict[str, Any]] = Field(
-        None,
-        description="Dead letter queue configuration"
+        None, description="Dead letter queue configuration"
     )
     retry_policy: Optional[dict[str, Any]] = Field(
-        None,
-        description="Retry policy configuration"
+        None, description="Retry policy configuration"
     )
 
     def __str__(self) -> str:
@@ -95,15 +101,18 @@ class EventBus(AWSResource):
 
     Represents an EventBridge event bus with its configuration.
     """
+
     model_config = ConfigDict(extra="ignore")
 
     name: str = Field(..., description="Event bus name")
     arn: str = Field(..., description="Event bus ARN")
-    policy: Optional[dict[str, Any]] = Field(None, description="Event bus policy document")
+    policy: Optional[dict[str, Any]] = Field(
+        None, description="Event bus policy document"
+    )
     description: Optional[str] = Field(None, description="Event bus description")
     creation_time: Optional[datetime] = Field(None, description="Creation timestamp")
 
-    @field_validator('name')
+    @field_validator("name")
     @classmethod
     def validate_name(cls, v: str) -> str:
         """
@@ -136,11 +145,11 @@ class EventBus(AWSResource):
             EventBus instance
         """
         bus_dict = {
-            'name': bus_data.get('Name'),
-            'arn': bus_data.get('Arn'),
-            'policy': bus_data.get('Policy'),
-            'description': bus_data.get('Description'),
-            'creation_time': bus_data.get('CreationTime'),
+            "name": bus_data.get("Name"),
+            "arn": bus_data.get("Arn"),
+            "policy": bus_data.get("Policy"),
+            "description": bus_data.get("Description"),
+            "creation_time": bus_data.get("CreationTime"),
         }
 
         return cls(**bus_dict)
@@ -156,6 +165,7 @@ class Rule(AWSResource):
 
     Represents an EventBridge rule that routes events to targets.
     """
+
     model_config = ConfigDict(extra="ignore")
 
     name: str = Field(..., description="Rule name")
@@ -163,8 +173,7 @@ class Rule(AWSResource):
     event_bus_name: str = Field(default="default", description="Event bus name")
     event_pattern: Optional[str] = Field(None, description="Event pattern JSON")
     schedule_expression: Optional[str] = Field(
-        None,
-        description="Schedule expression (cron or rate)"
+        None, description="Schedule expression (cron or rate)"
     )
     state: RuleState = Field(default=RuleState.ENABLED, description="Rule state")
     description: Optional[str] = Field(None, description="Rule description")
@@ -173,7 +182,7 @@ class Rule(AWSResource):
     targets: list[Target] = Field(default_factory=list, description="Rule targets")
     creation_time: Optional[datetime] = Field(None, description="Creation timestamp")
 
-    @field_validator('name')
+    @field_validator("name")
     @classmethod
     def validate_name(cls, v: str) -> str:
         """
@@ -196,9 +205,7 @@ class Rule(AWSResource):
 
     @classmethod
     def from_aws_response(
-        cls,
-        rule_data: dict[str, Any],
-        targets: Optional[list[dict[str, Any]]] = None
+        cls, rule_data: dict[str, Any], targets: Optional[list[dict[str, Any]]] = None
     ) -> "Rule":
         """
         Create Rule instance from AWS API response.
@@ -211,16 +218,16 @@ class Rule(AWSResource):
             Rule instance
         """
         rule_dict = {
-            'name': rule_data.get('Name'),
-            'arn': rule_data.get('Arn'),
-            'event_bus_name': rule_data.get('EventBusName', 'default'),
-            'event_pattern': rule_data.get('EventPattern'),
-            'schedule_expression': rule_data.get('ScheduleExpression'),
-            'state': rule_data.get('State', 'ENABLED'),
-            'description': rule_data.get('Description'),
-            'role_arn': rule_data.get('RoleArn'),
-            'managed_by': rule_data.get('ManagedBy'),
-            'creation_time': rule_data.get('CreationTime'),
+            "name": rule_data.get("Name"),
+            "arn": rule_data.get("Arn"),
+            "event_bus_name": rule_data.get("EventBusName", "default"),
+            "event_pattern": rule_data.get("EventPattern"),
+            "schedule_expression": rule_data.get("ScheduleExpression"),
+            "state": rule_data.get("State", "ENABLED"),
+            "description": rule_data.get("Description"),
+            "role_arn": rule_data.get("RoleArn"),
+            "managed_by": rule_data.get("ManagedBy"),
+            "creation_time": rule_data.get("CreationTime"),
         }
 
         # Process targets
@@ -228,26 +235,26 @@ class Rule(AWSResource):
             target_objects = []
             for target_data in targets:
                 target_dict = {
-                    'id': target_data.get('Id'),
-                    'arn': target_data.get('Arn'),
-                    'role_arn': target_data.get('RoleArn'),
-                    'input': target_data.get('Input'),
-                    'input_path': target_data.get('InputPath'),
-                    'dead_letter_config': target_data.get('DeadLetterConfig'),
-                    'retry_policy': target_data.get('RetryPolicy'),
+                    "id": target_data.get("Id"),
+                    "arn": target_data.get("Arn"),
+                    "role_arn": target_data.get("RoleArn"),
+                    "input": target_data.get("Input"),
+                    "input_path": target_data.get("InputPath"),
+                    "dead_letter_config": target_data.get("DeadLetterConfig"),
+                    "retry_policy": target_data.get("RetryPolicy"),
                 }
 
                 # Process input transformer
-                if 'InputTransformer' in target_data:
-                    transformer = target_data['InputTransformer']
-                    target_dict['input_transformer'] = {
-                        'input_paths_map': transformer.get('InputPathsMap', {}),
-                        'input_template': transformer.get('InputTemplate', ''),
+                if "InputTransformer" in target_data:
+                    transformer = target_data["InputTransformer"]
+                    target_dict["input_transformer"] = {
+                        "input_paths_map": transformer.get("InputPathsMap", {}),
+                        "input_template": transformer.get("InputTemplate", ""),
                     }
 
                 target_objects.append(Target(**target_dict))
 
-            rule_dict['targets'] = target_objects
+            rule_dict["targets"] = target_objects
 
         return cls(**rule_dict)
 
@@ -262,6 +269,7 @@ class Archive(AWSResource):
 
     Represents an EventBridge archive for event replay.
     """
+
     model_config = ConfigDict(extra="ignore")
 
     archive_name: str = Field(..., description="Archive name")
@@ -273,7 +281,7 @@ class Archive(AWSResource):
     event_count: Optional[int] = Field(None, description="Number of events in archive")
     creation_time: Optional[datetime] = Field(None, description="Creation timestamp")
 
-    @field_validator('archive_name')
+    @field_validator("archive_name")
     @classmethod
     def validate_name(cls, v: str) -> str:
         """
@@ -306,15 +314,15 @@ class Archive(AWSResource):
             Archive instance
         """
         archive_dict = {
-            'archive_name': archive_data.get('ArchiveName'),
-            'event_source_arn': archive_data.get('EventSourceArn'),
-            'description': archive_data.get('Description'),
-            'state': archive_data.get('State'),
-            'retention_days': archive_data.get('RetentionDays'),
-            'size_bytes': archive_data.get('SizeBytes'),
-            'event_count': archive_data.get('EventCount'),
-            'creation_time': archive_data.get('CreationTime'),
-            'arn': archive_data.get('ArchiveArn'),
+            "archive_name": archive_data.get("ArchiveName"),
+            "event_source_arn": archive_data.get("EventSourceArn"),
+            "description": archive_data.get("Description"),
+            "state": archive_data.get("State"),
+            "retention_days": archive_data.get("RetentionDays"),
+            "size_bytes": archive_data.get("SizeBytes"),
+            "event_count": archive_data.get("EventCount"),
+            "creation_time": archive_data.get("CreationTime"),
+            "arn": archive_data.get("ArchiveArn"),
         }
 
         return cls(**archive_dict)
@@ -330,6 +338,7 @@ class Connection(AWSResource):
 
     Represents an EventBridge connection for API destinations.
     """
+
     model_config = ConfigDict(extra="ignore")
 
     name: str = Field(..., description="Connection name")
@@ -339,15 +348,13 @@ class Connection(AWSResource):
     description: Optional[str] = Field(None, description="Connection description")
     creation_time: Optional[datetime] = Field(None, description="Creation timestamp")
     last_modified_time: Optional[datetime] = Field(
-        None,
-        description="Last modification timestamp"
+        None, description="Last modification timestamp"
     )
     last_authorized_time: Optional[datetime] = Field(
-        None,
-        description="Last authorization timestamp"
+        None, description="Last authorization timestamp"
     )
 
-    @field_validator('name')
+    @field_validator("name")
     @classmethod
     def validate_name(cls, v: str) -> str:
         """
@@ -380,14 +387,14 @@ class Connection(AWSResource):
             Connection instance
         """
         connection_dict = {
-            'name': connection_data.get('Name'),
-            'arn': connection_data.get('ConnectionArn'),
-            'connection_state': connection_data.get('ConnectionState'),
-            'authorization_type': connection_data.get('AuthorizationType'),
-            'description': connection_data.get('Description'),
-            'creation_time': connection_data.get('CreationTime'),
-            'last_modified_time': connection_data.get('LastModifiedTime'),
-            'last_authorized_time': connection_data.get('LastAuthorizedTime'),
+            "name": connection_data.get("Name"),
+            "arn": connection_data.get("ConnectionArn"),
+            "connection_state": connection_data.get("ConnectionState"),
+            "authorization_type": connection_data.get("AuthorizationType"),
+            "description": connection_data.get("Description"),
+            "creation_time": connection_data.get("CreationTime"),
+            "last_modified_time": connection_data.get("LastModifiedTime"),
+            "last_authorized_time": connection_data.get("LastAuthorizedTime"),
         }
 
         return cls(**connection_dict)

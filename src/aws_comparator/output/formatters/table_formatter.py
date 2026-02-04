@@ -104,9 +104,7 @@ class TableFormatter(BaseFormatter):
         self._account1_id: str = "Account 1"
         self._account2_id: str = "Account 2"
 
-    def format(
-        self, report: Union[ComparisonReport, ServiceComparisonResult]
-    ) -> str:
+    def format(self, report: Union[ComparisonReport, ServiceComparisonResult]) -> str:
         """
         Format a comparison report as Rich output.
 
@@ -270,11 +268,15 @@ class TableFormatter(BaseFormatter):
 
             console.print(f"Account 1: {report.account1_id} ({region1})")
             console.print(f"Account 2: {report.account2_id} ({region2})")
-            console.print(f"Timestamp: {report.timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
+            console.print(
+                f"Timestamp: {report.timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
+            )
         else:
             console.print(f"Service: {report.service_name}")
             console.print(f"Execution Time: {report.execution_time_seconds:.2f}s")
-            console.print(f"Timestamp: {report.timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
+            console.print(
+                f"Timestamp: {report.timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
+            )
 
         console.print()
 
@@ -300,13 +302,20 @@ class TableFormatter(BaseFormatter):
         # Changes by severity (only show non-zero)
         severity_counts = stats["changes_by_severity"]
         severity_lines = []
-        for severity in [ChangeSeverity.CRITICAL, ChangeSeverity.HIGH,
-                         ChangeSeverity.MEDIUM, ChangeSeverity.LOW, ChangeSeverity.INFO]:
+        for severity in [
+            ChangeSeverity.CRITICAL,
+            ChangeSeverity.HIGH,
+            ChangeSeverity.MEDIUM,
+            ChangeSeverity.LOW,
+            ChangeSeverity.INFO,
+        ]:
             count = severity_counts.get(severity.value, 0)
             if count > 0:
                 if self.use_colors:
                     color = SEVERITY_COLORS.get(severity, "white")
-                    severity_lines.append(f"  [{color}]{severity.value.upper()}: {count}[/{color}]")
+                    severity_lines.append(
+                        f"  [{color}]{severity.value.upper()}: {count}[/{color}]"
+                    )
                 else:
                     severity_lines.append(f"  {severity.value.upper()}: {count}")
 
@@ -322,11 +331,15 @@ class TableFormatter(BaseFormatter):
 
         console.print()
         if self.use_colors:
-            console.print(f"  [green]ADDED: {added}[/green]  |  "
-                         f"[red]REMOVED: {removed}[/red]  |  "
-                         f"[yellow]MODIFIED: {modified}[/yellow]")
+            console.print(
+                f"  [green]ADDED: {added}[/green]  |  "
+                f"[red]REMOVED: {removed}[/red]  |  "
+                f"[yellow]MODIFIED: {modified}[/yellow]"
+            )
         else:
-            console.print(f"  ADDED: {added}  |  REMOVED: {removed}  |  MODIFIED: {modified}")
+            console.print(
+                f"  ADDED: {added}  |  REMOVED: {removed}  |  MODIFIED: {modified}"
+            )
 
         if stats.get("has_errors"):
             console.print()
@@ -352,7 +365,9 @@ class TableFormatter(BaseFormatter):
         # Service header with double lines
         console.print("=" * self.console_width)
         if self.use_colors:
-            console.print(f"[bold cyan]SERVICE: {service_result.service_name.upper()}[/bold cyan]")
+            console.print(
+                f"[bold cyan]SERVICE: {service_result.service_name.upper()}[/bold cyan]"
+            )
         else:
             console.print(f"SERVICE: {service_result.service_name.upper()}")
         console.print("=" * self.console_width)
@@ -373,8 +388,12 @@ class TableFormatter(BaseFormatter):
 
         # Sort by severity (highest first)
         all_added.sort(key=lambda x: SEVERITY_ORDER.get(x[1].severity, 0), reverse=True)
-        all_removed.sort(key=lambda x: SEVERITY_ORDER.get(x[1].severity, 0), reverse=True)
-        all_modified.sort(key=lambda x: SEVERITY_ORDER.get(x[1].severity, 0), reverse=True)
+        all_removed.sort(
+            key=lambda x: SEVERITY_ORDER.get(x[1].severity, 0), reverse=True
+        )
+        all_modified.sort(
+            key=lambda x: SEVERITY_ORDER.get(x[1].severity, 0), reverse=True
+        )
 
         # Render ONLY IN ACCOUNT 2 section (was ADDED)
         if all_added:
@@ -458,7 +477,9 @@ class TableFormatter(BaseFormatter):
 
         if self.use_colors:
             severity_color = SEVERITY_COLORS.get(change.severity, "white")
-            console.print(f"  [{severity_color}]{severity_str}[/{severity_color}] {resource_type}: {change.resource_id}")
+            console.print(
+                f"  [{severity_color}]{severity_str}[/{severity_color}] {resource_type}: {change.resource_id}"
+            )
         else:
             console.print(f"  {severity_str} {resource_type}: {change.resource_id}")
 
@@ -469,7 +490,10 @@ class TableFormatter(BaseFormatter):
             for key, val in extra_info.items():
                 # Skip ARN-like fields if they match the resource_id already shown
                 val_str = str(val)
-                if key.lower() in ('arn', 'topicarn', 'clusterarn') and val_str == change.resource_id:
+                if (
+                    key.lower() in ("arn", "topicarn", "clusterarn")
+                    and val_str == change.resource_id
+                ):
                     continue
                 console.print(f"         {key}: {val_str}")
 
@@ -518,7 +542,9 @@ class TableFormatter(BaseFormatter):
 
         if self.use_colors:
             severity_color = SEVERITY_COLORS.get(change.severity, "white")
-            console.print(f"  [{severity_color}]{severity_str}[/{severity_color}] {resource_type}: {change.resource_id}")
+            console.print(
+                f"  [{severity_color}]{severity_str}[/{severity_color}] {resource_type}: {change.resource_id}"
+            )
         else:
             console.print(f"  {severity_str} {resource_type}: {change.resource_id}")
 
@@ -564,9 +590,13 @@ class TableFormatter(BaseFormatter):
 
         for error in report.errors:
             if self.use_colors:
-                console.print(f"  [red][{error.service_name}][/red] {error.error_type}: {error.error_message}")
+                console.print(
+                    f"  [red][{error.service_name}][/red] {error.error_type}: {error.error_message}"
+                )
             else:
-                console.print(f"  [{error.service_name}] {error.error_type}: {error.error_message}")
+                console.print(
+                    f"  [{error.service_name}] {error.error_type}: {error.error_message}"
+                )
 
         console.print()
 
@@ -591,25 +621,46 @@ class TableFormatter(BaseFormatter):
         if isinstance(value, dict):
             # Priority fields to extract
             priority_fields = [
-                'Arn', 'ARN', 'arn',
-                'Name', 'name', 'ResourceName',
-                'Id', 'ID', 'id', 'ResourceId',
-                'VpcId', 'SubnetId', 'InstanceId', 'SecurityGroupId',
-                'BucketName', 'FunctionName', 'RoleName', 'PolicyName',
-                'KeyId', 'TableName', 'QueueUrl', 'TopicArn',
-                'DomainName', 'HostedZoneId', 'ClusterArn', 'ClusterName',
-                'Tags', 'State', 'Status',
+                "Arn",
+                "ARN",
+                "arn",
+                "Name",
+                "name",
+                "ResourceName",
+                "Id",
+                "ID",
+                "id",
+                "ResourceId",
+                "VpcId",
+                "SubnetId",
+                "InstanceId",
+                "SecurityGroupId",
+                "BucketName",
+                "FunctionName",
+                "RoleName",
+                "PolicyName",
+                "KeyId",
+                "TableName",
+                "QueueUrl",
+                "TopicArn",
+                "DomainName",
+                "HostedZoneId",
+                "ClusterArn",
+                "ClusterName",
+                "Tags",
+                "State",
+                "Status",
             ]
 
             for field in priority_fields:
                 if field in value and value[field] is not None:
                     field_value = value[field]
                     # Handle Tags specially
-                    if field == 'Tags' and isinstance(field_value, list):
+                    if field == "Tags" and isinstance(field_value, list):
                         # Try to find Name tag
                         for tag in field_value:
-                            if isinstance(tag, dict) and tag.get('Key') == 'Name':
-                                info['Name (tag)'] = tag.get('Value', '')
+                            if isinstance(tag, dict) and tag.get("Key") == "Name":
+                                info["Name (tag)"] = tag.get("Value", "")
                                 break
                     elif isinstance(field_value, str):
                         info[field] = field_value
@@ -622,8 +673,8 @@ class TableFormatter(BaseFormatter):
 
         elif isinstance(value, str):
             # If it's just a string, check if it looks like an ARN
-            if value.startswith('arn:'):
-                info['ARN'] = value
+            if value.startswith("arn:"):
+                info["ARN"] = value
 
         return info
 
@@ -648,13 +699,13 @@ class TableFormatter(BaseFormatter):
 
         if isinstance(value, str):
             if len(value) > self.max_value_length:
-                return value[:self.max_value_length] + "..."
+                return value[: self.max_value_length] + "..."
             return value
 
         if isinstance(value, dict):
             # Try to extract a meaningful representation
             # Check for common identifier fields
-            for key in ['Arn', 'ARN', 'arn', 'Name', 'name', 'Id', 'ID', 'id']:
+            for key in ["Arn", "ARN", "arn", "Name", "name", "Id", "ID", "id"]:
                 if key in value:
                     extracted = value[key]
                     if isinstance(extracted, str):
@@ -681,7 +732,7 @@ class TableFormatter(BaseFormatter):
         # Fallback
         result = str(value)
         if len(result) > self.max_value_length:
-            return result[:self.max_value_length] + "..."
+            return result[: self.max_value_length] + "..."
         return result
 
     @staticmethod
@@ -696,5 +747,5 @@ class TableFormatter(BaseFormatter):
             Clean text without ANSI codes
         """
         # Comprehensive ANSI escape pattern
-        ansi_pattern = re.compile(r'\x1b\[[0-9;]*[A-Za-z]|\x1b\].*?\x07')
+        ansi_pattern = re.compile(r"\x1b\[[0-9;]*[A-Za-z]|\x1b\].*?\x07")
         return ansi_pattern.sub("", text)

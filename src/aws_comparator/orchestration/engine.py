@@ -119,7 +119,9 @@ class ComparisonOrchestrator:
         try:
             # Create base session
             if account_config.profile:
-                self.logger.debug(f"Creating session with profile: {account_config.profile}")
+                self.logger.debug(
+                    f"Creating session with profile: {account_config.profile}"
+                )
                 session = boto3.Session(
                     profile_name=account_config.profile,
                     region_name=account_config.region,
@@ -172,7 +174,8 @@ class ComparisonOrchestrator:
 
             assume_role_params: dict[str, Any] = {
                 "RoleArn": account_config.role_arn,
-                "RoleSessionName": account_config.session_name or "aws-comparator-session",
+                "RoleSessionName": account_config.session_name
+                or "aws-comparator-session",
             }
 
             if account_config.external_id:
@@ -192,7 +195,9 @@ class ComparisonOrchestrator:
             error_message = e.response.get("Error", {}).get("Message", str(e))
             raise AssumeRoleError(account_config.role_arn or "", error_message) from e
 
-    def _validate_session(self, session: boto3.Session, expected_account_id: str) -> None:
+    def _validate_session(
+        self, session: boto3.Session, expected_account_id: str
+    ) -> None:
         """
         Validate that the session has valid credentials and matches expected account.
 
@@ -216,7 +221,11 @@ class ComparisonOrchestrator:
 
         except ClientError as e:
             error_code = e.response.get("Error", {}).get("Code", "")
-            if error_code in ["InvalidClientTokenId", "SignatureDoesNotMatch", "AccessDenied"]:
+            if error_code in [
+                "InvalidClientTokenId",
+                "SignatureDoesNotMatch",
+                "AccessDenied",
+            ]:
                 raise InvalidCredentialsError(str(e)) from e
             raise
 
@@ -303,17 +312,17 @@ class ComparisonOrchestrator:
         # These comparators use name-based matching instead of ARN-based matching
         # which is essential for cross-account comparison
         comparator_map = {
-            'service-quotas': ServiceQuotasComparator,
-            'cloudwatch': CloudWatchComparator,
-            'eventbridge': EventBridgeComparator,
-            'secretsmanager': SecretsManagerComparator,
-            'lambda': LambdaComparator,
-            's3': S3Comparator,
-            'ec2': EC2Comparator,
-            'sns': SNSComparator,
-            'sqs': SQSComparator,
-            'bedrock': BedrockComparator,
-            'elasticbeanstalk': ElasticBeanstalkComparator,
+            "service-quotas": ServiceQuotasComparator,
+            "cloudwatch": CloudWatchComparator,
+            "eventbridge": EventBridgeComparator,
+            "secretsmanager": SecretsManagerComparator,
+            "lambda": LambdaComparator,
+            "s3": S3Comparator,
+            "ec2": EC2Comparator,
+            "sns": SNSComparator,
+            "sqs": SQSComparator,
+            "bedrock": BedrockComparator,
+            "elasticbeanstalk": ElasticBeanstalkComparator,
         }
 
         # Use service-specific comparator if available, otherwise use generic

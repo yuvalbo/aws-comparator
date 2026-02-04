@@ -7,4 +7,4 @@ SECURITY CRITICAL: Only fetches metadata, NEVER fetches secret values.
 
 from aws_comparator.services.secretsmanager.fetcher import SecretsManagerFetcher
 
-__all__ = ['SecretsManagerFetcher']
+__all__ = ["SecretsManagerFetcher"]

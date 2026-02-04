@@ -24,31 +24,32 @@ from aws_comparator.services.elasticbeanstalk import ElasticBeanstalkFetcher
 def aws_credentials():
     """Mock AWS credentials for moto."""
     import os
-    os.environ['AWS_ACCESS_KEY_ID'] = 'testing'
-    os.environ['AWS_SECRET_ACCESS_KEY'] = 'testing'
-    os.environ['AWS_SECURITY_TOKEN'] = 'testing'
-    os.environ['AWS_SESSION_TOKEN'] = 'testing'
-    os.environ['AWS_DEFAULT_REGION'] = 'us-east-1'
+
+    os.environ["AWS_ACCESS_KEY_ID"] = "testing"
+    os.environ["AWS_SECRET_ACCESS_KEY"] = "testing"
+    os.environ["AWS_SECURITY_TOKEN"] = "testing"
+    os.environ["AWS_SESSION_TOKEN"] = "testing"
+    os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
 
 
 @pytest.fixture
 def eb_client(aws_credentials):
     """Create a mocked Elastic Beanstalk client."""
     with mock_aws():
-        yield boto3.client('elasticbeanstalk', region_name='us-east-1')
+        yield boto3.client("elasticbeanstalk", region_name="us-east-1")
 
 
 @pytest.fixture
 def session(aws_credentials):
     """Create a mocked boto3 session."""
     with mock_aws():
-        yield boto3.Session(region_name='us-east-1')
+        yield boto3.Session(region_name="us-east-1")
 
 
 @pytest.fixture
 def fetcher(session):
     """Create an ElasticBeanstalkFetcher instance."""
-    return ElasticBeanstalkFetcher(session=session, region='us-east-1')
+    return ElasticBeanstalkFetcher(session=session, region="us-east-1")
 
 
 class TestElasticBeanstalkFetcher:
@@ -56,15 +57,15 @@ class TestElasticBeanstalkFetcher:
 
     def test_service_name(self, fetcher):
         """Test that service name is correctly set."""
-        assert fetcher.SERVICE_NAME == 'elasticbeanstalk'
+        assert fetcher.SERVICE_NAME == "elasticbeanstalk"
 
     def test_get_resource_types(self, fetcher):
         """Test get_resource_types returns correct resource types."""
         resource_types = fetcher.get_resource_types()
-        assert 'applications' in resource_types
-        assert 'environments' in resource_types
-        assert 'configuration_templates' in resource_types
-        assert 'application_versions' in resource_types
+        assert "applications" in resource_types
+        assert "environments" in resource_types
+        assert "configuration_templates" in resource_types
+        assert "application_versions" in resource_types
         assert len(resource_types) == 4
 
     def test_fetch_applications_empty(self, fetcher, eb_client):
@@ -77,15 +78,14 @@ class TestElasticBeanstalkFetcher:
         """Test fetching applications."""
         # Create test application
         eb_client.create_application(
-            ApplicationName='test-app',
-            Description='Test application'
+            ApplicationName="test-app", Description="Test application"
         )
 
         applications = fetcher._fetch_applications()
 
         assert len(applications) == 1
         assert isinstance(applications[0], Application)
-        assert applications[0].application_name == 'test-app'
+        assert applications[0].application_name == "test-app"
         # Note: moto doesn't return Description field in describe_applications response
         # so we only verify the application was created and fetched correctly
 
@@ -94,15 +94,14 @@ class TestElasticBeanstalkFetcher:
         # Create multiple applications
         for i in range(3):
             eb_client.create_application(
-                ApplicationName=f'test-app-{i}',
-                Description=f'Test application {i}'
+                ApplicationName=f"test-app-{i}", Description=f"Test application {i}"
             )
 
         applications = fetcher._fetch_applications()
 
         assert len(applications) == 3
         app_names = {app.application_name for app in applications}
-        assert app_names == {'test-app-0', 'test-app-1', 'test-app-2'}
+        assert app_names == {"test-app-0", "test-app-1", "test-app-2"}
 
     def test_fetch_environments_empty(self, fetcher, eb_client):
         """Test fetching environments when none exist."""
@@ -113,21 +112,21 @@ class TestElasticBeanstalkFetcher:
     def test_fetch_environments(self, fetcher, eb_client):
         """Test fetching environments."""
         # Create test application first
-        eb_client.create_application(ApplicationName='test-app')
+        eb_client.create_application(ApplicationName="test-app")
 
         # Create environment
         eb_client.create_environment(
-            ApplicationName='test-app',
-            EnvironmentName='test-env',
-            SolutionStackName='64bit Amazon Linux 2 v5.0.0 running Python 3.8'
+            ApplicationName="test-app",
+            EnvironmentName="test-env",
+            SolutionStackName="64bit Amazon Linux 2 v5.0.0 running Python 3.8",
         )
 
         environments = fetcher._fetch_environments()
 
         assert len(environments) == 1
         assert isinstance(environments[0], Environment)
-        assert environments[0].environment_name == 'test-env'
-        assert environments[0].application_name == 'test-app'
+        assert environments[0].environment_name == "test-env"
+        assert environments[0].application_name == "test-app"
 
     def test_fetch_configuration_templates_empty(self, fetcher, eb_client):
         """Test fetching configuration templates when none exist."""
@@ -139,21 +138,21 @@ class TestElasticBeanstalkFetcher:
     def test_fetch_configuration_templates(self, fetcher, eb_client):
         """Test fetching configuration templates."""
         # Create test application
-        eb_client.create_application(ApplicationName='test-app')
+        eb_client.create_application(ApplicationName="test-app")
 
         # Create configuration template
         eb_client.create_configuration_template(
-            ApplicationName='test-app',
-            TemplateName='test-template',
-            SolutionStackName='64bit Amazon Linux 2 v5.0.0 running Python 3.8'
+            ApplicationName="test-app",
+            TemplateName="test-template",
+            SolutionStackName="64bit Amazon Linux 2 v5.0.0 running Python 3.8",
         )
 
         templates = fetcher._fetch_configuration_templates()
 
         assert len(templates) == 1
         assert isinstance(templates[0], ConfigurationTemplate)
-        assert templates[0].template_name == 'test-template'
-        assert templates[0].application_name == 'test-app'
+        assert templates[0].template_name == "test-template"
+        assert templates[0].application_name == "test-app"
 
     def test_fetch_application_versions_empty(self, fetcher, eb_client):
         """Test fetching application versions when none exist."""
@@ -165,59 +164,60 @@ class TestElasticBeanstalkFetcher:
     def test_fetch_application_versions(self, fetcher, eb_client):
         """Test fetching application versions."""
         # Create test application
-        eb_client.create_application(ApplicationName='test-app')
+        eb_client.create_application(ApplicationName="test-app")
 
         # Create application version
         eb_client.create_application_version(
-            ApplicationName='test-app',
-            VersionLabel='v1.0.0',
-            Description='Version 1.0.0'
+            ApplicationName="test-app",
+            VersionLabel="v1.0.0",
+            Description="Version 1.0.0",
         )
 
         versions = fetcher._fetch_application_versions()
 
         assert len(versions) == 1
         assert isinstance(versions[0], ApplicationVersion)
-        assert versions[0].version_label == 'v1.0.0'
-        assert versions[0].application_name == 'test-app'
-        assert versions[0].description == 'Version 1.0.0'
+        assert versions[0].version_label == "v1.0.0"
+        assert versions[0].application_name == "test-app"
+        assert versions[0].description == "Version 1.0.0"
 
-    @pytest.mark.skip(reason="moto does not implement create_application_version and create_configuration_template")
+    @pytest.mark.skip(
+        reason="moto does not implement create_application_version and create_configuration_template"
+    )
     def test_fetch_resources(self, fetcher, eb_client):
         """Test fetch_resources returns all resource types."""
         # Create test data
-        eb_client.create_application(ApplicationName='test-app')
+        eb_client.create_application(ApplicationName="test-app")
         eb_client.create_environment(
-            ApplicationName='test-app',
-            EnvironmentName='test-env',
-            SolutionStackName='64bit Amazon Linux 2 v5.0.0 running Python 3.8'
+            ApplicationName="test-app",
+            EnvironmentName="test-env",
+            SolutionStackName="64bit Amazon Linux 2 v5.0.0 running Python 3.8",
         )
         eb_client.create_application_version(
-            ApplicationName='test-app',
-            VersionLabel='v1.0.0'
+            ApplicationName="test-app", VersionLabel="v1.0.0"
         )
         eb_client.create_configuration_template(
-            ApplicationName='test-app',
-            TemplateName='test-template',
-            SolutionStackName='64bit Amazon Linux 2 v5.0.0 running Python 3.8'
+            ApplicationName="test-app",
+            TemplateName="test-template",
+            SolutionStackName="64bit Amazon Linux 2 v5.0.0 running Python 3.8",
         )
 
         resources = fetcher.fetch_resources()
 
         assert isinstance(resources, dict)
-        assert 'applications' in resources
-        assert 'environments' in resources
-        assert 'configuration_templates' in resources
-        assert 'application_versions' in resources
+        assert "applications" in resources
+        assert "environments" in resources
+        assert "configuration_templates" in resources
+        assert "application_versions" in resources
 
-        assert len(resources['applications']) == 1
-        assert len(resources['environments']) == 1
-        assert len(resources['application_versions']) == 1
-        assert len(resources['configuration_templates']) == 1
+        assert len(resources["applications"]) == 1
+        assert len(resources["environments"]) == 1
+        assert len(resources["application_versions"]) == 1
+        assert len(resources["configuration_templates"]) == 1
 
     def test_fetch_applications_error_handling(self, fetcher):
         """Test error handling when describe_applications fails."""
-        with patch.object(fetcher.client, 'describe_applications') as mock_describe:
+        with patch.object(fetcher.client, "describe_applications") as mock_describe:
             mock_describe.side_effect = Exception("API Error")
 
             applications = fetcher._fetch_applications()
@@ -227,7 +227,7 @@ class TestElasticBeanstalkFetcher:
 
     def test_fetch_environments_error_handling(self, fetcher):
         """Test error handling when describe_environments fails."""
-        with patch.object(fetcher.client, 'describe_environments') as mock_describe:
+        with patch.object(fetcher.client, "describe_environments") as mock_describe:
             mock_describe.side_effect = Exception("API Error")
 
             environments = fetcher._fetch_environments()
@@ -238,8 +238,8 @@ class TestElasticBeanstalkFetcher:
     def test_client_creation(self, fetcher):
         """Test that the Elastic Beanstalk client is created correctly."""
         assert fetcher.client is not None
-        assert hasattr(fetcher.client, 'describe_applications')
-        assert hasattr(fetcher.client, 'describe_environments')
+        assert hasattr(fetcher.client, "describe_applications")
+        assert hasattr(fetcher.client, "describe_environments")
 
 
 class TestApplicationModel:
@@ -248,29 +248,35 @@ class TestApplicationModel:
     def test_from_aws_response(self):
         """Test creating Application from AWS response."""
         app_data = {
-            'ApplicationName': 'my-app',
-            'ApplicationArn': 'arn:aws:elasticbeanstalk:us-east-1:123456789012:application/my-app',
-            'Description': 'My application',
-            'DateCreated': datetime(2024, 1, 1, tzinfo=timezone.utc),
-            'DateUpdated': datetime(2024, 1, 2, tzinfo=timezone.utc),
-            'Versions': ['v1.0.0', 'v1.0.1'],
-            'ConfigurationTemplates': ['template1'],
+            "ApplicationName": "my-app",
+            "ApplicationArn": "arn:aws:elasticbeanstalk:us-east-1:123456789012:application/my-app",
+            "Description": "My application",
+            "DateCreated": datetime(2024, 1, 1, tzinfo=timezone.utc),
+            "DateUpdated": datetime(2024, 1, 2, tzinfo=timezone.utc),
+            "Versions": ["v1.0.0", "v1.0.1"],
+            "ConfigurationTemplates": ["template1"],
         }
 
         application = Application.from_aws_response(app_data)
 
-        assert application.application_name == 'my-app'
-        assert application.description == 'My application'
+        assert application.application_name == "my-app"
+        assert application.description == "My application"
         assert len(application.versions) == 2
         assert len(application.configuration_templates) == 1
 
     def test_application_name_validation(self):
         """Test application name validation."""
         with pytest.raises(ValueError, match="Application name cannot be empty"):
-            Application(application_name='', arn='arn:aws:elasticbeanstalk:us-east-1:123456789012:application/test')  # type: ignore[call-arg]
+            Application(
+                application_name="",
+                arn="arn:aws:elasticbeanstalk:us-east-1:123456789012:application/test",
+            )  # type: ignore[call-arg]
 
         with pytest.raises(ValueError, match="must be 100 characters or less"):
-            Application(application_name='a' * 101, arn='arn:aws:elasticbeanstalk:us-east-1:123456789012:application/test')  # type: ignore[call-arg]
+            Application(
+                application_name="a" * 101,
+                arn="arn:aws:elasticbeanstalk:us-east-1:123456789012:application/test",
+            )  # type: ignore[call-arg]
 
 
 class TestEnvironmentModel:
@@ -279,32 +285,32 @@ class TestEnvironmentModel:
     def test_from_aws_response(self):
         """Test creating Environment from AWS response."""
         env_data = {
-            'EnvironmentName': 'my-env',
-            'EnvironmentId': 'e-abc123',
-            'ApplicationName': 'my-app',
-            'VersionLabel': 'v1.0.0',
-            'SolutionStackName': '64bit Amazon Linux 2 v5.0.0 running Python 3.8',
-            'Status': 'Ready',
-            'Health': 'Green',
-            'DateCreated': datetime(2024, 1, 1, tzinfo=timezone.utc),
-            'DateUpdated': datetime(2024, 1, 2, tzinfo=timezone.utc),
+            "EnvironmentName": "my-env",
+            "EnvironmentId": "e-abc123",
+            "ApplicationName": "my-app",
+            "VersionLabel": "v1.0.0",
+            "SolutionStackName": "64bit Amazon Linux 2 v5.0.0 running Python 3.8",
+            "Status": "Ready",
+            "Health": "Green",
+            "DateCreated": datetime(2024, 1, 1, tzinfo=timezone.utc),
+            "DateUpdated": datetime(2024, 1, 2, tzinfo=timezone.utc),
         }
 
         environment = Environment.from_aws_response(env_data)
 
-        assert environment.environment_name == 'my-env'
-        assert environment.application_name == 'my-app'
-        assert environment.version_label == 'v1.0.0'
-        assert environment.status == 'Ready'
-        assert environment.health == 'Green'
+        assert environment.environment_name == "my-env"
+        assert environment.application_name == "my-app"
+        assert environment.version_label == "v1.0.0"
+        assert environment.status == "Ready"
+        assert environment.health == "Green"
 
     def test_environment_name_validation(self):
         """Test environment name validation."""
         with pytest.raises(ValueError, match="Environment name cannot be empty"):
-            Environment(environment_name='', application_name='test')  # type: ignore[call-arg]
+            Environment(environment_name="", application_name="test")  # type: ignore[call-arg]
 
         with pytest.raises(ValueError, match="must be 40 characters or less"):
-            Environment(environment_name='a' * 41, application_name='test')  # type: ignore[call-arg]
+            Environment(environment_name="a" * 41, application_name="test")  # type: ignore[call-arg]
 
 
 class TestConfigurationTemplateModel:
@@ -313,28 +319,28 @@ class TestConfigurationTemplateModel:
     def test_from_aws_response(self):
         """Test creating ConfigurationTemplate from AWS response."""
         config_data = {
-            'TemplateName': 'my-template',
-            'ApplicationName': 'my-app',
-            'Description': 'My template',
-            'SolutionStackName': '64bit Amazon Linux 2 v5.0.0 running Python 3.8',
-            'DateCreated': datetime(2024, 1, 1, tzinfo=timezone.utc),
-            'DateUpdated': datetime(2024, 1, 2, tzinfo=timezone.utc),
-            'OptionSettings': [
+            "TemplateName": "my-template",
+            "ApplicationName": "my-app",
+            "Description": "My template",
+            "SolutionStackName": "64bit Amazon Linux 2 v5.0.0 running Python 3.8",
+            "DateCreated": datetime(2024, 1, 1, tzinfo=timezone.utc),
+            "DateUpdated": datetime(2024, 1, 2, tzinfo=timezone.utc),
+            "OptionSettings": [
                 {
-                    'Namespace': 'aws:autoscaling:launchconfiguration',
-                    'OptionName': 'InstanceType',
-                    'Value': 't2.micro'
+                    "Namespace": "aws:autoscaling:launchconfiguration",
+                    "OptionName": "InstanceType",
+                    "Value": "t2.micro",
                 }
-            ]
+            ],
         }
 
         template = ConfigurationTemplate.from_aws_response(config_data)
 
-        assert template.template_name == 'my-template'
-        assert template.application_name == 'my-app'
-        assert template.description == 'My template'
+        assert template.template_name == "my-template"
+        assert template.application_name == "my-app"
+        assert template.description == "My template"
         assert len(template.option_settings) == 1
-        assert template.option_settings[0].option_name == 'InstanceType'
+        assert template.option_settings[0].option_name == "InstanceType"
 
 
 class TestApplicationVersionModel:
@@ -343,24 +349,21 @@ class TestApplicationVersionModel:
     def test_from_aws_response(self):
         """Test creating ApplicationVersion from AWS response."""
         version_data = {
-            'ApplicationName': 'my-app',
-            'VersionLabel': 'v1.0.0',
-            'Description': 'Version 1.0.0',
-            'DateCreated': datetime(2024, 1, 1, tzinfo=timezone.utc),
-            'DateUpdated': datetime(2024, 1, 2, tzinfo=timezone.utc),
-            'Status': 'PROCESSED',
-            'SourceBundle': {
-                'S3Bucket': 'my-bucket',
-                'S3Key': 'my-app/v1.0.0.zip'
-            }
+            "ApplicationName": "my-app",
+            "VersionLabel": "v1.0.0",
+            "Description": "Version 1.0.0",
+            "DateCreated": datetime(2024, 1, 1, tzinfo=timezone.utc),
+            "DateUpdated": datetime(2024, 1, 2, tzinfo=timezone.utc),
+            "Status": "PROCESSED",
+            "SourceBundle": {"S3Bucket": "my-bucket", "S3Key": "my-app/v1.0.0.zip"},
         }
 
         version = ApplicationVersion.from_aws_response(version_data)
 
-        assert version.application_name == 'my-app'
-        assert version.version_label == 'v1.0.0'
-        assert version.description == 'Version 1.0.0'
-        assert version.status == 'PROCESSED'
+        assert version.application_name == "my-app"
+        assert version.version_label == "v1.0.0"
+        assert version.description == "Version 1.0.0"
+        assert version.status == "PROCESSED"
         assert version.source_bundle is not None
 
 

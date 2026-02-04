@@ -1,4 +1,5 @@
 """Tests for SQS model module."""
+
 import json
 
 import pytest
@@ -115,7 +116,10 @@ class TestSQSQueueFromAWSResponse:
         queue = SQSQueue.from_aws_response(queue_url, attributes)
 
         assert queue.redrive_policy is not None
-        assert queue.redrive_policy["deadLetterTargetArn"] == redrive_policy["deadLetterTargetArn"]
+        assert (
+            queue.redrive_policy["deadLetterTargetArn"]
+            == redrive_policy["deadLetterTargetArn"]
+        )
         assert queue.redrive_policy["maxReceiveCount"] == 3
 
     def test_from_aws_response_with_redrive_allow_policy(self):

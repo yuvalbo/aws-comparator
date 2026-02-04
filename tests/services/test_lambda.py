@@ -1,4 +1,5 @@
 """Tests for Lambda service fetcher."""
+
 import zipfile
 from io import BytesIO
 from unittest.mock import MagicMock
@@ -72,7 +73,9 @@ class TestLambdaFetcherFetchResources:
         assert len(resources["functions"]) == 0
 
     @mock_aws
-    @pytest.mark.skip(reason="Moto Lambda function creation not fully compatible with fetcher model")
+    @pytest.mark.skip(
+        reason="Moto Lambda function creation not fully compatible with fetcher model"
+    )
     def test_fetch_resources_with_functions(self, lambda_role_arn):
         """Test fetching resources with existing functions."""
         session = boto3.Session(region_name="us-east-1")
@@ -109,7 +112,9 @@ class TestLambdaFetcherFetchResources:
         assert len(resources["functions"]) == 2
 
     @mock_aws
-    @pytest.mark.skip(reason="Moto Lambda function creation not fully compatible with fetcher model")
+    @pytest.mark.skip(
+        reason="Moto Lambda function creation not fully compatible with fetcher model"
+    )
     def test_fetch_resources_function_properties(self, lambda_role_arn):
         """Test fetched functions have expected properties."""
         session = boto3.Session(region_name="us-east-1")
@@ -145,7 +150,9 @@ class TestLambdaFetcherFetchResources:
         assert func.runtime == "python3.9"
 
     @mock_aws
-    @pytest.mark.skip(reason="Moto Lambda function creation not fully compatible with fetcher model")
+    @pytest.mark.skip(
+        reason="Moto Lambda function creation not fully compatible with fetcher model"
+    )
     def test_fetch_resources_with_tags(self, lambda_role_arn):
         """Test fetching function with tags."""
         session = boto3.Session(region_name="us-east-1")

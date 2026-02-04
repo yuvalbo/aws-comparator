@@ -1,4 +1,5 @@
 """Tests for name-based comparators module."""
+
 from typing import Any
 
 import pytest

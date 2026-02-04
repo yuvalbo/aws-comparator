@@ -7,4 +7,4 @@ alarms, log groups, and dashboards.
 
 from aws_comparator.services.cloudwatch.fetcher import CloudWatchFetcher
 
-__all__ = ['CloudWatchFetcher']
+__all__ = ["CloudWatchFetcher"]

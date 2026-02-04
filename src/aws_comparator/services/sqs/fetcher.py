@@ -15,9 +15,7 @@ from aws_comparator.services.base import BaseServiceFetcher
 
 
 @ServiceRegistry.register(
-    'sqs',
-    description='Amazon SQS (Simple Queue Service)',
-    resource_types=['queues']
+    "sqs", description="Amazon SQS (Simple Queue Service)", resource_types=["queues"]
 )
 class SQSFetcher(BaseServiceFetcher):
     """
@@ -39,7 +37,7 @@ class SQSFetcher(BaseServiceFetcher):
         Returns:
             Configured boto3 SQS client
         """
-        return self.session.client('sqs', region_name=self.region)
+        return self.session.client("sqs", region_name=self.region)
 
     def fetch_resources(self) -> dict[str, list[AWSResource]]:
         """
@@ -48,9 +46,7 @@ class SQSFetcher(BaseServiceFetcher):
         Returns:
             Dictionary mapping resource types to lists of resources
         """
-        return {
-            'queues': self._safe_fetch('queues', self._fetch_queues)
-        }
+        return {"queues": self._safe_fetch("queues", self._fetch_queues)}
 
     def get_resource_types(self) -> list[str]:
         """
@@ -59,7 +55,7 @@ class SQSFetcher(BaseServiceFetcher):
         Returns:
             List of resource type names
         """
-        return ['queues']
+        return ["queues"]
 
     def _fetch_queues(self) -> list[SQSQueue]:
         """
@@ -76,7 +72,7 @@ class SQSFetcher(BaseServiceFetcher):
         try:
             # List all queue URLs
             response = self.client.list_queues()
-            queue_urls = response.get('QueueUrls', [])
+            queue_urls = response.get("QueueUrls", [])
 
             self.logger.info(f"Found {len(queue_urls)} SQS queues")
 
@@ -84,16 +80,15 @@ class SQSFetcher(BaseServiceFetcher):
                 try:
                     # Get queue attributes
                     attr_response = self.client.get_queue_attributes(
-                        QueueUrl=queue_url,
-                        AttributeNames=['All']
+                        QueueUrl=queue_url, AttributeNames=["All"]
                     )
-                    attributes = attr_response.get('Attributes', {})
+                    attributes = attr_response.get("Attributes", {})
 
                     # Get queue tags
                     tags: dict[str, str] = {}
                     try:
                         tag_response = self.client.list_queue_tags(QueueUrl=queue_url)
-                        tags = tag_response.get('Tags', {})
+                        tags = tag_response.get("Tags", {})
                     except ClientError:
                         # Tags may not be accessible
                         pass
@@ -102,23 +97,22 @@ class SQSFetcher(BaseServiceFetcher):
                     queue = SQSQueue.from_aws_response(queue_url, attributes, tags)
                     queues.append(queue)
 
-                    queue_name = queue_url.split('/')[-1]
+                    queue_name = queue_url.split("/")[-1]
                     self.logger.debug(f"Fetched queue: {queue_name}")
 
                 except ClientError as e:
-                    error_code = e.response.get('Error', {}).get('Code', '')
-                    queue_name = queue_url.split('/')[-1]
+                    error_code = e.response.get("Error", {}).get("Code", "")
+                    queue_name = queue_url.split("/")[-1]
                     if error_code in [
-                        'AccessDenied',
-                        'AWS.SimpleQueueService.NonExistentQueue'
+                        "AccessDenied",
+                        "AWS.SimpleQueueService.NonExistentQueue",
                     ]:
                         self.logger.warning(
                             f"Cannot access queue {queue_name}: {error_code}"
                         )
                     else:
                         self.logger.error(
-                            f"Error fetching queue {queue_name}: {e}",
-                            exc_info=True
+                            f"Error fetching queue {queue_name}: {e}", exc_info=True
                         )
 
         except Exception as e:

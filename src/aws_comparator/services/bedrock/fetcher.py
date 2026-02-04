@@ -20,9 +20,14 @@ from aws_comparator.services.base import BaseServiceFetcher
 
 
 @ServiceRegistry.register(
-    'bedrock',
-    description='Amazon Bedrock (Foundation Models)',
-    resource_types=['foundation_models', 'custom_models', 'provisioned_throughput', 'guardrails']
+    "bedrock",
+    description="Amazon Bedrock (Foundation Models)",
+    resource_types=[
+        "foundation_models",
+        "custom_models",
+        "provisioned_throughput",
+        "guardrails",
+    ],
 )
 class BedrockFetcher(BaseServiceFetcher):
     """
@@ -47,7 +52,7 @@ class BedrockFetcher(BaseServiceFetcher):
         Returns:
             Configured boto3 Bedrock client
         """
-        return self.session.client('bedrock', region_name=self.region)
+        return self.session.client("bedrock", region_name=self.region)
 
     def fetch_resources(self) -> dict[str, list[AWSResource]]:
         """
@@ -57,10 +62,16 @@ class BedrockFetcher(BaseServiceFetcher):
             Dictionary mapping resource types to lists of resources
         """
         return {
-            'foundation_models': self._safe_fetch('foundation_models', self._fetch_foundation_models),
-            'custom_models': self._safe_fetch('custom_models', self._fetch_custom_models),
-            'provisioned_throughput': self._safe_fetch('provisioned_throughput', self._fetch_provisioned_throughput),
-            'guardrails': self._safe_fetch('guardrails', self._fetch_guardrails)
+            "foundation_models": self._safe_fetch(
+                "foundation_models", self._fetch_foundation_models
+            ),
+            "custom_models": self._safe_fetch(
+                "custom_models", self._fetch_custom_models
+            ),
+            "provisioned_throughput": self._safe_fetch(
+                "provisioned_throughput", self._fetch_provisioned_throughput
+            ),
+            "guardrails": self._safe_fetch("guardrails", self._fetch_guardrails),
         }
 
     def get_resource_types(self) -> list[str]:
@@ -70,7 +81,12 @@ class BedrockFetcher(BaseServiceFetcher):
         Returns:
             List of resource type names
         """
-        return ['foundation_models', 'custom_models', 'provisioned_throughput', 'guardrails']
+        return [
+            "foundation_models",
+            "custom_models",
+            "provisioned_throughput",
+            "guardrails",
+        ]
 
     def _fetch_foundation_models(self) -> list[FoundationModel]:
         """
@@ -84,7 +100,7 @@ class BedrockFetcher(BaseServiceFetcher):
         try:
             # List foundation models (no pagination needed for this API)
             response = self.client.list_foundation_models()
-            model_summaries = response.get('modelSummaries', [])
+            model_summaries = response.get("modelSummaries", [])
 
             self.logger.info(f"Found {len(model_summaries)} Bedrock foundation models")
 
@@ -96,22 +112,21 @@ class BedrockFetcher(BaseServiceFetcher):
                     self.logger.debug(f"Fetched foundation model: {model.model_id}")
 
                 except Exception as e:
-                    model_id = model_data.get('modelId', 'unknown')
+                    model_id = model_data.get("modelId", "unknown")
                     self.logger.error(
                         f"Error processing foundation model {model_id}: {e}",
-                        exc_info=True
+                        exc_info=True,
                     )
 
         except ClientError as e:
-            error_code = e.response.get('Error', {}).get('Code', '')
-            if error_code in ['AccessDenied', 'UnauthorizedOperation']:
+            error_code = e.response.get("Error", {}).get("Code", "")
+            if error_code in ["AccessDenied", "UnauthorizedOperation"]:
                 self.logger.warning(
                     f"Cannot access Bedrock foundation models: {error_code}"
                 )
             else:
                 self.logger.error(
-                    f"Error fetching foundation models: {e}",
-                    exc_info=True
+                    f"Error fetching foundation models: {e}", exc_info=True
                 )
 
         except Exception as e:
@@ -130,11 +145,11 @@ class BedrockFetcher(BaseServiceFetcher):
 
         try:
             # Use pagination for custom models
-            paginator = self.client.get_paginator('list_custom_models')
+            paginator = self.client.get_paginator("list_custom_models")
             page_iterator = paginator.paginate()
 
             for page in page_iterator:
-                model_summaries = page.get('modelSummaries', [])
+                model_summaries = page.get("modelSummaries", [])
 
                 for model_data in model_summaries:
                     try:
@@ -144,25 +159,22 @@ class BedrockFetcher(BaseServiceFetcher):
                         self.logger.debug(f"Fetched custom model: {model.model_name}")
 
                     except Exception as e:
-                        model_name = model_data.get('modelName', 'unknown')
+                        model_name = model_data.get("modelName", "unknown")
                         self.logger.error(
                             f"Error processing custom model {model_name}: {e}",
-                            exc_info=True
+                            exc_info=True,
                         )
 
             self.logger.info(f"Found {len(models)} Bedrock custom models")
 
         except ClientError as e:
-            error_code = e.response.get('Error', {}).get('Code', '')
-            if error_code in ['AccessDenied', 'UnauthorizedOperation']:
+            error_code = e.response.get("Error", {}).get("Code", "")
+            if error_code in ["AccessDenied", "UnauthorizedOperation"]:
                 self.logger.warning(
                     f"Cannot access Bedrock custom models: {error_code}"
                 )
             else:
-                self.logger.error(
-                    f"Error fetching custom models: {e}",
-                    exc_info=True
-                )
+                self.logger.error(f"Error fetching custom models: {e}", exc_info=True)
 
         except Exception as e:
             self.logger.error(f"Failed to list custom models: {e}", exc_info=True)
@@ -180,15 +192,17 @@ class BedrockFetcher(BaseServiceFetcher):
 
         try:
             # Use pagination for provisioned throughput
-            paginator = self.client.get_paginator('list_provisioned_model_throughputs')
+            paginator = self.client.get_paginator("list_provisioned_model_throughputs")
             page_iterator = paginator.paginate()
 
             for page in page_iterator:
-                throughput_summaries = page.get('provisionedModelSummaries', [])
+                throughput_summaries = page.get("provisionedModelSummaries", [])
 
                 for throughput_data in throughput_summaries:
                     try:
-                        throughput = ProvisionedModelThroughput.from_aws_response(throughput_data)
+                        throughput = ProvisionedModelThroughput.from_aws_response(
+                            throughput_data
+                        )
                         throughputs.append(throughput)
 
                         self.logger.debug(
@@ -196,28 +210,31 @@ class BedrockFetcher(BaseServiceFetcher):
                         )
 
                     except Exception as e:
-                        name = throughput_data.get('provisionedModelName', 'unknown')
+                        name = throughput_data.get("provisionedModelName", "unknown")
                         self.logger.error(
                             f"Error processing provisioned throughput {name}: {e}",
-                            exc_info=True
+                            exc_info=True,
                         )
 
-            self.logger.info(f"Found {len(throughputs)} Bedrock provisioned throughputs")
+            self.logger.info(
+                f"Found {len(throughputs)} Bedrock provisioned throughputs"
+            )
 
         except ClientError as e:
-            error_code = e.response.get('Error', {}).get('Code', '')
-            if error_code in ['AccessDenied', 'UnauthorizedOperation']:
+            error_code = e.response.get("Error", {}).get("Code", "")
+            if error_code in ["AccessDenied", "UnauthorizedOperation"]:
                 self.logger.warning(
                     f"Cannot access Bedrock provisioned throughput: {error_code}"
                 )
             else:
                 self.logger.error(
-                    f"Error fetching provisioned throughput: {e}",
-                    exc_info=True
+                    f"Error fetching provisioned throughput: {e}", exc_info=True
                 )
 
         except Exception as e:
-            self.logger.error(f"Failed to list provisioned throughput: {e}", exc_info=True)
+            self.logger.error(
+                f"Failed to list provisioned throughput: {e}", exc_info=True
+            )
 
         return throughputs
 
@@ -232,11 +249,11 @@ class BedrockFetcher(BaseServiceFetcher):
 
         try:
             # Use pagination for guardrails
-            paginator = self.client.get_paginator('list_guardrails')
+            paginator = self.client.get_paginator("list_guardrails")
             page_iterator = paginator.paginate()
 
             for page in page_iterator:
-                guardrail_summaries = page.get('guardrails', [])
+                guardrail_summaries = page.get("guardrails", [])
 
                 for guardrail_data in guardrail_summaries:
                     try:
@@ -246,25 +263,19 @@ class BedrockFetcher(BaseServiceFetcher):
                         self.logger.debug(f"Fetched guardrail: {guardrail.name}")
 
                     except Exception as e:
-                        name = guardrail_data.get('name', 'unknown')
+                        name = guardrail_data.get("name", "unknown")
                         self.logger.error(
-                            f"Error processing guardrail {name}: {e}",
-                            exc_info=True
+                            f"Error processing guardrail {name}: {e}", exc_info=True
                         )
 
             self.logger.info(f"Found {len(guardrails)} Bedrock guardrails")
 
         except ClientError as e:
-            error_code = e.response.get('Error', {}).get('Code', '')
-            if error_code in ['AccessDenied', 'UnauthorizedOperation']:
-                self.logger.warning(
-                    f"Cannot access Bedrock guardrails: {error_code}"
-                )
+            error_code = e.response.get("Error", {}).get("Code", "")
+            if error_code in ["AccessDenied", "UnauthorizedOperation"]:
+                self.logger.warning(f"Cannot access Bedrock guardrails: {error_code}")
             else:
-                self.logger.error(
-                    f"Error fetching guardrails: {e}",
-                    exc_info=True
-                )
+                self.logger.error(f"Error fetching guardrails: {e}", exc_info=True)
 
         except Exception as e:
             self.logger.error(f"Failed to list guardrails: {e}", exc_info=True)

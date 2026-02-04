@@ -1,4 +1,5 @@
 """Tests for CLI commands module."""
+
 from unittest.mock import Mock, patch
 
 import click
@@ -228,29 +229,41 @@ class TestCompareCommand:
     def test_compare_invalid_account1(self):
         """Test compare fails with invalid account1."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "compare",
-            "--account1", "invalid",
-            "--account2", "987654321098",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "compare",
+                "--account1",
+                "invalid",
+                "--account2",
+                "987654321098",
+            ],
+        )
         assert result.exit_code != 0
         assert "12 digits" in result.output
 
     def test_compare_invalid_account2(self):
         """Test compare fails with invalid account2."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "compare",
-            "--account1", "123456789012",
-            "--account2", "invalid",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "compare",
+                "--account1",
+                "123456789012",
+                "--account2",
+                "invalid",
+            ],
+        )
         assert result.exit_code != 0
         assert "12 digits" in result.output
 
     @patch("aws_comparator.cli.commands.ComparisonOrchestrator")
     @patch("aws_comparator.cli.commands.ServiceRegistry")
     @patch("aws_comparator.cli.commands.get_formatter")
-    def test_compare_success(self, mock_get_formatter, mock_registry, mock_orchestrator):
+    def test_compare_success(
+        self, mock_get_formatter, mock_registry, mock_orchestrator
+    ):
         """Test compare command succeeds with valid inputs."""
         # Setup mocks
         mock_registry.validate_services.return_value = (["s3"], [])
@@ -273,13 +286,19 @@ class TestCompareCommand:
         mock_get_formatter.return_value = mock_formatter
 
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "compare",
-            "--account1", "123456789012",
-            "--account2", "987654321098",
-            "--services", "s3",
-            "--quiet",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "compare",
+                "--account1",
+                "123456789012",
+                "--account2",
+                "987654321098",
+                "--services",
+                "s3",
+                "--quiet",
+            ],
+        )
 
         # The command should run (might fail on boto3 session creation)
         # but should not have argument validation errors
@@ -291,12 +310,18 @@ class TestCompareCommand:
         mock_registry.validate_services.return_value = ([], ["unknown_service"])
 
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "compare",
-            "--account1", "123456789012",
-            "--account2", "987654321098",
-            "--services", "unknown_service",
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "compare",
+                "--account1",
+                "123456789012",
+                "--account2",
+                "987654321098",
+                "--services",
+                "unknown_service",
+            ],
+        )
         # Should show error about unsupported services
         assert result.exit_code != 0
 
@@ -450,7 +475,9 @@ class TestCompareCommandExceptionHandling:
 
     @patch("aws_comparator.cli.commands.ComparisonOrchestrator")
     @patch("aws_comparator.cli.commands.ServiceRegistry")
-    def test_compare_service_not_supported_error(self, mock_registry, mock_orchestrator):
+    def test_compare_service_not_supported_error(
+        self, mock_registry, mock_orchestrator
+    ):
         """Test compare handles ServiceNotSupportedError."""
         from aws_comparator.core.exceptions import ServiceNotSupportedError
 
@@ -482,7 +509,9 @@ class TestCompareCommandExceptionHandling:
 
     @patch("aws_comparator.cli.commands.ComparisonOrchestrator")
     @patch("aws_comparator.cli.commands.ServiceRegistry")
-    def test_compare_generic_aws_comparator_error(self, mock_registry, mock_orchestrator):
+    def test_compare_generic_aws_comparator_error(
+        self, mock_registry, mock_orchestrator
+    ):
         """Test compare handles generic AWSComparatorError."""
         from aws_comparator.core.exceptions import AWSComparatorError
 

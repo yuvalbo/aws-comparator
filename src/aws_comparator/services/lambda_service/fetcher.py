@@ -15,9 +15,7 @@ from aws_comparator.services.base import BaseServiceFetcher
 
 
 @ServiceRegistry.register(
-    'lambda',
-    description='AWS Lambda',
-    resource_types=['functions', 'layers']
+    "lambda", description="AWS Lambda", resource_types=["functions", "layers"]
 )
 class LambdaFetcher(BaseServiceFetcher):
     """
@@ -40,7 +38,7 @@ class LambdaFetcher(BaseServiceFetcher):
         Returns:
             Configured boto3 Lambda client
         """
-        return self.session.client('lambda', region_name=self.region)
+        return self.session.client("lambda", region_name=self.region)
 
     def fetch_resources(self) -> dict[str, list[AWSResource]]:
         """
@@ -50,8 +48,8 @@ class LambdaFetcher(BaseServiceFetcher):
             Dictionary mapping resource types to lists of resources
         """
         return {
-            'functions': self._safe_fetch('functions', self._fetch_functions),
-            'layers': self._safe_fetch('layers', self._fetch_layers)
+            "functions": self._safe_fetch("functions", self._fetch_functions),
+            "layers": self._safe_fetch("layers", self._fetch_layers),
         }
 
     def get_resource_types(self) -> list[str]:
@@ -61,7 +59,7 @@ class LambdaFetcher(BaseServiceFetcher):
         Returns:
             List of resource type names
         """
-        return ['functions', 'layers']
+        return ["functions", "layers"]
 
     def _fetch_functions(self) -> list[LambdaFunction]:
         """
@@ -77,21 +75,21 @@ class LambdaFetcher(BaseServiceFetcher):
 
         try:
             # Use pagination to list all functions
-            results = self._paginate('list_functions', 'Functions')
+            results = self._paginate("list_functions", "Functions")
 
             self.logger.info(f"Found {len(results)} Lambda functions")
 
             for function_data in results:
                 try:
-                    function_name = function_data['FunctionName']
+                    function_name = function_data["FunctionName"]
 
                     # Get function tags
                     tags: dict[str, str] = {}
                     try:
                         tag_response = self.client.list_tags(
-                            Resource=function_data['FunctionArn']
+                            Resource=function_data["FunctionArn"]
                         )
-                        tags = tag_response.get('Tags', {})
+                        tags = tag_response.get("Tags", {})
                     except ClientError:
                         # Tags may not be accessible
                         pass
@@ -101,9 +99,10 @@ class LambdaFetcher(BaseServiceFetcher):
                         concurrency = self.client.get_function_concurrency(
                             FunctionName=function_name
                         )
-                        if 'ReservedConcurrentExecutions' in concurrency:
-                            function_data['ReservedConcurrentExecutions'] = \
-                                concurrency['ReservedConcurrentExecutions']
+                        if "ReservedConcurrentExecutions" in concurrency:
+                            function_data["ReservedConcurrentExecutions"] = concurrency[
+                                "ReservedConcurrentExecutions"
+                            ]
                     except ClientError:
                         # Concurrency may not be configured
                         pass
@@ -115,22 +114,20 @@ class LambdaFetcher(BaseServiceFetcher):
                     self.logger.debug(f"Fetched function: {function_name}")
 
                 except ClientError as e:
-                    error_code = e.response.get('Error', {}).get('Code', '')
-                    function_name = function_data.get('FunctionName', 'unknown')
-                    if error_code in ['AccessDenied', 'ResourceNotFoundException']:
+                    error_code = e.response.get("Error", {}).get("Code", "")
+                    function_name = function_data.get("FunctionName", "unknown")
+                    if error_code in ["AccessDenied", "ResourceNotFoundException"]:
                         self.logger.warning(
                             f"Cannot access function {function_name}: {error_code}"
                         )
                     else:
                         self.logger.error(
                             f"Error fetching function {function_name}: {e}",
-                            exc_info=True
+                            exc_info=True,
                         )
 
         except Exception as e:
-            self.logger.error(
-                f"Failed to list Lambda functions: {e}", exc_info=True
-            )
+            self.logger.error(f"Failed to list Lambda functions: {e}", exc_info=True)
 
         return functions
 
@@ -145,44 +142,43 @@ class LambdaFetcher(BaseServiceFetcher):
 
         try:
             # List all layers
-            results = self._paginate('list_layers', 'Layers')
+            results = self._paginate("list_layers", "Layers")
 
             self.logger.info(f"Found {len(results)} Lambda layers")
 
             for layer_data in results:
                 try:
-                    layer_name = layer_data['LayerName']
+                    layer_name = layer_data["LayerName"]
 
                     # Get latest version details
-                    if 'LatestMatchingVersion' in layer_data:
-                        version_data = layer_data['LatestMatchingVersion']
+                    if "LatestMatchingVersion" in layer_data:
+                        version_data = layer_data["LatestMatchingVersion"]
 
                         # Create LambdaLayer instance
-                        layer = LambdaLayer.from_aws_response({
-                            'LayerName': layer_name,
-                            'LayerArn': layer_data['LayerArn'],
-                            **version_data
-                        })
+                        layer = LambdaLayer.from_aws_response(
+                            {
+                                "LayerName": layer_name,
+                                "LayerArn": layer_data["LayerArn"],
+                                **version_data,
+                            }
+                        )
                         layers.append(layer)
 
                         self.logger.debug(f"Fetched layer: {layer_name}")
 
                 except ClientError as e:
-                    error_code = e.response.get('Error', {}).get('Code', '')
-                    layer_name = layer_data.get('LayerName', 'unknown')
-                    if error_code in ['AccessDenied', 'ResourceNotFoundException']:
+                    error_code = e.response.get("Error", {}).get("Code", "")
+                    layer_name = layer_data.get("LayerName", "unknown")
+                    if error_code in ["AccessDenied", "ResourceNotFoundException"]:
                         self.logger.warning(
                             f"Cannot access layer {layer_name}: {error_code}"
                         )
                     else:
                         self.logger.error(
-                            f"Error fetching layer {layer_name}: {e}",
-                            exc_info=True
+                            f"Error fetching layer {layer_name}: {e}", exc_info=True
                         )
 
         except Exception as e:
-            self.logger.error(
-                f"Failed to list Lambda layers: {e}", exc_info=True
-            )
+            self.logger.error(f"Failed to list Lambda layers: {e}", exc_info=True)
 
         return layers

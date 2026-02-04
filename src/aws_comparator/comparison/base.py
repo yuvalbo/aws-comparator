@@ -47,103 +47,123 @@ class SeverityConfig:
         ... )
     """
 
-    critical_patterns: frozenset[str] = field(default_factory=lambda: frozenset([
-        'security',
-        'securitygroup',
-        'encryption',
-        'encrypted',
-        'policy',
-        'policies',
-        'iam',
-        'kms',
-        'public_access',
-        'publicaccess',
-        'acl',
-        'principal',
-        'permission',
-        'role',
-        'credential',
-        'secret',
-        'password',
-        'auth',
-        'ssl',
-        'tls',
-        'certificate',
-        'firewall',
-        'vpce',
-        'endpoint',
-        'network_policy',
-    ]))
+    critical_patterns: frozenset[str] = field(
+        default_factory=lambda: frozenset(
+            [
+                "security",
+                "securitygroup",
+                "encryption",
+                "encrypted",
+                "policy",
+                "policies",
+                "iam",
+                "kms",
+                "public_access",
+                "publicaccess",
+                "acl",
+                "principal",
+                "permission",
+                "role",
+                "credential",
+                "secret",
+                "password",
+                "auth",
+                "ssl",
+                "tls",
+                "certificate",
+                "firewall",
+                "vpce",
+                "endpoint",
+                "network_policy",
+            ]
+        )
+    )
 
-    high_patterns: frozenset[str] = field(default_factory=lambda: frozenset([
-        'configuration',
-        'config',
-        'settings',
-        'enabled',
-        'disabled',
-        'size',
-        'type',
-        'status',
-        'state',
-        'instance_type',
-        'instancetype',
-        'storage',
-        'volume',
-        'backup',
-        'snapshot',
-        'replication',
-        'availability',
-        'multi_az',
-        'multiaz',
-        'engine',
-        'version',
-        'class',
-        'tier',
-    ]))
+    high_patterns: frozenset[str] = field(
+        default_factory=lambda: frozenset(
+            [
+                "configuration",
+                "config",
+                "settings",
+                "enabled",
+                "disabled",
+                "size",
+                "type",
+                "status",
+                "state",
+                "instance_type",
+                "instancetype",
+                "storage",
+                "volume",
+                "backup",
+                "snapshot",
+                "replication",
+                "availability",
+                "multi_az",
+                "multiaz",
+                "engine",
+                "version",
+                "class",
+                "tier",
+            ]
+        )
+    )
 
-    medium_patterns: frozenset[str] = field(default_factory=lambda: frozenset([
-        'lifecycle',
-        'retention',
-        'logging',
-        'monitoring',
-        'versioning',
-        'notification',
-        'alarm',
-        'metric',
-        'throughput',
-        'iops',
-        'bandwidth',
-        'timeout',
-        'cooldown',
-        'scaling',
-        'capacity',
-        'limit',
-        'quota',
-    ]))
+    medium_patterns: frozenset[str] = field(
+        default_factory=lambda: frozenset(
+            [
+                "lifecycle",
+                "retention",
+                "logging",
+                "monitoring",
+                "versioning",
+                "notification",
+                "alarm",
+                "metric",
+                "throughput",
+                "iops",
+                "bandwidth",
+                "timeout",
+                "cooldown",
+                "scaling",
+                "capacity",
+                "limit",
+                "quota",
+            ]
+        )
+    )
 
-    low_patterns: frozenset[str] = field(default_factory=lambda: frozenset([
-        'name',
-        'description',
-        'metadata',
-        'label',
-        'comment',
-        'note',
-        'displayname',
-        'display_name',
-        'alias',
-    ]))
+    low_patterns: frozenset[str] = field(
+        default_factory=lambda: frozenset(
+            [
+                "name",
+                "description",
+                "metadata",
+                "label",
+                "comment",
+                "note",
+                "displayname",
+                "display_name",
+                "alias",
+            ]
+        )
+    )
 
-    info_patterns: frozenset[str] = field(default_factory=lambda: frozenset([
-        'tags',
-        'tag',
-        'last_modified',
-        'lastmodified',
-        'created',
-        'updated',
-        'modified_date',
-        'update_time',
-        'create_time',
-    ]))
+    info_patterns: frozenset[str] = field(
+        default_factory=lambda: frozenset(
+            [
+                "tags",
+                "tag",
+                "last_modified",
+                "lastmodified",
+                "created",
+                "updated",
+                "modified_date",
+                "update_time",
+                "create_time",
+            ]
+        )
+    )
 
 
 @dataclass
@@ -170,24 +190,28 @@ class ComparisonConfig:
         ... )
     """
 
-    excluded_fields: set[str] = field(default_factory=lambda: {
-        'request_id',
-        'response_metadata',
-        'ResponseMetadata',
-        'RequestId',
-        'HTTPStatusCode',
-        'HTTPHeaders',
-        'RetryAttempts',
-        'request_metadata',
-    })
+    excluded_fields: set[str] = field(
+        default_factory=lambda: {
+            "request_id",
+            "response_metadata",
+            "ResponseMetadata",
+            "RequestId",
+            "HTTPStatusCode",
+            "HTTPHeaders",
+            "RetryAttempts",
+            "request_metadata",
+        }
+    )
 
-    excluded_patterns: list[str] = field(default_factory=lambda: [
-        r'.*timestamp.*',
-        r'.*_at$',
-        r'.*_time$',
-        r'.*etag.*',
-        r'.*request_id.*',
-    ])
+    excluded_patterns: list[str] = field(
+        default_factory=lambda: [
+            r".*timestamp.*",
+            r".*_at$",
+            r".*_time$",
+            r".*etag.*",
+            r".*request_id.*",
+        ]
+    )
 
     severity_config: SeverityConfig = field(default_factory=SeverityConfig)
 
@@ -226,7 +250,7 @@ class BaseComparator(ABC):
         self,
         service_name: str,
         config: Optional[ComparisonConfig] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         """
         Initialize the comparator.
@@ -256,7 +280,7 @@ class BaseComparator(ABC):
     def compare(
         self,
         account1_data: dict[str, list[AWSResource]],
-        account2_data: dict[str, list[AWSResource]]
+        account2_data: dict[str, list[AWSResource]],
     ) -> ServiceComparisonResult:
         """
         Compare resources from two accounts.
@@ -304,11 +328,11 @@ class BaseComparator(ABC):
             >>> print(identifier)  # 'arn:aws:s3:::my-bucket'
         """
         # Try ARN first (most unique)
-        if hasattr(resource, 'arn') and resource.arn:
+        if hasattr(resource, "arn") and resource.arn:
             return str(resource.arn)
 
         # Try common identifier fields
-        for field_name in ['id', 'resource_id', 'name', 'bucket_name', 'instance_id']:
+        for field_name in ["id", "resource_id", "name", "bucket_name", "instance_id"]:
             if hasattr(resource, field_name):
                 value = getattr(resource, field_name)
                 if value:
@@ -326,9 +350,7 @@ class BaseComparator(ABC):
             return str(id(resource))
 
     def _resource_to_dict(
-        self,
-        resource: AWSResource,
-        exclude_transient: bool = True
+        self, resource: AWSResource, exclude_transient: bool = True
     ) -> dict[str, Any]:
         """
         Convert an AWS resource to a dictionary for comparison.
@@ -351,7 +373,7 @@ class BaseComparator(ABC):
             data = resource.model_dump()
         except AttributeError:
             # Fallback for non-Pydantic objects
-            data = dict(resource) if hasattr(resource, '__iter__') else {}
+            data = dict(resource) if hasattr(resource, "__iter__") else {}
 
         if exclude_transient:
             data = self._exclude_transient_fields(data)
@@ -404,9 +426,7 @@ class BaseComparator(ABC):
         return result
 
     def _perform_deep_diff(
-        self,
-        old_data: dict[str, Any],
-        new_data: dict[str, Any]
+        self, old_data: dict[str, Any], new_data: dict[str, Any]
     ) -> DeepDiff:
         """
         Perform deep comparison between two dictionaries using DeepDiff.
@@ -454,10 +474,10 @@ class BaseComparator(ABC):
             >>> print(normalized)  # 'security_groups[0].group_id'
         """
         if not deepdiff_path:
-            return ''
+            return ""
 
         # Remove 'root' prefix
-        path = deepdiff_path.replace('root', '')
+        path = deepdiff_path.replace("root", "")
 
         # Convert ['field'] to .field
         # Handle array indices separately to preserve them
@@ -470,12 +490,12 @@ class BaseComparator(ABC):
             # Get the matched group (either string key or numeric index)
             if match.group(1):  # String key: ['field']
                 if result_parts:
-                    result_parts.append('.')
+                    result_parts.append(".")
                 result_parts.append(match.group(1))
             else:  # Numeric index: [0]
-                result_parts.append(f'[{match.group(2)}]')
+                result_parts.append(f"[{match.group(2)}]")
 
-        return ''.join(result_parts)
+        return "".join(result_parts)
 
     def _determine_severity(self, field_path: str) -> ChangeSeverity:
         """
@@ -498,32 +518,32 @@ class BaseComparator(ABC):
             return ChangeSeverity.INFO
 
         # Normalize for pattern matching
-        path_lower = field_path.lower().replace('_', '').replace('-', '')
+        path_lower = field_path.lower().replace("_", "").replace("-", "")
         severity_config = self.config.severity_config
 
         # Check patterns in order of severity (highest first)
         for pattern in severity_config.critical_patterns:
-            normalized_pattern = pattern.lower().replace('_', '').replace('-', '')
+            normalized_pattern = pattern.lower().replace("_", "").replace("-", "")
             if normalized_pattern in path_lower:
                 return ChangeSeverity.CRITICAL
 
         for pattern in severity_config.high_patterns:
-            normalized_pattern = pattern.lower().replace('_', '').replace('-', '')
+            normalized_pattern = pattern.lower().replace("_", "").replace("-", "")
             if normalized_pattern in path_lower:
                 return ChangeSeverity.HIGH
 
         for pattern in severity_config.medium_patterns:
-            normalized_pattern = pattern.lower().replace('_', '').replace('-', '')
+            normalized_pattern = pattern.lower().replace("_", "").replace("-", "")
             if normalized_pattern in path_lower:
                 return ChangeSeverity.MEDIUM
 
         for pattern in severity_config.low_patterns:
-            normalized_pattern = pattern.lower().replace('_', '').replace('-', '')
+            normalized_pattern = pattern.lower().replace("_", "").replace("-", "")
             if normalized_pattern in path_lower:
                 return ChangeSeverity.LOW
 
         for pattern in severity_config.info_patterns:
-            normalized_pattern = pattern.lower().replace('_', '').replace('-', '')
+            normalized_pattern = pattern.lower().replace("_", "").replace("-", "")
             if normalized_pattern in path_lower:
                 return ChangeSeverity.INFO
 
@@ -531,10 +551,7 @@ class BaseComparator(ABC):
         return ChangeSeverity.MEDIUM
 
     def _extract_changes_from_diff(
-        self,
-        diff: DeepDiff,
-        resource_id: str,
-        resource_type: str
+        self, diff: DeepDiff, resource_id: str, resource_type: str
     ) -> list[ResourceChange]:
         """
         Extract ResourceChange objects from a DeepDiff result.
@@ -562,45 +579,49 @@ class BaseComparator(ABC):
             return changes
 
         # Process value changes
-        values_changed = diff.get('values_changed', {})
+        values_changed = diff.get("values_changed", {})
         for path, change_info in values_changed.items():
             field_path = self._normalize_field_path(path)
-            old_value = change_info.get('old_value')
-            new_value = change_info.get('new_value')
+            old_value = change_info.get("old_value")
+            new_value = change_info.get("new_value")
             severity = self._determine_severity(field_path)
 
-            changes.append(ResourceChange(
-                change_type=ChangeType.MODIFIED,
-                resource_id=resource_id,
-                resource_type=resource_type,
-                field_path=field_path,
-                old_value=old_value,
-                new_value=new_value,
-                severity=severity,
-                description=f"Value changed from '{old_value}' to '{new_value}'",
-            ))
+            changes.append(
+                ResourceChange(
+                    change_type=ChangeType.MODIFIED,
+                    resource_id=resource_id,
+                    resource_type=resource_type,
+                    field_path=field_path,
+                    old_value=old_value,
+                    new_value=new_value,
+                    severity=severity,
+                    description=f"Value changed from '{old_value}' to '{new_value}'",
+                )
+            )
 
         # Process type changes
-        type_changes = diff.get('type_changes', {})
+        type_changes = diff.get("type_changes", {})
         for path, change_info in type_changes.items():
             field_path = self._normalize_field_path(path)
-            old_value = change_info.get('old_value')
-            new_value = change_info.get('new_value')
+            old_value = change_info.get("old_value")
+            new_value = change_info.get("new_value")
             severity = self._determine_severity(field_path)
 
-            changes.append(ResourceChange(
-                change_type=ChangeType.MODIFIED,
-                resource_id=resource_id,
-                resource_type=resource_type,
-                field_path=field_path,
-                old_value=old_value,
-                new_value=new_value,
-                severity=severity,
-                description=f"Type changed from {type(old_value).__name__} to {type(new_value).__name__}",
-            ))
+            changes.append(
+                ResourceChange(
+                    change_type=ChangeType.MODIFIED,
+                    resource_id=resource_id,
+                    resource_type=resource_type,
+                    field_path=field_path,
+                    old_value=old_value,
+                    new_value=new_value,
+                    severity=severity,
+                    description=f"Type changed from {type(old_value).__name__} to {type(new_value).__name__}",
+                )
+            )
 
         # Process dictionary items added
-        dict_items_added = diff.get('dictionary_item_added', {})
+        dict_items_added = diff.get("dictionary_item_added", {})
         if isinstance(dict_items_added, set):
             dict_items_added = dict.fromkeys(dict_items_added, None)
         for path in dict_items_added:
@@ -611,21 +632,23 @@ class BaseComparator(ABC):
             new_value = dict_items_added.get(path)
             if new_value is None:
                 # DeepDiff sometimes returns a set of paths
-                new_value = diff.get('new_value')
+                new_value = diff.get("new_value")
 
-            changes.append(ResourceChange(
-                change_type=ChangeType.MODIFIED,
-                resource_id=resource_id,
-                resource_type=resource_type,
-                field_path=field_path,
-                old_value=None,
-                new_value=new_value,
-                severity=severity,
-                description=f"Field '{field_path}' exists only in Account 2",
-            ))
+            changes.append(
+                ResourceChange(
+                    change_type=ChangeType.MODIFIED,
+                    resource_id=resource_id,
+                    resource_type=resource_type,
+                    field_path=field_path,
+                    old_value=None,
+                    new_value=new_value,
+                    severity=severity,
+                    description=f"Field '{field_path}' exists only in Account 2",
+                )
+            )
 
         # Process dictionary items removed
-        dict_items_removed = diff.get('dictionary_item_removed', {})
+        dict_items_removed = diff.get("dictionary_item_removed", {})
         if isinstance(dict_items_removed, set):
             dict_items_removed = dict.fromkeys(dict_items_removed, None)
         for path in dict_items_removed:
@@ -634,78 +657,88 @@ class BaseComparator(ABC):
 
             old_value = dict_items_removed.get(path)
 
-            changes.append(ResourceChange(
-                change_type=ChangeType.MODIFIED,
-                resource_id=resource_id,
-                resource_type=resource_type,
-                field_path=field_path,
-                old_value=old_value,
-                new_value=None,
-                severity=severity,
-                description=f"Field '{field_path}' exists only in Account 1",
-            ))
+            changes.append(
+                ResourceChange(
+                    change_type=ChangeType.MODIFIED,
+                    resource_id=resource_id,
+                    resource_type=resource_type,
+                    field_path=field_path,
+                    old_value=old_value,
+                    new_value=None,
+                    severity=severity,
+                    description=f"Field '{field_path}' exists only in Account 1",
+                )
+            )
 
         # Process iterable items added
-        iterable_added = diff.get('iterable_item_added', {})
+        iterable_added = diff.get("iterable_item_added", {})
         for path, value in iterable_added.items():
             field_path = self._normalize_field_path(path)
             severity = self._determine_severity(field_path)
 
-            changes.append(ResourceChange(
-                change_type=ChangeType.MODIFIED,
-                resource_id=resource_id,
-                resource_type=resource_type,
-                field_path=field_path,
-                old_value=None,
-                new_value=value,
-                severity=severity,
-                description=f"Item added to '{field_path}'",
-            ))
+            changes.append(
+                ResourceChange(
+                    change_type=ChangeType.MODIFIED,
+                    resource_id=resource_id,
+                    resource_type=resource_type,
+                    field_path=field_path,
+                    old_value=None,
+                    new_value=value,
+                    severity=severity,
+                    description=f"Item added to '{field_path}'",
+                )
+            )
 
         # Process iterable items removed
-        iterable_removed = diff.get('iterable_item_removed', {})
+        iterable_removed = diff.get("iterable_item_removed", {})
         for path, value in iterable_removed.items():
             field_path = self._normalize_field_path(path)
             severity = self._determine_severity(field_path)
 
-            changes.append(ResourceChange(
-                change_type=ChangeType.MODIFIED,
-                resource_id=resource_id,
-                resource_type=resource_type,
-                field_path=field_path,
-                old_value=value,
-                new_value=None,
-                severity=severity,
-                description=f"Item removed from '{field_path}'",
-            ))
+            changes.append(
+                ResourceChange(
+                    change_type=ChangeType.MODIFIED,
+                    resource_id=resource_id,
+                    resource_type=resource_type,
+                    field_path=field_path,
+                    old_value=value,
+                    new_value=None,
+                    severity=severity,
+                    description=f"Item removed from '{field_path}'",
+                )
+            )
 
         # Process set items added
-        set_added = diff.get('set_item_added', set())
+        set_added = diff.get("set_item_added", set())
         for item in set_added:
-            changes.append(ResourceChange(
-                change_type=ChangeType.MODIFIED,
-                resource_id=resource_id,
-                resource_type=resource_type,
-                field_path='(set)',
-                old_value=None,
-                new_value=item,
-                severity=ChangeSeverity.MEDIUM,
-                description=f"Set item added: {item}",
-            ))
+            changes.append(
+                ResourceChange(
+                    change_type=ChangeType.MODIFIED,
+                    resource_id=resource_id,
+                    resource_type=resource_type,
+                    field_path="(set)",
+                    old_value=None,
+                    new_value=item,
+                    severity=ChangeSeverity.MEDIUM,
+                    description=f"Set item added: {item}",
+                )
+            )
 
         # Process set items removed
-        set_removed = diff.get('set_item_removed', set())
+        set_removed = diff.get("set_item_removed", set())
         for item in set_removed:
-            changes.append(ResourceChange(
-                change_type=ChangeType.MODIFIED,
-                resource_id=resource_id,
-                resource_type=resource_type,
-                field_path='(set)',
-                old_value=item,
-                new_value=None,
-                severity=ChangeSeverity.MEDIUM,
-                description=f"Set item removed: {item}",
-            ))
+            changes.append(
+                ResourceChange(
+                    change_type=ChangeType.MODIFIED,
+                    resource_id=resource_id,
+                    resource_type=resource_type,
+                    field_path="(set)",
+                    old_value=item,
+                    new_value=None,
+                    severity=ChangeSeverity.MEDIUM,
+                    description=f"Set item removed: {item}",
+                )
+            )
 
         return changes
 
@@ -713,7 +746,7 @@ class BaseComparator(ABC):
         self,
         resource: AWSResource,
         resource_type: str,
-        severity: ChangeSeverity = ChangeSeverity.HIGH
+        severity: ChangeSeverity = ChangeSeverity.HIGH,
     ) -> ResourceChange:
         """
         Create a ResourceChange for an added resource.
@@ -742,7 +775,7 @@ class BaseComparator(ABC):
         self,
         resource: AWSResource,
         resource_type: str,
-        severity: ChangeSeverity = ChangeSeverity.HIGH
+        severity: ChangeSeverity = ChangeSeverity.HIGH,
     ) -> ResourceChange:
         """
         Create a ResourceChange for a removed resource.

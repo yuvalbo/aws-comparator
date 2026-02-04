@@ -74,9 +74,7 @@ class YAMLFormatter(BaseFormatter):
             f"{self.__class__.__module__}.{self.__class__.__name__}"
         )
 
-    def format(
-        self, report: Union[ComparisonReport, ServiceComparisonResult]
-    ) -> str:
+    def format(self, report: Union[ComparisonReport, ServiceComparisonResult]) -> str:
         """
         Format a comparison report as YAML.
 
@@ -166,9 +164,7 @@ class YAMLFormatter(BaseFormatter):
             )
             raise
         except yaml.YAMLError as e:
-            self.logger.error(
-                f"Error serializing report to YAML: {e}", exc_info=True
-            )
+            self.logger.error(f"Error serializing report to YAML: {e}", exc_info=True)
             raise
 
     def _build_output_data(
@@ -194,9 +190,7 @@ class YAMLFormatter(BaseFormatter):
         return output_data
 
     @staticmethod
-    def _datetime_representer(
-        dumper: yaml.Dumper, data: datetime
-    ) -> yaml.ScalarNode:
+    def _datetime_representer(dumper: yaml.Dumper, data: datetime) -> yaml.ScalarNode:
         """
         Custom YAML representer for datetime objects.
 

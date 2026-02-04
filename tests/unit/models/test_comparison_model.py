@@ -1,4 +1,5 @@
 """Tests for comparison models."""
+
 import pytest
 
 from aws_comparator.models.comparison import (

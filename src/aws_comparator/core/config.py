@@ -23,6 +23,7 @@ from aws_comparator.core.exceptions import (
 
 class OutputFormat(str, Enum):
     """Supported output formats."""
+
     JSON = "json"
     YAML = "yaml"
     TABLE = "table"
@@ -30,6 +31,7 @@ class OutputFormat(str, Enum):
 
 class LogLevel(str, Enum):
     """Logging levels."""
+
     DEBUG = "DEBUG"
     INFO = "INFO"
     WARNING = "WARNING"
@@ -44,19 +46,19 @@ class AccountConfig(BaseModel):
     This model defines how to authenticate and connect to an AWS account
     for resource fetching.
     """
+
     model_config = ConfigDict(extra="ignore")
 
-    account_id: str = Field(..., pattern=r'^\d{12}$', description="AWS account ID")
+    account_id: str = Field(..., pattern=r"^\d{12}$", description="AWS account ID")
     profile: Optional[str] = Field(None, description="AWS profile name")
     role_arn: Optional[str] = Field(None, description="IAM role ARN to assume")
     external_id: Optional[str] = Field(None, description="External ID for assume role")
     session_name: Optional[str] = Field(
-        None,
-        description="Session name for assume role"
+        None, description="Session name for assume role"
     )
     region: str = Field(default="us-east-1", description="AWS region")
 
-    @field_validator('account_id')
+    @field_validator("account_id")
     @classmethod
     def validate_account_id(cls, v: str) -> str:
         """
@@ -102,20 +104,18 @@ class ServiceFilterConfig(BaseModel):
     This allows customizing which resources to include or exclude
     during comparison.
     """
+
     model_config = ConfigDict(extra="ignore")
 
     enabled: bool = Field(default=True, description="Whether service is enabled")
     resource_types: Optional[list[str]] = Field(
-        None,
-        description="Specific resource types to include (None = all)"
+        None, description="Specific resource types to include (None = all)"
     )
     exclude_tags: dict[str, str] = Field(
-        default_factory=dict,
-        description="Exclude resources with these tags"
+        default_factory=dict, description="Exclude resources with these tags"
     )
     include_tags: Optional[dict[str, str]] = Field(
-        None,
-        description="Only include resources with these tags"
+        None, description="Only include resources with these tags"
     )
 
     def __str__(self) -> str:
@@ -139,6 +139,7 @@ class ComparisonConfig(BaseModel):
     This is the top-level configuration model that contains all settings
     for performing account comparisons.
     """
+
     model_config = ConfigDict(extra="ignore")
 
     # Account configurations
@@ -147,32 +148,25 @@ class ComparisonConfig(BaseModel):
 
     # Service selection
     services: Optional[list[str]] = Field(
-        None,
-        description="Services to compare (None = all supported services)"
+        None, description="Services to compare (None = all supported services)"
     )
     service_filters: dict[str, ServiceFilterConfig] = Field(
-        default_factory=dict,
-        description="Per-service filter configurations"
+        default_factory=dict, description="Per-service filter configurations"
     )
 
     # Output configuration
     output_format: OutputFormat = Field(
-        default=OutputFormat.TABLE,
-        description="Output format"
+        default=OutputFormat.TABLE, description="Output format"
     )
     output_file: Optional[Path] = Field(None, description="Output file path")
     no_color: bool = Field(default=False, description="Disable colored output")
 
     # Execution configuration
     parallel_execution: bool = Field(
-        default=True,
-        description="Execute service fetchers in parallel"
+        default=True, description="Execute service fetchers in parallel"
     )
     max_workers: int = Field(
-        default=10,
-        ge=1,
-        le=50,
-        description="Maximum number of parallel workers"
+        default=10, ge=1, le=50, description="Maximum number of parallel workers"
     )
 
     # Logging configuration
@@ -189,14 +183,13 @@ class ComparisonConfig(BaseModel):
             "LaunchTime",
             "LastAccessedDate",
         ],
-        description="Fields to ignore in comparisons"
+        description="Fields to ignore in comparisons",
     )
     ignore_tags: list[str] = Field(
-        default_factory=list,
-        description="Tag keys to ignore (supports wildcards)"
+        default_factory=list, description="Tag keys to ignore (supports wildcards)"
     )
 
-    @field_validator('services')
+    @field_validator("services")
     @classmethod
     def validate_services(cls, v: Optional[list[str]]) -> Optional[list[str]]:
         """
@@ -216,16 +209,24 @@ class ComparisonConfig(BaseModel):
 
         # Define supported services
         valid_services = {
-            'ec2', 's3', 'lambda', 'secrets-manager', 'sns', 'sqs',
-            'cloudwatch', 'bedrock', 'pinpoint', 'eventbridge',
-            'elastic-beanstalk', 'service-quotas'
+            "ec2",
+            "s3",
+            "lambda",
+            "secrets-manager",
+            "sns",
+            "sqs",
+            "cloudwatch",
+            "bedrock",
+            "pinpoint",
+            "eventbridge",
+            "elastic-beanstalk",
+            "service-quotas",
         }
 
         invalid = set(v) - valid_services
         if invalid:
             raise ValueError(
-                f"Invalid services: {invalid}. "
-                f"Valid services: {sorted(valid_services)}"
+                f"Invalid services: {invalid}. Valid services: {sorted(valid_services)}"
             )
         return v
 
@@ -241,7 +242,7 @@ class ComparisonConfig(BaseModel):
         """
         return self.service_filters.get(
             service_name,
-            ServiceFilterConfig()  # type: ignore[call-arg]
+            ServiceFilterConfig(),  # type: ignore[call-arg]
         )
 
     @classmethod
@@ -263,7 +264,7 @@ class ComparisonConfig(BaseModel):
             raise ConfigFileNotFoundError(str(config_path))
 
         try:
-            with open(config_path, encoding='utf-8') as f:
+            with open(config_path, encoding="utf-8") as f:
                 data = yaml.safe_load(f)
 
             if data is None:
@@ -321,7 +322,7 @@ class ComparisonConfig(BaseModel):
         Returns:
             Dictionary representation of configuration
         """
-        return self.model_dump(exclude_none=True, mode='json')
+        return self.model_dump(exclude_none=True, mode="json")
 
     def to_yaml(self) -> str:
         """
@@ -340,7 +341,7 @@ class ComparisonConfig(BaseModel):
             config_path: Path where to save the configuration
         """
         config_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(config_path, 'w', encoding='utf-8') as f:
+        with open(config_path, "w", encoding="utf-8") as f:
             f.write(self.to_yaml())
 
     def __str__(self) -> str:
@@ -377,7 +378,7 @@ def load_config(
     config_file: Optional[Path] = None,
     account1_id: Optional[str] = None,
     account2_id: Optional[str] = None,
-    **overrides: Any
+    **overrides: Any,
 ) -> ComparisonConfig:
     """
     Load configuration from multiple sources with precedence.
@@ -422,35 +423,32 @@ def load_config(
 
     # 4. Apply explicit overrides
     if account1_id:
-        if 'account1' not in config_dict:
-            config_dict['account1'] = {}
-        config_dict['account1']['account_id'] = account1_id
+        if "account1" not in config_dict:
+            config_dict["account1"] = {}
+        config_dict["account1"]["account_id"] = account1_id
 
     if account2_id:
-        if 'account2' not in config_dict:
-            config_dict['account2'] = {}
-        config_dict['account2']['account_id'] = account2_id
+        if "account2" not in config_dict:
+            config_dict["account2"] = {}
+        config_dict["account2"]["account_id"] = account2_id
 
     # Apply other overrides
     config_dict.update(overrides)
 
     # Validate required fields
-    if 'account1' not in config_dict or 'account_id' not in config_dict['account1']:
+    if "account1" not in config_dict or "account_id" not in config_dict["account1"]:
         raise InvalidConfigError(
             str(config_file or "command line"),
-            ["Missing required field: account1.account_id"]
+            ["Missing required field: account1.account_id"],
         )
 
-    if 'account2' not in config_dict or 'account_id' not in config_dict['account2']:
+    if "account2" not in config_dict or "account_id" not in config_dict["account2"]:
         raise InvalidConfigError(
             str(config_file or "command line"),
-            ["Missing required field: account2.account_id"]
+            ["Missing required field: account2.account_id"],
         )
 
     try:
         return ComparisonConfig(**config_dict)
     except Exception as e:
-        raise InvalidConfigError(
-            str(config_file or "command line"),
-            [str(e)]
-        ) from e
+        raise InvalidConfigError(str(config_file or "command line"), [str(e)]) from e

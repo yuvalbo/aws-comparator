@@ -6,4 +6,4 @@ This package implements fetching of Elastic Beanstalk application and environmen
 
 from aws_comparator.services.elasticbeanstalk.fetcher import ElasticBeanstalkFetcher
 
-__all__ = ['ElasticBeanstalkFetcher']
+__all__ = ["ElasticBeanstalkFetcher"]

@@ -1,4 +1,5 @@
 """Tests for SNS service fetcher."""
+
 from unittest.mock import MagicMock
 
 import boto3

@@ -17,9 +17,9 @@ from aws_comparator.services.base import BaseServiceFetcher
 
 
 @ServiceRegistry.register(
-    'secretsmanager',
-    description='AWS Secrets Manager (metadata only, values never fetched)',
-    resource_types=['secrets']
+    "secretsmanager",
+    description="AWS Secrets Manager (metadata only, values never fetched)",
+    resource_types=["secrets"],
 )
 class SecretsManagerFetcher(BaseServiceFetcher):
     """
@@ -49,7 +49,7 @@ class SecretsManagerFetcher(BaseServiceFetcher):
         Returns:
             Configured boto3 Secrets Manager client
         """
-        return self.session.client('secretsmanager', region_name=self.region)
+        return self.session.client("secretsmanager", region_name=self.region)
 
     def fetch_resources(self) -> dict[str, list[AWSResource]]:
         """
@@ -60,9 +60,7 @@ class SecretsManagerFetcher(BaseServiceFetcher):
         Returns:
             Dictionary mapping resource types to lists of resources
         """
-        return {
-            'secrets': self._safe_fetch('secrets', self._fetch_secrets)
-        }
+        return {"secrets": self._safe_fetch("secrets", self._fetch_secrets)}
 
     def get_resource_types(self) -> list[str]:
         """
@@ -71,7 +69,7 @@ class SecretsManagerFetcher(BaseServiceFetcher):
         Returns:
             List of resource type names
         """
-        return ['secrets']
+        return ["secrets"]
 
     def _fetch_secrets(self) -> list[SecretMetadata]:
         """
@@ -87,16 +85,16 @@ class SecretsManagerFetcher(BaseServiceFetcher):
 
         try:
             # Use pagination to list all secrets (metadata only)
-            results = self._paginate('list_secrets', 'SecretList')
+            results = self._paginate("list_secrets", "SecretList")
 
             self.logger.info(f"Found {len(results)} secrets")
 
             for secret_data in results:
                 try:
-                    secret_name = secret_data['Name']
+                    secret_name = secret_data["Name"]
 
                     # SECURITY CHECK: Verify no secret values in response
-                    if 'SecretString' in secret_data or 'SecretBinary' in secret_data:
+                    if "SecretString" in secret_data or "SecretBinary" in secret_data:
                         self.logger.error(
                             f"SECURITY VIOLATION: Secret values found in "
                             f"list_secrets response for {secret_name}"
@@ -110,7 +108,10 @@ class SecretsManagerFetcher(BaseServiceFetcher):
                         )
 
                         # SECURITY CHECK: Verify no secret values in detailed response
-                        if 'SecretString' in detail_response or 'SecretBinary' in detail_response:
+                        if (
+                            "SecretString" in detail_response
+                            or "SecretBinary" in detail_response
+                        ):
                             self.logger.error(
                                 f"SECURITY VIOLATION: Secret values found in "
                                 f"describe_secret response for {secret_name}"
@@ -121,8 +122,8 @@ class SecretsManagerFetcher(BaseServiceFetcher):
                         merged_data = {**secret_data, **detail_response}
 
                     except ClientError as e:
-                        error_code = e.response.get('Error', {}).get('Code', '')
-                        if error_code in ['AccessDenied', 'ResourceNotFoundException']:
+                        error_code = e.response.get("Error", {}).get("Code", "")
+                        if error_code in ["AccessDenied", "ResourceNotFoundException"]:
                             self.logger.warning(
                                 f"Cannot describe secret {secret_name}: {error_code}"
                             )
@@ -133,8 +134,8 @@ class SecretsManagerFetcher(BaseServiceFetcher):
 
                     # Get tags
                     tags = {}
-                    if 'Tags' in merged_data:
-                        tags = self._normalize_tags(merged_data['Tags'])
+                    if "Tags" in merged_data:
+                        tags = self._normalize_tags(merged_data["Tags"])
 
                     # Create SecretMetadata instance (will validate no secret values)
                     secret = SecretMetadata.from_aws_response(merged_data, tags)
@@ -143,16 +144,15 @@ class SecretsManagerFetcher(BaseServiceFetcher):
                     self.logger.debug(f"Fetched secret metadata: {secret_name}")
 
                 except ClientError as e:
-                    error_code = e.response.get('Error', {}).get('Code', '')
-                    secret_name = secret_data.get('Name', 'unknown')
-                    if error_code in ['AccessDenied', 'ResourceNotFoundException']:
+                    error_code = e.response.get("Error", {}).get("Code", "")
+                    secret_name = secret_data.get("Name", "unknown")
+                    if error_code in ["AccessDenied", "ResourceNotFoundException"]:
                         self.logger.warning(
                             f"Cannot access secret {secret_name}: {error_code}"
                         )
                     else:
                         self.logger.error(
-                            f"Error fetching secret {secret_name}: {e}",
-                            exc_info=True
+                            f"Error fetching secret {secret_name}: {e}", exc_info=True
                         )
 
         except Exception as e:

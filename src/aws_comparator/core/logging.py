@@ -32,9 +32,7 @@ class ServiceLoggerAdapter(logging.LoggerAdapter):
     by service.
     """
 
-    def process(
-        self, msg: str, kwargs: dict
-    ) -> tuple[str, dict]:  # type: ignore[type-arg]
+    def process(self, msg: str, kwargs: dict) -> tuple[str, dict]:  # type: ignore[type-arg]
         """
         Process log message to add service context.
 
@@ -46,7 +44,7 @@ class ServiceLoggerAdapter(logging.LoggerAdapter):
             Tuple of (modified_message, kwargs)
         """
         extra = self.extra or {}
-        service = extra.get('service', 'unknown')
+        service = extra.get("service", "unknown")
         return f"[{service}] {msg}", kwargs
 
 
@@ -126,7 +124,7 @@ def setup_logging(
             log_file,
             maxBytes=10 * 1024 * 1024,  # 10MB
             backupCount=5,
-            encoding='utf-8'
+            encoding="utf-8",
         )
         file_handler.setLevel(logging.DEBUG)  # Always log everything to file
 
@@ -136,16 +134,16 @@ def setup_logging(
             "%(filename)s:%(lineno)d - %(message)s"
         )
         file_handler.setFormatter(
-            logging.Formatter(file_format, datefmt='%Y-%m-%d %H:%M:%S')
+            logging.Formatter(file_format, datefmt="%Y-%m-%d %H:%M:%S")
         )
 
         root_logger.addHandler(file_handler)
 
     # Set levels for third-party loggers to reduce noise
-    logging.getLogger('boto3').setLevel(logging.WARNING)
-    logging.getLogger('botocore').setLevel(logging.WARNING)
-    logging.getLogger('urllib3').setLevel(logging.WARNING)
-    logging.getLogger('s3transfer').setLevel(logging.WARNING)
+    logging.getLogger("boto3").setLevel(logging.WARNING)
+    logging.getLogger("botocore").setLevel(logging.WARNING)
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+    logging.getLogger("s3transfer").setLevel(logging.WARNING)
 
     # Log startup message
     logger = logging.getLogger(__name__)
@@ -175,7 +173,7 @@ def get_logger(
     logger = logging.getLogger(name)
 
     if service:
-        return ServiceLoggerAdapter(logger, {'service': service})
+        return ServiceLoggerAdapter(logger, {"service": service})
 
     return logger
 
@@ -190,10 +188,7 @@ class LogTimer:
     """
 
     def __init__(
-        self,
-        logger: logging.Logger,
-        operation: str,
-        level: int = logging.INFO
+        self, logger: logging.Logger, operation: str, level: int = logging.INFO
     ):
         """
         Initialize the timer.
@@ -215,10 +210,7 @@ class LogTimer:
         return self
 
     def __exit__(
-        self,
-        exc_type: Optional[type],
-        exc_val: Optional[Exception],
-        exc_tb: object
+        self, exc_type: Optional[type], exc_val: Optional[Exception], exc_tb: object
     ) -> None:
         """Stop the timer and log duration."""
         if self.start_time:
@@ -230,14 +222,11 @@ class LogTimer:
                 )
             else:
                 self.logger.log(
-                    self.level,
-                    f"Completed: {self.operation} ({duration:.2f}s)"
+                    self.level, f"Completed: {self.operation} ({duration:.2f}s)"
                 )
 
 
-def log_operation_start(
-    logger: logging.Logger, operation: str, **context: str
-) -> None:
+def log_operation_start(logger: logging.Logger, operation: str, **context: str) -> None:
     """
     Log the start of an operation with context.
 
@@ -251,10 +240,7 @@ def log_operation_start(
 
 
 def log_operation_success(
-    logger: logging.Logger,
-    operation: str,
-    duration: float,
-    **context: str
+    logger: logging.Logger, operation: str, duration: float, **context: str
 ) -> None:
     """
     Log successful completion of an operation.
@@ -270,10 +256,7 @@ def log_operation_success(
 
 
 def log_operation_failure(
-    logger: logging.Logger,
-    operation: str,
-    error: Exception,
-    **context: str
+    logger: logging.Logger, operation: str, error: Exception, **context: str
 ) -> None:
     """
     Log failure of an operation.
@@ -291,10 +274,7 @@ def log_operation_failure(
 
 
 def log_progress(
-    logger: logging.Logger,
-    current: int,
-    total: int,
-    item: str = "items"
+    logger: logging.Logger, current: int, total: int, item: str = "items"
 ) -> None:
     """
     Log progress of a long-running operation.
@@ -311,13 +291,13 @@ def log_progress(
 
 # Export console for use in other modules
 __all__ = [
-    'setup_logging',
-    'get_logger',
-    'LogTimer',
-    'log_operation_start',
-    'log_operation_success',
-    'log_operation_failure',
-    'log_progress',
-    'console',
-    'ServiceLoggerAdapter',
+    "setup_logging",
+    "get_logger",
+    "LogTimer",
+    "log_operation_start",
+    "log_operation_success",
+    "log_operation_failure",
+    "log_progress",
+    "console",
+    "ServiceLoggerAdapter",
 ]

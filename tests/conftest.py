@@ -19,9 +19,7 @@ from aws_comparator.models.comparison import (
 def account1_config() -> AccountConfig:
     """Fixture for first account configuration."""
     return AccountConfig(
-        account_id="123456789012",
-        profile="test-profile-1",
-        region="us-east-1"
+        account_id="123456789012", profile="test-profile-1", region="us-east-1"
     )
 
 
@@ -29,9 +27,7 @@ def account1_config() -> AccountConfig:
 def account2_config() -> AccountConfig:
     """Fixture for second account configuration."""
     return AccountConfig(
-        account_id="987654321098",
-        profile="test-profile-2",
-        region="us-east-1"
+        account_id="987654321098", profile="test-profile-2", region="us-east-1"
     )
 
 
@@ -45,7 +41,7 @@ def comparison_config(
         account2=account2_config,
         services=["ec2", "s3"],
         parallel_execution=True,
-        max_workers=5
+        max_workers=5,
     )
 
 
@@ -58,7 +54,7 @@ def sample_summary() -> ReportSummary:
         total_changes=5,
         total_resources_account1=10,
         total_resources_account2=12,
-        execution_time_seconds=3.5
+        execution_time_seconds=3.5,
     )
 
 
@@ -72,7 +68,7 @@ def sample_report(
         account2_id=comparison_config.account2.account_id,
         region=comparison_config.account1.region,
         services_compared=["ec2", "s3"],
-        summary=sample_summary
+        summary=sample_summary,
     )
 
 

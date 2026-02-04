@@ -1,4 +1,5 @@
 """Tests for SQS service fetcher."""
+
 from unittest.mock import MagicMock
 
 import boto3
@@ -55,7 +56,9 @@ class TestSQSFetcherFetchResources:
         assert len(resources["queues"]) == 0
 
     @mock_aws
-    @pytest.mark.skip(reason="Moto returns timestamps in float format incompatible with SQS model")
+    @pytest.mark.skip(
+        reason="Moto returns timestamps in float format incompatible with SQS model"
+    )
     def test_fetch_resources_with_queues(self):
         """Test fetching resources with existing queues."""
         session = boto3.Session(region_name="us-east-1")
@@ -72,7 +75,9 @@ class TestSQSFetcherFetchResources:
         assert len(resources["queues"]) == 2
 
     @mock_aws
-    @pytest.mark.skip(reason="Moto returns timestamps in float format incompatible with SQS model")
+    @pytest.mark.skip(
+        reason="Moto returns timestamps in float format incompatible with SQS model"
+    )
     def test_fetch_resources_queue_properties(self):
         """Test fetched queues have expected properties."""
         session = boto3.Session(region_name="us-east-1")
@@ -89,7 +94,9 @@ class TestSQSFetcherFetchResources:
         assert queue.queue_name == "test-queue"
 
     @mock_aws
-    @pytest.mark.skip(reason="Moto returns timestamps in float format incompatible with SQS model")
+    @pytest.mark.skip(
+        reason="Moto returns timestamps in float format incompatible with SQS model"
+    )
     def test_fetch_resources_fifo_queue(self):
         """Test fetching FIFO queue."""
         session = boto3.Session(region_name="us-east-1")
@@ -109,7 +116,9 @@ class TestSQSFetcherFetchResources:
         assert queue.fifo_queue is True
 
     @mock_aws
-    @pytest.mark.skip(reason="Moto returns timestamps in float format incompatible with SQS model")
+    @pytest.mark.skip(
+        reason="Moto returns timestamps in float format incompatible with SQS model"
+    )
     def test_fetch_resources_with_tags(self):
         """Test fetching queue with tags."""
         session = boto3.Session(region_name="us-east-1")
@@ -268,9 +277,7 @@ class TestSQSFetcherErrorHandling:
                 "FifoQueue": "false",
             }
         }
-        mock_client.list_queue_tags.return_value = {
-            "Tags": {"Environment": "test"}
-        }
+        mock_client.list_queue_tags.return_value = {"Tags": {"Environment": "test"}}
         mock_session.client.return_value = mock_client
 
         fetcher = SQSFetcher(session=mock_session, region="us-east-1")

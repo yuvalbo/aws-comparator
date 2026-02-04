@@ -45,9 +45,7 @@ class BaseFormatter(ABC):
         )
 
     @abstractmethod
-    def format(
-        self, report: Union[ComparisonReport, ServiceComparisonResult]
-    ) -> str:
+    def format(self, report: Union[ComparisonReport, ServiceComparisonResult]) -> str:
         """
         Format a comparison report as a string.
 
@@ -170,9 +168,7 @@ class BaseFormatter(ABC):
             changes_by_type[change.change_type.value] += 1
 
         # Count by severity
-        changes_by_severity: dict[str, int] = {
-            cs.value: 0 for cs in ChangeSeverity
-        }
+        changes_by_severity: dict[str, int] = {cs.value: 0 for cs in ChangeSeverity}
         for change in changes:
             changes_by_severity[change.severity.value] += 1
 
@@ -184,9 +180,7 @@ class BaseFormatter(ABC):
 
         if isinstance(report, ComparisonReport):
             services_with_changes = sum(
-                1
-                for result in report.results
-                if result.total_changes > 0
+                1 for result in report.results if result.total_changes > 0
             )
             stats["services_with_changes"] = services_with_changes
             stats["total_services"] = len(report.results)

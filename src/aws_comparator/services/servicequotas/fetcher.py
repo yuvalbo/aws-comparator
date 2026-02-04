@@ -16,9 +16,7 @@ from aws_comparator.services.base import BaseServiceFetcher
 
 
 @ServiceRegistry.register(
-    'service-quotas',
-    description='AWS Service Quotas',
-    resource_types=['quotas']
+    "service-quotas", description="AWS Service Quotas", resource_types=["quotas"]
 )
 class ServiceQuotasFetcher(BaseServiceFetcher):
     """
@@ -49,17 +47,17 @@ class ServiceQuotasFetcher(BaseServiceFetcher):
 
     # Service codes for all services we're comparing
     TARGET_SERVICE_CODES = [
-        'elasticbeanstalk',
-        'ec2',
-        's3',
-        'secretsmanager',
-        'sqs',
-        'logs',           # CloudWatch Logs
-        'monitoring',     # CloudWatch (note: not 'cloudwatch')
-        'bedrock',
-        'mobiletargeting',  # Pinpoint
-        'events',         # EventBridge
-        'lambda',
+        "elasticbeanstalk",
+        "ec2",
+        "s3",
+        "secretsmanager",
+        "sqs",
+        "logs",  # CloudWatch Logs
+        "monitoring",  # CloudWatch (note: not 'cloudwatch')
+        "bedrock",
+        "mobiletargeting",  # Pinpoint
+        "events",  # EventBridge
+        "lambda",
     ]
 
     def _create_client(self) -> Any:
@@ -69,7 +67,7 @@ class ServiceQuotasFetcher(BaseServiceFetcher):
         Returns:
             Configured boto3 Service Quotas client
         """
-        return self.session.client('service-quotas', region_name=self.region)
+        return self.session.client("service-quotas", region_name=self.region)
 
     def fetch_resources(self) -> dict[str, list[AWSResource]]:
         """
@@ -78,9 +76,7 @@ class ServiceQuotasFetcher(BaseServiceFetcher):
         Returns:
             Dictionary mapping resource types to lists of resources
         """
-        return {
-            'quotas': self._safe_fetch('quotas', self._fetch_quotas)
-        }
+        return {"quotas": self._safe_fetch("quotas", self._fetch_quotas)}
 
     def get_resource_types(self) -> list[str]:
         """
@@ -89,7 +85,7 @@ class ServiceQuotasFetcher(BaseServiceFetcher):
         Returns:
             List of resource type names
         """
-        return ['quotas']
+        return ["quotas"]
 
     def _fetch_quotas(self) -> list[ServiceQuota]:
         """
@@ -112,20 +108,20 @@ class ServiceQuotasFetcher(BaseServiceFetcher):
                     f"Fetched {len(service_quotas)} quotas for service: {service_code}"
                 )
             except ClientError as e:
-                error_code = e.response.get('Error', {}).get('Code', '')
-                if error_code in ['AccessDenied', 'NoSuchResourceException']:
+                error_code = e.response.get("Error", {}).get("Code", "")
+                if error_code in ["AccessDenied", "NoSuchResourceException"]:
                     self.logger.warning(
                         f"Cannot access quotas for service {service_code}: {error_code}"
                     )
                 else:
                     self.logger.error(
                         f"Error fetching quotas for service {service_code}: {e}",
-                        exc_info=True
+                        exc_info=True,
                     )
             except Exception as e:
                 self.logger.error(
                     f"Unexpected error fetching quotas for service {service_code}: {e}",
-                    exc_info=True
+                    exc_info=True,
                 )
 
         self.logger.info(f"Fetched total of {len(quotas)} service quotas")
@@ -146,9 +142,7 @@ class ServiceQuotasFetcher(BaseServiceFetcher):
         try:
             # Fetch current quotas
             current_quotas = self._paginate(
-                'list_service_quotas',
-                'Quotas',
-                ServiceCode=service_code
+                "list_service_quotas", "Quotas", ServiceCode=service_code
             )
 
             # Fetch default quotas for comparison
@@ -157,25 +151,24 @@ class ServiceQuotasFetcher(BaseServiceFetcher):
             # Process each quota
             for quota_data in current_quotas:
                 try:
-                    quota_code = quota_data['QuotaCode']
+                    quota_code = quota_data["QuotaCode"]
                     default_value = default_quotas_map.get(quota_code)
 
                     # Create ServiceQuota instance
                     quota = ServiceQuota.from_aws_response(
-                        quota_data,
-                        default_value=default_value
+                        quota_data, default_value=default_value
                     )
                     quotas.append(quota)
 
                 except Exception as e:
-                    quota_name = quota_data.get('QuotaName', 'unknown')
+                    quota_name = quota_data.get("QuotaName", "unknown")
                     self.logger.warning(
                         f"Failed to parse quota {quota_name} for {service_code}: {e}"
                     )
 
         except ClientError as e:
-            error_code = e.response.get('Error', {}).get('Code', '')
-            if error_code == 'NoSuchResourceException':
+            error_code = e.response.get("Error", {}).get("Code", "")
+            if error_code == "NoSuchResourceException":
                 # Service may not have any quotas in Service Quotas API
                 self.logger.debug(
                     f"Service {service_code} has no quotas in Service Quotas API"
@@ -200,19 +193,17 @@ class ServiceQuotasFetcher(BaseServiceFetcher):
         try:
             # Use paginate to get all default quotas
             default_quota_list = self._paginate(
-                'list_aws_default_service_quotas',
-                'Quotas',
-                ServiceCode=service_code
+                "list_aws_default_service_quotas", "Quotas", ServiceCode=service_code
             )
 
             for quota_data in default_quota_list:
-                quota_code = quota_data['QuotaCode']
-                default_value = float(quota_data['Value'])
+                quota_code = quota_data["QuotaCode"]
+                default_value = float(quota_data["Value"])
                 default_quotas[quota_code] = default_value
 
         except ClientError as e:
-            error_code = e.response.get('Error', {}).get('Code', '')
-            if error_code != 'NoSuchResourceException':
+            error_code = e.response.get("Error", {}).get("Code", "")
+            if error_code != "NoSuchResourceException":
                 self.logger.warning(
                     f"Failed to fetch default quotas for {service_code}: {error_code}"
                 )
@@ -233,28 +224,21 @@ class ServiceQuotasFetcher(BaseServiceFetcher):
 
         try:
             # Fetch all services
-            service_list = self._paginate('list_services', 'Services')
+            service_list = self._paginate("list_services", "Services")
 
             for service_data in service_list:
                 service = ServiceInfo.from_aws_response(service_data)
                 services.append(service)
 
-            self.logger.info(
-                f"Found {len(services)} services in Service Quotas API"
-            )
+            self.logger.info(f"Found {len(services)} services in Service Quotas API")
 
         except Exception as e:
-            self.logger.error(
-                f"Failed to list services: {e}",
-                exc_info=True
-            )
+            self.logger.error(f"Failed to list services: {e}", exc_info=True)
 
         return services
 
     def get_quota_by_code(
-        self,
-        service_code: str,
-        quota_code: str
+        self, service_code: str, quota_code: str
     ) -> Optional[ServiceQuota]:
         """
         Get a specific quota by service and quota code.
@@ -271,31 +255,31 @@ class ServiceQuotasFetcher(BaseServiceFetcher):
 
         try:
             response = self.client.get_service_quota(
-                ServiceCode=service_code,
-                QuotaCode=quota_code
+                ServiceCode=service_code, QuotaCode=quota_code
             )
 
-            quota_data = response.get('Quota')
+            quota_data = response.get("Quota")
             if quota_data:
                 # Also fetch default value
                 default_value: Optional[float] = None
                 try:
                     default_response = self.client.get_aws_default_service_quota(
-                        ServiceCode=service_code,
-                        QuotaCode=quota_code
+                        ServiceCode=service_code, QuotaCode=quota_code
                     )
-                    default_value = float(default_response['Quota']['Value'])
+                    default_value = float(default_response["Quota"]["Value"])
                 except ClientError:
                     pass
 
                 return ServiceQuota.from_aws_response(
-                    quota_data,
-                    default_value=default_value
+                    quota_data, default_value=default_value
                 )
 
         except ClientError as e:
-            error_code = e.response.get('Error', {}).get('Code', '')
-            if error_code not in ['NoSuchResourceException', 'ResourceNotFoundException']:
+            error_code = e.response.get("Error", {}).get("Code", "")
+            if error_code not in [
+                "NoSuchResourceException",
+                "ResourceNotFoundException",
+            ]:
                 self.logger.error(
                     f"Error fetching quota {quota_code} for {service_code}: {e}"
                 )

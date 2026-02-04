@@ -65,9 +65,7 @@ class JSONFormatter(BaseFormatter):
             f"{self.__class__.__module__}.{self.__class__.__name__}"
         )
 
-    def format(
-        self, report: Union[ComparisonReport, ServiceComparisonResult]
-    ) -> str:
+    def format(self, report: Union[ComparisonReport, ServiceComparisonResult]) -> str:
         """
         Format a comparison report as JSON.
 
@@ -149,9 +147,7 @@ class JSONFormatter(BaseFormatter):
             )
             raise
         except Exception as e:
-            self.logger.error(
-                f"Error serializing report to JSON: {e}", exc_info=True
-            )
+            self.logger.error(f"Error serializing report to JSON: {e}", exc_info=True)
             raise
 
     def _build_output_data(

@@ -22,10 +22,7 @@ class AWSComparatorError(Exception):
     """
 
     def __init__(
-        self,
-        message: str,
-        error_code: str,
-        details: Optional[dict[str, Any]] = None
+        self, message: str, error_code: str, details: Optional[dict[str, Any]] = None
     ) -> None:
         """
         Initialize the base exception.
@@ -62,8 +59,10 @@ class AWSComparatorError(Exception):
 # Authentication Errors (AUTH-xxx)
 # ============================================================================
 
+
 class AuthenticationError(AWSComparatorError):
     """Base class for all authentication-related errors."""
+
     pass
 
 
@@ -79,7 +78,7 @@ class CredentialsNotFoundError(AuthenticationError):
                     "Configure AWS credentials via profile, "
                     "environment variables, or IAM role"
                 )
-            }
+            },
         )
 
 
@@ -94,9 +93,7 @@ class InvalidCredentialsError(AuthenticationError):
             details["reason"] = reason
 
         super().__init__(
-            message="Invalid AWS credentials",
-            error_code="AUTH-002",
-            details=details
+            message="Invalid AWS credentials", error_code="AUTH-002", details=details
         )
 
 
@@ -110,8 +107,8 @@ class AssumeRoleError(AuthenticationError):
             details={
                 "role_arn": role_arn,
                 "reason": reason,
-                "suggestion": "Check role trust policy and permissions"
-            }
+                "suggestion": "Check role trust policy and permissions",
+            },
         )
 
 
@@ -119,8 +116,10 @@ class AssumeRoleError(AuthenticationError):
 # Permission Errors (PERM-xxx)
 # ============================================================================
 
+
 class PermissionError(AWSComparatorError):
     """Base class for all permission-related errors."""
+
     pass
 
 
@@ -135,8 +134,8 @@ class InsufficientPermissionsError(PermissionError):
                 "service": service,
                 "action": action,
                 "required_permission": required_permission,
-                "suggestion": f"Add IAM policy with {required_permission} permission"
-            }
+                "suggestion": f"Add IAM policy with {required_permission} permission",
+            },
         )
 
 
@@ -144,8 +143,10 @@ class InsufficientPermissionsError(PermissionError):
 # Service Errors (SERV-xxx)
 # ============================================================================
 
+
 class ServiceError(AWSComparatorError):
     """Base class for all service-related errors."""
+
     pass
 
 
@@ -159,8 +160,8 @@ class ServiceNotAvailableError(ServiceError):
             details={
                 "service": service,
                 "region": region,
-                "suggestion": "Try a different region or check AWS service availability"
-            }
+                "suggestion": "Try a different region or check AWS service availability",
+            },
         )
 
 
@@ -173,8 +174,8 @@ class ServiceNotSupportedError(ServiceError):
             error_code="SERV-002",
             details={
                 "service": service,
-                "suggestion": "Run 'aws-comparator list-services' to see supported services"
-            }
+                "suggestion": "Run 'aws-comparator list-services' to see supported services",
+            },
         )
 
 
@@ -190,8 +191,8 @@ class ServiceThrottlingError(ServiceError):
                 "operation": operation,
                 "suggestion": (
                     "Retry with exponential backoff or request rate limit increase"
-                )
-            }
+                ),
+            },
         )
 
 
@@ -199,8 +200,10 @@ class ServiceThrottlingError(ServiceError):
 # Validation Errors (VALID-xxx)
 # ============================================================================
 
+
 class ValidationError(AWSComparatorError):
     """Base class for all validation errors."""
+
     pass
 
 
@@ -213,8 +216,8 @@ class InvalidAccountIdError(ValidationError):
             error_code="VALID-001",
             details={
                 "account_id": account_id,
-                "suggestion": "Account ID must be exactly 12 digits"
-            }
+                "suggestion": "Account ID must be exactly 12 digits",
+            },
         )
 
 
@@ -228,8 +231,8 @@ class InvalidConfigError(ValidationError):
             details={
                 "config_file": config_file,
                 "errors": errors,
-                "suggestion": "Fix configuration errors and try again"
-            }
+                "suggestion": "Fix configuration errors and try again",
+            },
         )
 
 
@@ -242,8 +245,8 @@ class InvalidRegionError(ValidationError):
             error_code="VALID-003",
             details={
                 "region": region,
-                "suggestion": "Use a valid AWS region code (e.g., us-east-1)"
-            }
+                "suggestion": "Use a valid AWS region code (e.g., us-east-1)",
+            },
         )
 
 
@@ -251,8 +254,10 @@ class InvalidRegionError(ValidationError):
 # Comparison Errors (COMP-xxx)
 # ============================================================================
 
+
 class ComparisonError(AWSComparatorError):
     """Base class for all comparison operation errors."""
+
     pass
 
 
@@ -266,8 +271,8 @@ class DataFetchError(ComparisonError):
             details={
                 "service": service,
                 "resource_type": resource_type,
-                "reason": reason
-            }
+                "reason": reason,
+            },
         )
 
 
@@ -278,10 +283,7 @@ class ComparisonFailedError(ComparisonError):
         super().__init__(
             message=f"Comparison failed for service: {service}",
             error_code="COMP-002",
-            details={
-                "service": service,
-                "reason": reason
-            }
+            details={"service": service, "reason": reason},
         )
 
 
@@ -295,8 +297,8 @@ class DataNormalizationError(ComparisonError):
             details={
                 "service": service,
                 "resource_type": resource_type,
-                "reason": reason
-            }
+                "reason": reason,
+            },
         )
 
 
@@ -304,8 +306,10 @@ class DataNormalizationError(ComparisonError):
 # Configuration Errors (CONFIG-xxx)
 # ============================================================================
 
+
 class ConfigurationError(AWSComparatorError):
     """Base class for configuration errors."""
+
     pass
 
 
@@ -318,8 +322,8 @@ class ConfigFileNotFoundError(ConfigurationError):
             error_code="CONFIG-001",
             details={
                 "config_path": config_path,
-                "suggestion": "Create a configuration file or use default settings"
-            }
+                "suggestion": "Create a configuration file or use default settings",
+            },
         )
 
 
@@ -333,8 +337,8 @@ class ConfigParseError(ConfigurationError):
             details={
                 "config_path": config_path,
                 "reason": reason,
-                "suggestion": "Check YAML syntax in configuration file"
-            }
+                "suggestion": "Check YAML syntax in configuration file",
+            },
         )
 
 
@@ -342,8 +346,10 @@ class ConfigParseError(ConfigurationError):
 # Output Errors (OUTPUT-xxx)
 # ============================================================================
 
+
 class OutputError(AWSComparatorError):
     """Base class for output-related errors."""
+
     pass
 
 
@@ -356,8 +362,8 @@ class OutputFormatError(OutputError):
             error_code="OUTPUT-001",
             details={
                 "format": format_name,
-                "suggestion": "Use one of: json, yaml, table"
-            }
+                "suggestion": "Use one of: json, yaml, table",
+            },
         )
 
 
@@ -371,6 +377,6 @@ class OutputWriteError(OutputError):
             details={
                 "output_path": output_path,
                 "reason": reason,
-                "suggestion": "Check file permissions and disk space"
-            }
+                "suggestion": "Check file permissions and disk space",
+            },
         )

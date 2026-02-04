@@ -16,6 +16,7 @@ from aws_comparator.models.common import AWSResource
 
 class ModelModalityType(str, Enum):
     """Bedrock model modality types."""
+
     TEXT = "TEXT"
     IMAGE = "IMAGE"
     EMBEDDING = "EMBEDDING"
@@ -23,18 +24,21 @@ class ModelModalityType(str, Enum):
 
 class CustomizationType(str, Enum):
     """Bedrock model customization types."""
+
     FINE_TUNING = "FINE_TUNING"
     CONTINUED_PRE_TRAINING = "CONTINUED_PRE_TRAINING"
 
 
 class InferenceType(str, Enum):
     """Bedrock inference types."""
+
     ON_DEMAND = "ON_DEMAND"
     PROVISIONED = "PROVISIONED"
 
 
 class ModelAccessStatus(str, Enum):
     """Bedrock model access status."""
+
     AVAILABLE = "AVAILABLE"
     GRANTED = "GRANTED"
     DENIED = "DENIED"
@@ -43,6 +47,7 @@ class ModelAccessStatus(str, Enum):
 
 class ProvisionedModelStatus(str, Enum):
     """Provisioned model throughput status."""
+
     CREATING = "Creating"
     IN_SERVICE = "InService"
     UPDATING = "Updating"
@@ -51,6 +56,7 @@ class ProvisionedModelStatus(str, Enum):
 
 class GuardrailStatus(str, Enum):
     """Guardrail status."""
+
     CREATING = "CREATING"
     VERSIONING = "VERSIONING"
     READY = "READY"
@@ -64,39 +70,39 @@ class FoundationModel(AWSResource):
 
     Represents a foundation model available in AWS Bedrock.
     """
+
     model_config = ConfigDict(extra="ignore")
 
     # Basic properties
     model_arn: str = Field(..., description="Model ARN")
     model_id: str = Field(..., description="Model identifier")
     model_name: str = Field(..., description="Model name")
-    provider_name: str = Field(..., description="Model provider (e.g., Anthropic, Amazon)")
+    provider_name: str = Field(
+        ..., description="Model provider (e.g., Anthropic, Amazon)"
+    )
 
     # Capabilities
     input_modalities: list[str] = Field(
         default_factory=list,
-        description="Supported input modalities (TEXT, IMAGE, etc.)"
+        description="Supported input modalities (TEXT, IMAGE, etc.)",
     )
     output_modalities: list[str] = Field(
-        default_factory=list,
-        description="Supported output modalities"
+        default_factory=list, description="Supported output modalities"
     )
     response_streaming_supported: bool = Field(
-        default=False,
-        description="Whether response streaming is supported"
+        default=False, description="Whether response streaming is supported"
     )
 
     # Customization and inference
     customizations_supported: list[str] = Field(
-        default_factory=list,
-        description="Supported customization types"
+        default_factory=list, description="Supported customization types"
     )
     inference_types_supported: list[str] = Field(
         default_factory=list,
-        description="Supported inference types (ON_DEMAND, PROVISIONED)"
+        description="Supported inference types (ON_DEMAND, PROVISIONED)",
     )
 
-    @field_validator('model_id')
+    @field_validator("model_id")
     @classmethod
     def validate_model_id(cls, v: str) -> str:
         """
@@ -127,16 +133,18 @@ class FoundationModel(AWSResource):
             FoundationModel instance
         """
         return cls(
-            model_arn=model_data.get('modelArn', ''),
-            model_id=model_data.get('modelId', ''),
-            model_name=model_data.get('modelName', ''),
-            provider_name=model_data.get('providerName', ''),
-            input_modalities=model_data.get('inputModalities', []),
-            output_modalities=model_data.get('outputModalities', []),
-            response_streaming_supported=model_data.get('responseStreamingSupported', False),
-            customizations_supported=model_data.get('customizationsSupported', []),
-            inference_types_supported=model_data.get('inferenceTypesSupported', []),
-            arn=model_data.get('modelArn', '')
+            model_arn=model_data.get("modelArn", ""),
+            model_id=model_data.get("modelId", ""),
+            model_name=model_data.get("modelName", ""),
+            provider_name=model_data.get("providerName", ""),
+            input_modalities=model_data.get("inputModalities", []),
+            output_modalities=model_data.get("outputModalities", []),
+            response_streaming_supported=model_data.get(
+                "responseStreamingSupported", False
+            ),
+            customizations_supported=model_data.get("customizationsSupported", []),
+            inference_types_supported=model_data.get("inferenceTypesSupported", []),
+            arn=model_data.get("modelArn", ""),
         )
 
     def __str__(self) -> str:
@@ -150,6 +158,7 @@ class CustomModel(AWSResource):
 
     Represents a custom fine-tuned model in AWS Bedrock.
     """
+
     model_config = ConfigDict(extra="ignore")
 
     # Basic properties
@@ -160,9 +169,11 @@ class CustomModel(AWSResource):
     creation_time: Optional[datetime] = Field(None, description="Creation timestamp")
 
     # Security
-    model_kms_key_arn: Optional[str] = Field(None, description="KMS key ARN for encryption")
+    model_kms_key_arn: Optional[str] = Field(
+        None, description="KMS key ARN for encryption"
+    )
 
-    @field_validator('model_name')
+    @field_validator("model_name")
     @classmethod
     def validate_model_name(cls, v: str) -> str:
         """
@@ -193,13 +204,13 @@ class CustomModel(AWSResource):
             CustomModel instance
         """
         return cls(
-            model_arn=model_data.get('modelArn', ''),
-            model_name=model_data.get('modelName', ''),
-            job_name=model_data.get('jobName'),
-            base_model_arn=model_data.get('baseModelArn', ''),
-            creation_time=model_data.get('creationTime'),
-            model_kms_key_arn=model_data.get('modelKmsKeyArn'),
-            arn=model_data.get('modelArn', '')
+            model_arn=model_data.get("modelArn", ""),
+            model_name=model_data.get("modelName", ""),
+            job_name=model_data.get("jobName"),
+            base_model_arn=model_data.get("baseModelArn", ""),
+            creation_time=model_data.get("creationTime"),
+            model_kms_key_arn=model_data.get("modelKmsKeyArn"),
+            arn=model_data.get("modelArn", ""),
         )
 
     def __str__(self) -> str:
@@ -213,6 +224,7 @@ class ProvisionedModelThroughput(AWSResource):
 
     Represents provisioned throughput for a Bedrock model.
     """
+
     model_config = ConfigDict(extra="ignore")
 
     # Basic properties
@@ -222,13 +234,15 @@ class ProvisionedModelThroughput(AWSResource):
 
     # Capacity
     desired_model_units: int = Field(..., ge=1, description="Desired model units")
-    current_model_units: Optional[int] = Field(None, ge=0, description="Current model units")
+    current_model_units: Optional[int] = Field(
+        None, ge=0, description="Current model units"
+    )
 
     # Status
     status: str = Field(..., description="Provisioned model status")
     creation_time: Optional[datetime] = Field(None, description="Creation timestamp")
 
-    @field_validator('provisioned_model_name')
+    @field_validator("provisioned_model_name")
     @classmethod
     def validate_name(cls, v: str) -> str:
         """
@@ -248,7 +262,9 @@ class ProvisionedModelThroughput(AWSResource):
         return v
 
     @classmethod
-    def from_aws_response(cls, throughput_data: dict[str, Any]) -> "ProvisionedModelThroughput":
+    def from_aws_response(
+        cls, throughput_data: dict[str, Any]
+    ) -> "ProvisionedModelThroughput":
         """
         Create ProvisionedModelThroughput instance from AWS API response.
 
@@ -259,14 +275,14 @@ class ProvisionedModelThroughput(AWSResource):
             ProvisionedModelThroughput instance
         """
         return cls(
-            provisioned_model_arn=throughput_data.get('provisionedModelArn', ''),
-            provisioned_model_name=throughput_data.get('provisionedModelName', ''),
-            model_arn=throughput_data.get('modelArn', ''),
-            desired_model_units=throughput_data.get('desiredModelUnits', 1),
-            current_model_units=throughput_data.get('modelUnits'),
-            status=throughput_data.get('status', ''),
-            creation_time=throughput_data.get('creationTime'),
-            arn=throughput_data.get('provisionedModelArn', '')
+            provisioned_model_arn=throughput_data.get("provisionedModelArn", ""),
+            provisioned_model_name=throughput_data.get("provisionedModelName", ""),
+            model_arn=throughput_data.get("modelArn", ""),
+            desired_model_units=throughput_data.get("desiredModelUnits", 1),
+            current_model_units=throughput_data.get("modelUnits"),
+            status=throughput_data.get("status", ""),
+            creation_time=throughput_data.get("creationTime"),
+            arn=throughput_data.get("provisionedModelArn", ""),
         )
 
     def __str__(self) -> str:
@@ -280,6 +296,7 @@ class ModelAccessConfiguration(AWSResource):
 
     Represents model access status for a foundation model.
     """
+
     model_config = ConfigDict(extra="ignore")
 
     # Basic properties
@@ -287,7 +304,9 @@ class ModelAccessConfiguration(AWSResource):
     access_status: str = Field(..., description="Access status")
 
     @classmethod
-    def from_aws_response(cls, access_data: dict[str, Any]) -> "ModelAccessConfiguration":
+    def from_aws_response(
+        cls, access_data: dict[str, Any]
+    ) -> "ModelAccessConfiguration":
         """
         Create ModelAccessConfiguration instance from AWS API response.
 
@@ -298,9 +317,9 @@ class ModelAccessConfiguration(AWSResource):
             ModelAccessConfiguration instance
         """
         return cls(
-            model_id=access_data.get('modelId', ''),
-            access_status=access_data.get('accessStatus', ''),
-            arn=f"arn:aws:bedrock:::foundation-model/{access_data.get('modelId', '')}"
+            model_id=access_data.get("modelId", ""),
+            access_status=access_data.get("accessStatus", ""),
+            arn=f"arn:aws:bedrock:::foundation-model/{access_data.get('modelId', '')}",
         )
 
     def __str__(self) -> str:
@@ -314,6 +333,7 @@ class Guardrail(AWSResource):
 
     Represents a guardrail for controlling model outputs.
     """
+
     model_config = ConfigDict(extra="ignore")
 
     # Basic properties
@@ -327,7 +347,7 @@ class Guardrail(AWSResource):
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
     updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
 
-    @field_validator('name')
+    @field_validator("name")
     @classmethod
     def validate_name(cls, v: str) -> str:
         """
@@ -358,15 +378,15 @@ class Guardrail(AWSResource):
             Guardrail instance
         """
         return cls(
-            guardrail_id=guardrail_data.get('id', ''),
-            guardrail_arn=guardrail_data.get('arn', ''),
-            name=guardrail_data.get('name', ''),
-            status=guardrail_data.get('status', ''),
-            version=guardrail_data.get('version', 'DRAFT'),
-            created_at=guardrail_data.get('createdAt'),
-            updated_at=guardrail_data.get('updatedAt'),
-            arn=guardrail_data.get('arn', ''),
-            tags=guardrail_data.get('tags', {})
+            guardrail_id=guardrail_data.get("id", ""),
+            guardrail_arn=guardrail_data.get("arn", ""),
+            name=guardrail_data.get("name", ""),
+            status=guardrail_data.get("status", ""),
+            version=guardrail_data.get("version", "DRAFT"),
+            created_at=guardrail_data.get("createdAt"),
+            updated_at=guardrail_data.get("updatedAt"),
+            arn=guardrail_data.get("arn", ""),
+            tags=guardrail_data.get("tags", {}),
         )
 
     def __str__(self) -> str:

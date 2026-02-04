@@ -62,7 +62,7 @@ class ResourceComparator(BaseComparator):
         self,
         service_name: str,
         config: Optional[ComparisonConfig] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         """
         Initialize the resource comparator.
@@ -87,7 +87,7 @@ class ResourceComparator(BaseComparator):
     def compare(
         self,
         account1_data: dict[str, list[AWSResource]],
-        account2_data: dict[str, list[AWSResource]]
+        account2_data: dict[str, list[AWSResource]],
     ) -> ServiceComparisonResult:
         """
         Compare resources from two AWS accounts.
@@ -141,7 +141,7 @@ class ResourceComparator(BaseComparator):
                 comparison = self._compare_resource_type(
                     resource_type=resource_type,
                     resources1=account1_data.get(resource_type, []),
-                    resources2=account2_data.get(resource_type, [])
+                    resources2=account2_data.get(resource_type, []),
                 )
                 resource_comparisons[resource_type] = comparison
 
@@ -173,7 +173,7 @@ class ResourceComparator(BaseComparator):
         self,
         resource_type: str,
         resources1: list[AWSResource],
-        resources2: list[AWSResource]
+        resources2: list[AWSResource],
     ) -> ResourceTypeComparison:
         """
         Compare resources of a single type between two accounts.
@@ -235,7 +235,7 @@ class ResourceComparator(BaseComparator):
                 resource1=resource1,
                 resource2=resource2,
                 resource_type=resource_type,
-                resource_id=resource_id
+                resource_id=resource_id,
             )
 
             if changes:
@@ -254,8 +254,7 @@ class ResourceComparator(BaseComparator):
         )
 
     def _build_resource_map(
-        self,
-        resources: list[AWSResource]
+        self, resources: list[AWSResource]
     ) -> dict[str, AWSResource]:
         """
         Build a map of resource identifier to resource for fast lookup.
@@ -293,7 +292,7 @@ class ResourceComparator(BaseComparator):
         resource1: AWSResource,
         resource2: AWSResource,
         resource_type: str,
-        resource_id: str
+        resource_id: str,
     ) -> list[ResourceChange]:
         """
         Compare two resources and return list of changes.
@@ -330,9 +329,7 @@ class ResourceComparator(BaseComparator):
 
         # Extract changes from diff result
         changes = self._extract_changes_from_diff(
-            diff=diff,
-            resource_id=resource_id,
-            resource_type=resource_type
+            diff=diff, resource_id=resource_id, resource_type=resource_type
         )
 
         return changes
@@ -341,7 +338,7 @@ class ResourceComparator(BaseComparator):
         self,
         resource_type: str,
         resources1: list[AWSResource],
-        resources2: list[AWSResource]
+        resources2: list[AWSResource],
     ) -> ResourceTypeComparison:
         """
         Compare a single resource type between two accounts.
@@ -368,8 +365,7 @@ class ResourceComparator(BaseComparator):
         return self._compare_resource_type(resource_type, resources1, resources2)
 
     def get_highest_severity(
-        self,
-        changes: list[ResourceChange]
+        self, changes: list[ResourceChange]
     ) -> Optional[ChangeSeverity]:
         """
         Get the highest severity level from a list of changes.
@@ -412,7 +408,7 @@ class ResourceComparator(BaseComparator):
     def filter_by_severity(
         self,
         changes: list[ResourceChange],
-        min_severity: ChangeSeverity = ChangeSeverity.INFO
+        min_severity: ChangeSeverity = ChangeSeverity.INFO,
     ) -> list[ResourceChange]:
         """
         Filter changes by minimum severity level.
@@ -441,6 +437,7 @@ class ResourceComparator(BaseComparator):
         min_level = severity_order.get(min_severity, 0)
 
         return [
-            change for change in changes
+            change
+            for change in changes
             if severity_order.get(change.severity, 0) >= min_level
         ]

@@ -1,4 +1,5 @@
 """Tests for YAML formatter module."""
+
 from datetime import datetime
 
 import pytest

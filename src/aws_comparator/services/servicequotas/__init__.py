@@ -7,4 +7,4 @@ across AWS accounts.
 
 from aws_comparator.services.servicequotas.fetcher import ServiceQuotasFetcher
 
-__all__ = ['ServiceQuotasFetcher']
+__all__ = ["ServiceQuotasFetcher"]

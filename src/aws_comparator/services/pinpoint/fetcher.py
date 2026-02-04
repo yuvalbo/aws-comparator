@@ -23,9 +23,15 @@ from aws_comparator.services.base import BaseServiceFetcher
 
 
 @ServiceRegistry.register(
-    'pinpoint',
-    description='Amazon Pinpoint (Customer Engagement)',
-    resource_types=['applications', 'campaigns', 'segments', 'channels', 'event_streams']
+    "pinpoint",
+    description="Amazon Pinpoint (Customer Engagement)",
+    resource_types=[
+        "applications",
+        "campaigns",
+        "segments",
+        "channels",
+        "event_streams",
+    ],
 )
 class PinpointFetcher(BaseServiceFetcher):
     """
@@ -48,7 +54,7 @@ class PinpointFetcher(BaseServiceFetcher):
         Returns:
             Configured boto3 Pinpoint client
         """
-        return self.session.client('pinpoint', region_name=self.region)
+        return self.session.client("pinpoint", region_name=self.region)
 
     def fetch_resources(self) -> dict[str, list[AWSResource]]:
         """
@@ -58,11 +64,13 @@ class PinpointFetcher(BaseServiceFetcher):
             Dictionary mapping resource types to lists of resources
         """
         return {
-            'applications': self._safe_fetch('applications', self._fetch_applications),
-            'campaigns': self._safe_fetch('campaigns', self._fetch_campaigns),
-            'segments': self._safe_fetch('segments', self._fetch_segments),
-            'channels': self._safe_fetch('channels', self._fetch_channels),
-            'event_streams': self._safe_fetch('event_streams', self._fetch_event_streams),
+            "applications": self._safe_fetch("applications", self._fetch_applications),
+            "campaigns": self._safe_fetch("campaigns", self._fetch_campaigns),
+            "segments": self._safe_fetch("segments", self._fetch_segments),
+            "channels": self._safe_fetch("channels", self._fetch_channels),
+            "event_streams": self._safe_fetch(
+                "event_streams", self._fetch_event_streams
+            ),
         }
 
     def get_resource_types(self) -> list[str]:
@@ -72,7 +80,7 @@ class PinpointFetcher(BaseServiceFetcher):
         Returns:
             List of resource type names
         """
-        return ['applications', 'campaigns', 'segments', 'channels', 'event_streams']
+        return ["applications", "campaigns", "segments", "channels", "event_streams"]
 
     def _fetch_applications(self) -> list[PinpointApplication]:
         """
@@ -88,9 +96,9 @@ class PinpointFetcher(BaseServiceFetcher):
             # Note: get_apps doesn't have native pagination, but we handle NextToken
             response = self.client.get_apps()
 
-            if 'ApplicationsResponse' in response:
-                apps_response = response['ApplicationsResponse']
-                app_items = apps_response.get('Item', [])
+            if "ApplicationsResponse" in response:
+                apps_response = response["ApplicationsResponse"]
+                app_items = apps_response.get("Item", [])
 
                 self.logger.info(f"Found {len(app_items)} Pinpoint applications")
 
@@ -99,31 +107,28 @@ class PinpointFetcher(BaseServiceFetcher):
                         application = PinpointApplication.from_aws_response(app_data)
                         applications.append(application)
 
-                        app_name = app_data.get('Name', app_data.get('Id'))
+                        app_name = app_data.get("Name", app_data.get("Id"))
                         self.logger.debug(f"Fetched application: {app_name}")
 
                     except Exception as e:
-                        app_id = app_data.get('Id', 'unknown')
+                        app_id = app_data.get("Id", "unknown")
                         self.logger.error(
-                            f"Error parsing application {app_id}: {e}",
-                            exc_info=True
+                            f"Error parsing application {app_id}: {e}", exc_info=True
                         )
 
         except ClientError as e:
-            error_code = e.response.get('Error', {}).get('Code', '')
-            if error_code in ['AccessDenied', 'UnauthorizedOperation']:
+            error_code = e.response.get("Error", {}).get("Code", "")
+            if error_code in ["AccessDenied", "UnauthorizedOperation"]:
                 self.logger.warning(
                     f"Cannot access Pinpoint applications: {error_code}"
                 )
             else:
                 self.logger.error(
-                    f"Error fetching Pinpoint applications: {e}",
-                    exc_info=True
+                    f"Error fetching Pinpoint applications: {e}", exc_info=True
                 )
         except Exception as e:
             self.logger.error(
-                f"Failed to list Pinpoint applications: {e}",
-                exc_info=True
+                f"Failed to list Pinpoint applications: {e}", exc_info=True
             )
 
         return applications
@@ -145,9 +150,9 @@ class PinpointFetcher(BaseServiceFetcher):
                 # Get campaigns for this application
                 response = self.client.get_campaigns(ApplicationId=app.application_id)
 
-                if 'CampaignsResponse' in response:
-                    campaigns_response = response['CampaignsResponse']
-                    campaign_items = campaigns_response.get('Item', [])
+                if "CampaignsResponse" in response:
+                    campaigns_response = response["CampaignsResponse"]
+                    campaign_items = campaigns_response.get("Item", [])
 
                     self.logger.debug(
                         f"Found {len(campaign_items)} campaigns for app {app.application_id}"
@@ -156,28 +161,27 @@ class PinpointFetcher(BaseServiceFetcher):
                     for campaign_data in campaign_items:
                         try:
                             campaign = PinpointCampaign.from_aws_response(
-                                campaign_data,
-                                app.application_id
+                                campaign_data, app.application_id
                             )
                             campaigns.append(campaign)
 
                         except Exception as e:
-                            campaign_id = campaign_data.get('Id', 'unknown')
+                            campaign_id = campaign_data.get("Id", "unknown")
                             self.logger.error(
                                 f"Error parsing campaign {campaign_id}: {e}",
-                                exc_info=True
+                                exc_info=True,
                             )
 
             except ClientError as e:
-                error_code = e.response.get('Error', {}).get('Code', '')
-                if error_code in ['AccessDenied', 'NotFoundException']:
+                error_code = e.response.get("Error", {}).get("Code", "")
+                if error_code in ["AccessDenied", "NotFoundException"]:
                     self.logger.warning(
                         f"Cannot access campaigns for app {app.application_id}: {error_code}"
                     )
                 else:
                     self.logger.error(
                         f"Error fetching campaigns for app {app.application_id}: {e}",
-                        exc_info=True
+                        exc_info=True,
                     )
 
         self.logger.info(f"Fetched total of {len(campaigns)} campaigns")
@@ -200,9 +204,9 @@ class PinpointFetcher(BaseServiceFetcher):
                 # Get segments for this application
                 response = self.client.get_segments(ApplicationId=app.application_id)
 
-                if 'SegmentsResponse' in response:
-                    segments_response = response['SegmentsResponse']
-                    segment_items = segments_response.get('Item', [])
+                if "SegmentsResponse" in response:
+                    segments_response = response["SegmentsResponse"]
+                    segment_items = segments_response.get("Item", [])
 
                     self.logger.debug(
                         f"Found {len(segment_items)} segments for app {app.application_id}"
@@ -211,28 +215,27 @@ class PinpointFetcher(BaseServiceFetcher):
                     for segment_data in segment_items:
                         try:
                             segment = PinpointSegment.from_aws_response(
-                                segment_data,
-                                app.application_id
+                                segment_data, app.application_id
                             )
                             segments.append(segment)
 
                         except Exception as e:
-                            segment_id = segment_data.get('Id', 'unknown')
+                            segment_id = segment_data.get("Id", "unknown")
                             self.logger.error(
                                 f"Error parsing segment {segment_id}: {e}",
-                                exc_info=True
+                                exc_info=True,
                             )
 
             except ClientError as e:
-                error_code = e.response.get('Error', {}).get('Code', '')
-                if error_code in ['AccessDenied', 'NotFoundException']:
+                error_code = e.response.get("Error", {}).get("Code", "")
+                if error_code in ["AccessDenied", "NotFoundException"]:
                     self.logger.warning(
                         f"Cannot access segments for app {app.application_id}: {error_code}"
                     )
                 else:
                     self.logger.error(
                         f"Error fetching segments for app {app.application_id}: {e}",
-                        exc_info=True
+                        exc_info=True,
                     )
 
         self.logger.info(f"Fetched total of {len(segments)} segments")
@@ -254,10 +257,10 @@ class PinpointFetcher(BaseServiceFetcher):
 
         # Channel types to fetch with their corresponding API methods
         channel_methods = [
-            (ChannelType.EMAIL, 'get_email_channel'),
-            (ChannelType.SMS, 'get_sms_channel'),
-            (ChannelType.PUSH, 'get_apns_channel'),  # Apple Push
-            (ChannelType.PUSH, 'get_gcm_channel'),   # Google Cloud Messaging
+            (ChannelType.EMAIL, "get_email_channel"),
+            (ChannelType.SMS, "get_sms_channel"),
+            (ChannelType.PUSH, "get_apns_channel"),  # Apple Push
+            (ChannelType.PUSH, "get_gcm_channel"),  # Google Cloud Messaging
         ]
 
         for app in applications:
@@ -269,10 +272,10 @@ class PinpointFetcher(BaseServiceFetcher):
 
                     # Response key varies by channel type
                     response_keys = {
-                        'get_email_channel': 'EmailChannelResponse',
-                        'get_sms_channel': 'SMSChannelResponse',
-                        'get_apns_channel': 'APNSChannelResponse',
-                        'get_gcm_channel': 'GCMChannelResponse',
+                        "get_email_channel": "EmailChannelResponse",
+                        "get_sms_channel": "SMSChannelResponse",
+                        "get_apns_channel": "APNSChannelResponse",
+                        "get_gcm_channel": "GCMChannelResponse",
                     }
 
                     response_key = response_keys.get(method_name)
@@ -281,9 +284,7 @@ class PinpointFetcher(BaseServiceFetcher):
 
                         try:
                             channel = PinpointChannel.from_aws_response(
-                                channel_data,
-                                app.application_id,
-                                channel_type
+                                channel_data, app.application_id, channel_type
                             )
                             channels.append(channel)
 
@@ -294,14 +295,14 @@ class PinpointFetcher(BaseServiceFetcher):
                         except Exception as e:
                             self.logger.error(
                                 f"Error parsing {channel_type} channel for app {app.application_id}: {e}",
-                                exc_info=True
+                                exc_info=True,
                             )
 
                 except ClientError as e:
-                    error_code = e.response.get('Error', {}).get('Code', '')
+                    error_code = e.response.get("Error", {}).get("Code", "")
                     # NotFoundException is expected if channel is not configured
-                    if error_code != 'NotFoundException':
-                        if error_code in ['AccessDenied']:
+                    if error_code != "NotFoundException":
+                        if error_code in ["AccessDenied"]:
                             self.logger.warning(
                                 f"Cannot access {channel_type} channel for app {app.application_id}: {error_code}"
                             )
@@ -312,7 +313,7 @@ class PinpointFetcher(BaseServiceFetcher):
                 except Exception as e:
                     self.logger.error(
                         f"Unexpected error fetching {channel_type} channel for app {app.application_id}: {e}",
-                        exc_info=True
+                        exc_info=True,
                     )
 
         self.logger.info(f"Fetched total of {len(channels)} channels")
@@ -333,15 +334,16 @@ class PinpointFetcher(BaseServiceFetcher):
         for app in applications:
             try:
                 # Get event stream for this application
-                response = self.client.get_event_stream(ApplicationId=app.application_id)
+                response = self.client.get_event_stream(
+                    ApplicationId=app.application_id
+                )
 
-                if 'EventStream' in response:
-                    event_stream_data = response['EventStream']
+                if "EventStream" in response:
+                    event_stream_data = response["EventStream"]
 
                     try:
                         event_stream = PinpointEventStream.from_aws_response(
-                            event_stream_data,
-                            app.application_id
+                            event_stream_data, app.application_id
                         )
                         event_streams.append(event_stream)
 
@@ -352,26 +354,26 @@ class PinpointFetcher(BaseServiceFetcher):
                     except Exception as e:
                         self.logger.error(
                             f"Error parsing event stream for app {app.application_id}: {e}",
-                            exc_info=True
+                            exc_info=True,
                         )
 
             except ClientError as e:
-                error_code = e.response.get('Error', {}).get('Code', '')
+                error_code = e.response.get("Error", {}).get("Code", "")
                 # NotFoundException is expected if event stream is not configured
-                if error_code != 'NotFoundException':
-                    if error_code in ['AccessDenied']:
+                if error_code != "NotFoundException":
+                    if error_code in ["AccessDenied"]:
                         self.logger.warning(
                             f"Cannot access event stream for app {app.application_id}: {error_code}"
                         )
                     else:
                         self.logger.error(
                             f"Error fetching event stream for app {app.application_id}: {e}",
-                            exc_info=True
+                            exc_info=True,
                         )
             except Exception as e:
                 self.logger.error(
                     f"Unexpected error fetching event stream for app {app.application_id}: {e}",
-                    exc_info=True
+                    exc_info=True,
                 )
 
         self.logger.info(f"Fetched total of {len(event_streams)} event streams")

@@ -16,9 +16,7 @@ from aws_comparator.services.base import BaseServiceFetcher
 
 
 @ServiceRegistry.register(
-    's3',
-    description='Amazon S3 (Simple Storage Service)',
-    resource_types=['buckets']
+    "s3", description="Amazon S3 (Simple Storage Service)", resource_types=["buckets"]
 )
 class S3Fetcher(BaseServiceFetcher):
     """
@@ -45,7 +43,7 @@ class S3Fetcher(BaseServiceFetcher):
         Returns:
             Configured boto3 S3 client
         """
-        return self.session.client('s3', region_name=self.region)
+        return self.session.client("s3", region_name=self.region)
 
     def fetch_resources(self) -> dict[str, list[AWSResource]]:
         """
@@ -54,9 +52,7 @@ class S3Fetcher(BaseServiceFetcher):
         Returns:
             Dictionary mapping resource types to lists of resources
         """
-        return {
-            'buckets': self._safe_fetch('buckets', self._fetch_buckets)
-        }
+        return {"buckets": self._safe_fetch("buckets", self._fetch_buckets)}
 
     def get_resource_types(self) -> list[str]:
         """
@@ -65,7 +61,7 @@ class S3Fetcher(BaseServiceFetcher):
         Returns:
             List of resource type names
         """
-        return ['buckets']
+        return ["buckets"]
 
     def _fetch_buckets(self) -> list[S3Bucket]:
         """
@@ -82,12 +78,12 @@ class S3Fetcher(BaseServiceFetcher):
         # List all buckets
         try:
             response = self.client.list_buckets()
-            bucket_list = response.get('Buckets', [])
+            bucket_list = response.get("Buckets", [])
 
             self.logger.info(f"Found {len(bucket_list)} S3 buckets")
 
             for bucket_data in bucket_list:
-                bucket_name = bucket_data['Name']
+                bucket_name = bucket_data["Name"]
 
                 try:
                     # Fetch additional bucket configuration
@@ -100,15 +96,14 @@ class S3Fetcher(BaseServiceFetcher):
                     self.logger.debug(f"Fetched bucket: {bucket_name}")
 
                 except ClientError as e:
-                    error_code = e.response.get('Error', {}).get('Code', '')
-                    if error_code in ['AccessDenied', 'NoSuchBucket']:
+                    error_code = e.response.get("Error", {}).get("Code", "")
+                    if error_code in ["AccessDenied", "NoSuchBucket"]:
                         self.logger.warning(
                             f"Cannot access bucket {bucket_name}: {error_code}"
                         )
                     else:
                         self.logger.error(
-                            f"Error fetching bucket {bucket_name}: {e}",
-                            exc_info=True
+                            f"Error fetching bucket {bucket_name}: {e}", exc_info=True
                         )
 
         except Exception as e:
@@ -134,8 +129,8 @@ class S3Fetcher(BaseServiceFetcher):
         # Fetch location
         try:
             location = self.client.get_bucket_location(Bucket=bucket_name)
-            details['LocationConstraint'] = (
-                location.get('LocationConstraint') or 'us-east-1'
+            details["LocationConstraint"] = (
+                location.get("LocationConstraint") or "us-east-1"
             )
         except ClientError:
             pass
@@ -143,27 +138,27 @@ class S3Fetcher(BaseServiceFetcher):
         # Fetch versioning
         try:
             versioning = self.client.get_bucket_versioning(Bucket=bucket_name)
-            details['Versioning'] = versioning
+            details["Versioning"] = versioning
         except ClientError:
             pass
 
         # Fetch encryption
         try:
             encryption = self.client.get_bucket_encryption(Bucket=bucket_name)
-            details['Encryption'] = encryption.get(
-                'ServerSideEncryptionConfiguration', {}
+            details["Encryption"] = encryption.get(
+                "ServerSideEncryptionConfiguration", {}
             )
         except ClientError as e:
             # Encryption may not be configured
-            error_code = e.response.get('Error', {}).get('Code')
-            if error_code != 'ServerSideEncryptionConfigurationNotFoundError':
+            error_code = e.response.get("Error", {}).get("Code")
+            if error_code != "ServerSideEncryptionConfigurationNotFoundError":
                 self.logger.debug(f"No encryption configured for {bucket_name}")
 
         # Fetch public access block
         try:
             public_access = self.client.get_public_access_block(Bucket=bucket_name)
-            details['PublicAccessBlock'] = public_access.get(
-                'PublicAccessBlockConfiguration', {}
+            details["PublicAccessBlock"] = public_access.get(
+                "PublicAccessBlockConfiguration", {}
             )
         except ClientError:
             pass
@@ -171,7 +166,7 @@ class S3Fetcher(BaseServiceFetcher):
         # Fetch logging
         try:
             logging_config = self.client.get_bucket_logging(Bucket=bucket_name)
-            details['Logging'] = logging_config
+            details["Logging"] = logging_config
         except ClientError:
             pass
 
@@ -180,81 +175,78 @@ class S3Fetcher(BaseServiceFetcher):
             lifecycle = self.client.get_bucket_lifecycle_configuration(
                 Bucket=bucket_name
             )
-            details['Lifecycle'] = lifecycle
+            details["Lifecycle"] = lifecycle
         except ClientError as e:
             # Lifecycle may not be configured
-            if e.response.get('Error', {}).get('Code') != 'NoSuchLifecycleConfiguration':
+            if (
+                e.response.get("Error", {}).get("Code")
+                != "NoSuchLifecycleConfiguration"
+            ):
                 self.logger.debug(f"No lifecycle configured for {bucket_name}")
 
         # Fetch replication
         try:
             replication = self.client.get_bucket_replication(Bucket=bucket_name)
-            details['Replication'] = replication.get('ReplicationConfiguration', {})
+            details["Replication"] = replication.get("ReplicationConfiguration", {})
         except ClientError as e:
             # Replication may not be configured
-            error_code = e.response.get('Error', {}).get('Code')
-            if error_code != 'ReplicationConfigurationNotFoundError':
+            error_code = e.response.get("Error", {}).get("Code")
+            if error_code != "ReplicationConfigurationNotFoundError":
                 self.logger.debug(f"No replication configured for {bucket_name}")
 
         # Fetch website configuration
         try:
             website = self.client.get_bucket_website(Bucket=bucket_name)
-            details['Website'] = website
+            details["Website"] = website
         except ClientError as e:
             # Website may not be configured
-            if e.response.get('Error', {}).get('Code') != 'NoSuchWebsiteConfiguration':
+            if e.response.get("Error", {}).get("Code") != "NoSuchWebsiteConfiguration":
                 self.logger.debug(f"No website configured for {bucket_name}")
 
         # Fetch tags
         try:
             tags = self.client.get_bucket_tagging(Bucket=bucket_name)
-            details['Tags'] = tags
+            details["Tags"] = tags
         except ClientError as e:
             # Tags may not be configured
-            if e.response.get('Error', {}).get('Code') != 'NoSuchTagSet':
+            if e.response.get("Error", {}).get("Code") != "NoSuchTagSet":
                 self.logger.debug(f"No tags for {bucket_name}")
 
         # Fetch bucket policy
         try:
             policy = self.client.get_bucket_policy(Bucket=bucket_name)
-            policy_text = policy.get('Policy', '{}')
-            details['Policy'] = (
-                json.loads(policy_text)
-                if isinstance(policy_text, str)
-                else policy_text
+            policy_text = policy.get("Policy", "{}")
+            details["Policy"] = (
+                json.loads(policy_text) if isinstance(policy_text, str) else policy_text
             )
         except ClientError as e:
             # Policy may not exist
-            if e.response.get('Error', {}).get('Code') != 'NoSuchBucketPolicy':
+            if e.response.get("Error", {}).get("Code") != "NoSuchBucketPolicy":
                 self.logger.debug(f"No policy for {bucket_name}")
 
         # Fetch CORS
         try:
             cors = self.client.get_bucket_cors(Bucket=bucket_name)
-            details['Cors'] = cors
+            details["Cors"] = cors
         except ClientError as e:
             # CORS may not be configured
-            if e.response.get('Error', {}).get('Code') != 'NoSuchCORSConfiguration':
+            if e.response.get("Error", {}).get("Code") != "NoSuchCORSConfiguration":
                 self.logger.debug(f"No CORS configured for {bucket_name}")
 
         # Fetch object lock
         try:
-            object_lock = self.client.get_object_lock_configuration(
-                Bucket=bucket_name
-            )
-            details['ObjectLock'] = object_lock.get('ObjectLockConfiguration', {})
+            object_lock = self.client.get_object_lock_configuration(Bucket=bucket_name)
+            details["ObjectLock"] = object_lock.get("ObjectLockConfiguration", {})
         except ClientError as e:
             # Object lock may not be configured
-            error_code = e.response.get('Error', {}).get('Code')
-            if error_code != 'ObjectLockConfigurationNotFoundError':
+            error_code = e.response.get("Error", {}).get("Code")
+            if error_code != "ObjectLockConfigurationNotFoundError":
                 self.logger.debug(f"No object lock for {bucket_name}")
 
         # Fetch request payment
         try:
-            request_payment = self.client.get_bucket_request_payment(
-                Bucket=bucket_name
-            )
-            details['RequestPayment'] = request_payment
+            request_payment = self.client.get_bucket_request_payment(Bucket=bucket_name)
+            details["RequestPayment"] = request_payment
         except ClientError:
             pass
 

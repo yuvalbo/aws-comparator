@@ -14,6 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 class ChangeType(str, Enum):
     """Types of changes detected during comparison."""
+
     ADDED = "added"
     REMOVED = "removed"
     MODIFIED = "modified"
@@ -30,6 +31,7 @@ class ChangeSeverity(str, Enum):
     LOW: Metadata changes with minimal impact
     INFO: Informational changes only
     """
+
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
@@ -44,6 +46,7 @@ class ResourceChange(BaseModel):
     This model captures all details about a specific change, including
     what changed, how it changed, and the severity of the change.
     """
+
     model_config = ConfigDict(
         extra="ignore",
         json_encoders={datetime: lambda v: v.isoformat()},
@@ -53,14 +56,12 @@ class ResourceChange(BaseModel):
     resource_id: str = Field(..., description="Unique resource identifier")
     resource_type: str = Field(..., description="Type of resource")
     field_path: Optional[str] = Field(
-        None,
-        description="Path to changed field (e.g., 'SecurityGroups[0].GroupId')"
+        None, description="Path to changed field (e.g., 'SecurityGroups[0].GroupId')"
     )
     old_value: Optional[Any] = Field(None, description="Previous value")
     new_value: Optional[Any] = Field(None, description="New value")
     severity: ChangeSeverity = Field(
-        default=ChangeSeverity.INFO,
-        description="Severity level of the change"
+        default=ChangeSeverity.INFO, description="Severity level of the change"
     )
     description: Optional[str] = Field(None, description="Human-readable description")
 
@@ -91,22 +92,20 @@ class ResourceTypeComparison(BaseModel):
     This aggregates all changes for a specific type of resource
     (e.g., EC2 instances, S3 buckets).
     """
+
     model_config = ConfigDict(extra="ignore")
 
     resource_type: str = Field(..., description="Type of resource")
     account1_count: int = Field(ge=0, description="Count in first account")
     account2_count: int = Field(ge=0, description="Count in second account")
     added: list[ResourceChange] = Field(
-        default_factory=list,
-        description="Resources added in account2"
+        default_factory=list, description="Resources added in account2"
     )
     removed: list[ResourceChange] = Field(
-        default_factory=list,
-        description="Resources removed from account2"
+        default_factory=list, description="Resources removed from account2"
     )
     modified: list[ResourceChange] = Field(
-        default_factory=list,
-        description="Resources modified between accounts"
+        default_factory=list, description="Resources modified between accounts"
     )
     unchanged_count: int = Field(ge=0, default=0, description="Unchanged resources")
 
@@ -146,31 +145,26 @@ class ServiceComparisonResult(BaseModel):
     This aggregates all resource type comparisons for a service
     (e.g., all EC2 resource types).
     """
+
     model_config = ConfigDict(extra="ignore")
 
     service_name: str = Field(..., description="AWS service name")
     resource_comparisons: dict[str, ResourceTypeComparison] = Field(
-        default_factory=dict,
-        description="Comparisons for each resource type"
+        default_factory=dict, description="Comparisons for each resource type"
     )
     errors: list[str] = Field(
-        default_factory=list,
-        description="Errors encountered during comparison"
+        default_factory=list, description="Errors encountered during comparison"
     )
     execution_time_seconds: float = Field(ge=0, description="Execution time")
     timestamp: datetime = Field(
-        default_factory=datetime.utcnow,
-        description="When comparison was performed"
+        default_factory=datetime.utcnow, description="When comparison was performed"
     )
 
     @computed_field  # type: ignore[misc]
     @property
     def total_changes(self) -> int:
         """Total changes across all resource types."""
-        return sum(
-            comp.total_changes
-            for comp in self.resource_comparisons.values()
-        )
+        return sum(comp.total_changes for comp in self.resource_comparisons.values())
 
     @computed_field  # type: ignore[misc]
     @property
@@ -199,6 +193,7 @@ class ReportSummary(BaseModel):
 
     This provides high-level metrics about the comparison results.
     """
+
     model_config = ConfigDict(extra="ignore")
 
     total_services_compared: int = Field(ge=0, description="Number of services")
@@ -207,14 +202,11 @@ class ReportSummary(BaseModel):
     total_resources_account1: int = Field(ge=0, description="Resources in account1")
     total_resources_account2: int = Field(ge=0, description="Resources in account2")
     changes_by_severity: dict[str, int] = Field(
-        default_factory=lambda: {
-            severity.value: 0 for severity in ChangeSeverity
-        },
-        description="Count of changes by severity level"
+        default_factory=lambda: {severity.value: 0 for severity in ChangeSeverity},
+        description="Count of changes by severity level",
     )
     services_with_errors: list[str] = Field(
-        default_factory=list,
-        description="Services that had errors"
+        default_factory=list, description="Services that had errors"
     )
     execution_time_seconds: float = Field(ge=0, description="Total execution time")
 
@@ -240,6 +232,7 @@ class ServiceError(BaseModel):
 
     This captures all details about errors for debugging and reporting.
     """
+
     model_config = ConfigDict(extra="ignore")
 
     service_name: str = Field(..., description="Service where error occurred")
@@ -248,8 +241,7 @@ class ServiceError(BaseModel):
     error_code: Optional[str] = Field(None, description="Error code if available")
     traceback: Optional[str] = Field(None, description="Stack trace")
     timestamp: datetime = Field(
-        default_factory=datetime.utcnow,
-        description="When error occurred"
+        default_factory=datetime.utcnow, description="When error occurred"
     )
 
     def __str__(self) -> str:
@@ -273,29 +265,27 @@ class ComparisonReport(BaseModel):
     This is the top-level model that contains all comparison results,
     summaries, and metadata about the comparison operation.
     """
+
     model_config = ConfigDict(
         extra="ignore",
         json_encoders={datetime: lambda v: v.isoformat()},
     )
 
-    account1_id: str = Field(..., pattern=r'^\d{12}$', description="First account ID")
-    account2_id: str = Field(..., pattern=r'^\d{12}$', description="Second account ID")
+    account1_id: str = Field(..., pattern=r"^\d{12}$", description="First account ID")
+    account2_id: str = Field(..., pattern=r"^\d{12}$", description="Second account ID")
     region: str = Field(..., description="AWS region (deprecated, use region1/region2)")
     region1: Optional[str] = Field(None, description="AWS region for account 1")
     region2: Optional[str] = Field(None, description="AWS region for account 2")
     services_compared: list[str] = Field(..., description="Services compared")
     timestamp: datetime = Field(
-        default_factory=datetime.utcnow,
-        description="When comparison was performed"
+        default_factory=datetime.utcnow, description="When comparison was performed"
     )
     results: list[ServiceComparisonResult] = Field(
-        default_factory=list,
-        description="Results for each service"
+        default_factory=list, description="Results for each service"
     )
     summary: ReportSummary = Field(..., description="Summary statistics")
     errors: list[ServiceError] = Field(
-        default_factory=list,
-        description="Errors encountered"
+        default_factory=list, description="Errors encountered"
     )
 
     def to_dict(self) -> dict[str, Any]:
@@ -307,7 +297,9 @@ class ComparisonReport(BaseModel):
         """
         return self.model_dump()
 
-    def get_service_result(self, service_name: str) -> Optional[ServiceComparisonResult]:
+    def get_service_result(
+        self, service_name: str
+    ) -> Optional[ServiceComparisonResult]:
         """
         Get results for a specific service.
 
@@ -323,8 +315,7 @@ class ComparisonReport(BaseModel):
         return None
 
     def get_changes_by_severity(
-        self,
-        min_severity: ChangeSeverity = ChangeSeverity.INFO
+        self, min_severity: ChangeSeverity = ChangeSeverity.INFO
     ) -> list[ResourceChange]:
         """
         Get all changes at or above a minimum severity level.
@@ -347,9 +338,14 @@ class ComparisonReport(BaseModel):
         changes: list[ResourceChange] = []
         for result in self.results:
             for resource_comp in result.resource_comparisons.values():
-                for change_list in [resource_comp.added, resource_comp.removed, resource_comp.modified]:
+                for change_list in [
+                    resource_comp.added,
+                    resource_comp.removed,
+                    resource_comp.modified,
+                ]:
                     changes.extend(
-                        change for change in change_list
+                        change
+                        for change in change_list
                         if severity_order.get(change.severity, 0) >= min_level
                     )
         return changes

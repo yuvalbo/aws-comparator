@@ -7,4 +7,4 @@ and their configurations.
 
 from aws_comparator.services.s3.fetcher import S3Fetcher
 
-__all__ = ['S3Fetcher']
+__all__ = ["S3Fetcher"]

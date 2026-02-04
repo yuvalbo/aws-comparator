@@ -28,9 +28,7 @@ class TestAWSComparatorError:
     def test_base_exception_creation(self):
         """Test creating base exception."""
         error = AWSComparatorError(
-            message="Test error",
-            error_code="TEST-001",
-            details={"key": "value"}
+            message="Test error", error_code="TEST-001", details={"key": "value"}
         )
 
         assert error.message == "Test error"
@@ -40,10 +38,7 @@ class TestAWSComparatorError:
 
     def test_base_exception_without_details(self):
         """Test creating exception without details."""
-        error = AWSComparatorError(
-            message="Test error",
-            error_code="TEST-001"
-        )
+        error = AWSComparatorError(message="Test error", error_code="TEST-001")
 
         assert error.details == {}
         assert str(error) == "[TEST-001] Test error"
@@ -51,9 +46,7 @@ class TestAWSComparatorError:
     def test_repr(self):
         """Test __repr__ method."""
         error = AWSComparatorError(
-            message="Test error",
-            error_code="TEST-001",
-            details={"key": "value"}
+            message="Test error", error_code="TEST-001", details={"key": "value"}
         )
 
         repr_str = repr(error)
@@ -99,7 +92,7 @@ class TestPermissionErrors:
         error = InsufficientPermissionsError(
             service="ec2",
             action="DescribeInstances",
-            required_permission="ec2:DescribeInstances"
+            required_permission="ec2:DescribeInstances",
         )
 
         assert error.error_code == "PERM-001"
@@ -148,8 +141,7 @@ class TestValidationErrors:
     def test_invalid_config_error(self):
         """Test InvalidConfigError."""
         error = InvalidConfigError(
-            "config.yaml",
-            ["Missing field: account_id", "Invalid format"]
+            "config.yaml", ["Missing field: account_id", "Invalid format"]
         )
 
         assert error.error_code == "VALID-002"

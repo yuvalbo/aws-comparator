@@ -14,6 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 class AWSRegion(str, Enum):
     """Supported AWS regions."""
+
     US_EAST_1 = "us-east-1"
     US_EAST_2 = "us-east-2"
     US_WEST_1 = "us-west-1"
@@ -46,12 +47,13 @@ class AWSTag(BaseModel):
     AWS tags are used to organize and identify resources. They have specific
     naming restrictions that are validated here.
     """
+
     model_config = ConfigDict(extra="forbid")
 
     key: str = Field(..., min_length=1, max_length=128, description="Tag key")
     value: str = Field(..., max_length=256, description="Tag value")
 
-    @field_validator('key')
+    @field_validator("key")
     @classmethod
     def validate_key(cls, v: str) -> str:
         """
@@ -66,7 +68,7 @@ class AWSTag(BaseModel):
         Raises:
             ValueError: If key starts with 'aws:' (reserved prefix)
         """
-        if v.lower().startswith('aws:'):
+        if v.lower().startswith("aws:"):
             raise ValueError("Tag keys cannot start with 'aws:' (reserved prefix)")
         return v
 
@@ -92,6 +94,7 @@ class AWSResource(BaseModel):
         created_date: Resource creation timestamp
         region: AWS region where resource exists
     """
+
     model_config = ConfigDict(
         extra="ignore",  # Allow extra fields from AWS responses
         use_enum_values=True,
@@ -100,12 +103,10 @@ class AWSResource(BaseModel):
 
     arn: Optional[str] = Field(None, description="Amazon Resource Name")
     tags: dict[str, str] = Field(
-        default_factory=dict,
-        description="Resource tags as key-value pairs"
+        default_factory=dict, description="Resource tags as key-value pairs"
     )
     created_date: Optional[datetime] = Field(
-        None,
-        description="Resource creation timestamp"
+        None, description="Resource creation timestamp"
     )
     region: Optional[str] = Field(None, description="AWS region")
 
@@ -131,8 +132,8 @@ class AWSResource(BaseModel):
         result: dict[str, str] = {}
         for tag in tag_list:
             # Handle both 'Key'/'Value' and 'key'/'value' formats
-            key = tag.get('Key') or tag.get('key', '')
-            value = tag.get('Value') or tag.get('value', '')
+            key = tag.get("Key") or tag.get("key", "")
+            value = tag.get("Value") or tag.get("value", "")
             if key:
                 result[key] = value
         return result
@@ -161,15 +162,16 @@ class ResourceIdentifier(BaseModel):
     This model provides a standardized way to reference resources across
     different services and accounts.
     """
+
     model_config = ConfigDict(extra="forbid")
 
     service: str = Field(..., description="AWS service name (e.g., 'ec2')")
     resource_type: str = Field(..., description="Resource type (e.g., 'instance')")
     identifier: str = Field(..., description="Unique ID or ARN")
-    account_id: str = Field(..., pattern=r'^\d{12}$', description="AWS account ID")
+    account_id: str = Field(..., pattern=r"^\d{12}$", description="AWS account ID")
     region: str = Field(..., description="AWS region")
 
-    @field_validator('account_id')
+    @field_validator("account_id")
     @classmethod
     def validate_account_id(cls, v: str) -> str:
         """
@@ -210,14 +212,15 @@ class AccountInfo(BaseModel):
 
     This model stores metadata about AWS accounts being compared.
     """
+
     model_config = ConfigDict(extra="ignore")
 
-    account_id: str = Field(..., pattern=r'^\d{12}$', description="AWS account ID")
+    account_id: str = Field(..., pattern=r"^\d{12}$", description="AWS account ID")
     account_alias: Optional[str] = Field(None, description="Account alias")
     arn: Optional[str] = Field(None, description="IAM entity ARN")
     user_id: Optional[str] = Field(None, description="IAM user/role ID")
 
-    @field_validator('account_id')
+    @field_validator("account_id")
     @classmethod
     def validate_account_id(cls, v: str) -> str:
         """Validate AWS account ID format."""

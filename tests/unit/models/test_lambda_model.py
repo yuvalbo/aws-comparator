@@ -1,4 +1,5 @@
 """Tests for Lambda model module."""
+
 import pytest
 
 from aws_comparator.models.lambda_svc import (
@@ -196,7 +197,10 @@ class TestLambdaFunctionFromAWSResponse:
         func = LambdaFunction.from_aws_response(function_data)
 
         assert func.dead_letter_config is not None
-        assert func.dead_letter_config.target_arn == "arn:aws:sqs:us-east-1:123456789012:dlq"
+        assert (
+            func.dead_letter_config.target_arn
+            == "arn:aws:sqs:us-east-1:123456789012:dlq"
+        )
 
     def test_from_aws_response_with_tracing_config(self):
         """Test creating LambdaFunction with tracing configuration."""
@@ -256,7 +260,10 @@ class TestLambdaFunctionFromAWSResponse:
             "LastModified": "2024-01-01T00:00:00.000+0000",
             "Version": "$LATEST",
             "FileSystemConfigs": [
-                {"Arn": "arn:aws:elasticfilesystem:us-east-1:123456789012:access-point/fsap-123", "LocalMountPath": "/mnt/data"},
+                {
+                    "Arn": "arn:aws:elasticfilesystem:us-east-1:123456789012:access-point/fsap-123",
+                    "LocalMountPath": "/mnt/data",
+                },
             ],
         }
 

@@ -42,9 +42,7 @@ def validate_account_id(
         return value
 
     if not re.match(r"^\d{12}$", value):
-        raise click.BadParameter(
-            f"Account ID must be exactly 12 digits. Got: {value}"
-        )
+        raise click.BadParameter(f"Account ID must be exactly 12 digits. Got: {value}")
     return value
 
 
@@ -87,24 +85,28 @@ def cli(ctx: click.Context) -> None:
 
 @cli.command("compare")
 @click.option(
-    "--account1", "-a1",
+    "--account1",
+    "-a1",
     required=True,
     callback=validate_account_id,
     help="First AWS account ID (12 digits).",
 )
 @click.option(
-    "--account2", "-a2",
+    "--account2",
+    "-a2",
     required=True,
     callback=validate_account_id,
     help="Second AWS account ID (12 digits).",
 )
 @click.option(
-    "--profile1", "-p1",
+    "--profile1",
+    "-p1",
     default=None,
     help="AWS profile name for account1.",
 )
 @click.option(
-    "--profile2", "-p2",
+    "--profile2",
+    "-p2",
     default=None,
     help="AWS profile name for account2.",
 )
@@ -119,7 +121,8 @@ def cli(ctx: click.Context) -> None:
     help="IAM role ARN to assume for account2.",
 )
 @click.option(
-    "--region", "-r",
+    "--region",
+    "-r",
     default="us-east-1",
     help="AWS region for both accounts (default: us-east-1).",
 )
@@ -134,35 +137,41 @@ def cli(ctx: click.Context) -> None:
     help="Override region for account2 (for cross-region comparison).",
 )
 @click.option(
-    "--services", "-s",
+    "--services",
+    "-s",
     default=None,
     help="Comma-separated list of services to compare (default: all).",
 )
 @click.option(
-    "--output-format", "-f",
+    "--output-format",
+    "-f",
     type=click.Choice(["json", "yaml", "table"], case_sensitive=False),
     default="table",
     help="Output format (default: table).",
 )
 @click.option(
-    "--output-file", "-o",
+    "--output-file",
+    "-o",
     type=click.Path(dir_okay=False, writable=True),
     default=None,
     help="Output file path (default: stdout).",
 )
 @click.option(
-    "--config", "-c",
+    "--config",
+    "-c",
     type=click.Path(exists=True, dir_okay=False, readable=True),
     default=None,
     help="Path to configuration file.",
 )
 @click.option(
-    "--verbose", "-v",
+    "--verbose",
+    "-v",
     count=True,
     help="Increase verbosity (can be used multiple times).",
 )
 @click.option(
-    "--quiet", "-q",
+    "--quiet",
+    "-q",
     is_flag=True,
     default=False,
     help="Suppress non-error output.",
@@ -304,9 +313,7 @@ def compare(  # noqa: C901
         if output_file:
             formatter.write_to_file(report, Path(output_file))
             if not quiet:
-                output_console.print(
-                    f"[green]Report written to: {output_file}[/green]"
-                )
+                output_console.print(f"[green]Report written to: {output_file}[/green]")
         else:
             output = formatter.format(report)
             # Write directly to stdout to avoid Rich re-processing ANSI codes
@@ -340,7 +347,9 @@ def compare(  # noqa: C901
     except AuthenticationError as e:
         output_console.print(f"[red]Authentication error: {e.message}[/red]")
         if e.details.get("suggestion"):
-            output_console.print(f"[yellow]Suggestion: {e.details['suggestion']}[/yellow]")
+            output_console.print(
+                f"[yellow]Suggestion: {e.details['suggestion']}[/yellow]"
+            )
         sys.exit(1)
     except InvalidAccountIdError as e:
         output_console.print(f"[red]Invalid account ID: {e.message}[/red]")
@@ -357,7 +366,9 @@ def compare(  # noqa: C901
     except AWSComparatorError as e:
         output_console.print(f"[red]Error: {e.message}[/red]")
         if e.details.get("suggestion"):
-            output_console.print(f"[yellow]Suggestion: {e.details['suggestion']}[/yellow]")
+            output_console.print(
+                f"[yellow]Suggestion: {e.details['suggestion']}[/yellow]"
+            )
         sys.exit(1)
     except Exception as e:
         output_console.print(f"[red]Unexpected error: {e}[/red]")
@@ -368,7 +379,8 @@ def compare(  # noqa: C901
 
 @cli.command("list-services")
 @click.option(
-    "--verbose", "-v",
+    "--verbose",
+    "-v",
     is_flag=True,
     default=False,
     help="Show detailed service information.",

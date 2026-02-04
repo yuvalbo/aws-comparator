@@ -16,9 +16,9 @@ from aws_comparator.services.base import BaseServiceFetcher
 
 
 @ServiceRegistry.register(
-    'cloudwatch',
-    description='Amazon CloudWatch - Monitoring and Observability',
-    resource_types=['alarms', 'log_groups', 'dashboards']
+    "cloudwatch",
+    description="Amazon CloudWatch - Monitoring and Observability",
+    resource_types=["alarms", "log_groups", "dashboards"],
 )
 class CloudWatchFetcher(BaseServiceFetcher):
     """
@@ -39,7 +39,7 @@ class CloudWatchFetcher(BaseServiceFetcher):
         Returns:
             Configured boto3 CloudWatch client
         """
-        return self.session.client('cloudwatch', region_name=self.region)
+        return self.session.client("cloudwatch", region_name=self.region)
 
     def _create_logs_client(self) -> Any:
         """
@@ -48,7 +48,7 @@ class CloudWatchFetcher(BaseServiceFetcher):
         Returns:
             Configured boto3 CloudWatch Logs client
         """
-        return self.session.client('logs', region_name=self.region)
+        return self.session.client("logs", region_name=self.region)
 
     def fetch_resources(self) -> dict[str, list[AWSResource]]:
         """
@@ -58,9 +58,9 @@ class CloudWatchFetcher(BaseServiceFetcher):
             Dictionary mapping resource types to lists of resources
         """
         return {
-            'alarms': self._safe_fetch('alarms', self._fetch_alarms),
-            'log_groups': self._safe_fetch('log_groups', self._fetch_log_groups),
-            'dashboards': self._safe_fetch('dashboards', self._fetch_dashboards),
+            "alarms": self._safe_fetch("alarms", self._fetch_alarms),
+            "log_groups": self._safe_fetch("log_groups", self._fetch_log_groups),
+            "dashboards": self._safe_fetch("dashboards", self._fetch_dashboards),
         }
 
     def get_resource_types(self) -> list[str]:
@@ -70,7 +70,7 @@ class CloudWatchFetcher(BaseServiceFetcher):
         Returns:
             List of resource type names
         """
-        return ['alarms', 'log_groups', 'dashboards']
+        return ["alarms", "log_groups", "dashboards"]
 
     def _fetch_alarms(self) -> list[CloudWatchAlarm]:
         """
@@ -83,7 +83,7 @@ class CloudWatchFetcher(BaseServiceFetcher):
 
         try:
             # Use pagination to fetch all alarms
-            alarm_data_list = self._paginate('describe_alarms', 'MetricAlarms')
+            alarm_data_list = self._paginate("describe_alarms", "MetricAlarms")
 
             self.logger.info(f"Found {len(alarm_data_list)} CloudWatch alarms")
 
@@ -96,10 +96,9 @@ class CloudWatchFetcher(BaseServiceFetcher):
                     self.logger.debug(f"Fetched alarm: {alarm.alarm_name}")
 
                 except Exception as e:
-                    alarm_name = alarm_data.get('AlarmName', 'unknown')
+                    alarm_name = alarm_data.get("AlarmName", "unknown")
                     self.logger.error(
-                        f"Error parsing alarm {alarm_name}: {e}",
-                        exc_info=True
+                        f"Error parsing alarm {alarm_name}: {e}", exc_info=True
                     )
 
         except Exception as e:
@@ -121,16 +120,18 @@ class CloudWatchFetcher(BaseServiceFetcher):
             logs_client = self._create_logs_client()
 
             # Check if logs client can paginate
-            if logs_client.can_paginate('describe_log_groups'):
-                paginator = logs_client.get_paginator('describe_log_groups')
+            if logs_client.can_paginate("describe_log_groups"):
+                paginator = logs_client.get_paginator("describe_log_groups")
                 log_group_data_list: list[dict[str, Any]] = []
 
                 self.logger.debug("Paginating describe_log_groups")
 
                 for page in paginator.paginate():
-                    log_group_data_list.extend(page.get('logGroups', []))
+                    log_group_data_list.extend(page.get("logGroups", []))
 
-                self.logger.info(f"Found {len(log_group_data_list)} CloudWatch log groups")
+                self.logger.info(
+                    f"Found {len(log_group_data_list)} CloudWatch log groups"
+                )
 
                 for log_group_data in log_group_data_list:
                     try:
@@ -138,47 +139,50 @@ class CloudWatchFetcher(BaseServiceFetcher):
                         log_group = LogGroup.from_aws_response(log_group_data)
                         log_groups.append(log_group)
 
-                        self.logger.debug(f"Fetched log group: {log_group.log_group_name}")
+                        self.logger.debug(
+                            f"Fetched log group: {log_group.log_group_name}"
+                        )
 
                     except Exception as e:
-                        log_group_name = log_group_data.get('logGroupName', 'unknown')
+                        log_group_name = log_group_data.get("logGroupName", "unknown")
                         self.logger.error(
                             f"Error parsing log group {log_group_name}: {e}",
-                            exc_info=True
+                            exc_info=True,
                         )
 
             else:
                 # Fallback to non-paginated call
                 response = logs_client.describe_log_groups()
-                log_group_data_list = response.get('logGroups', [])
+                log_group_data_list = response.get("logGroups", [])
 
-                self.logger.info(f"Found {len(log_group_data_list)} CloudWatch log groups")
+                self.logger.info(
+                    f"Found {len(log_group_data_list)} CloudWatch log groups"
+                )
 
                 for log_group_data in log_group_data_list:
                     try:
                         log_group = LogGroup.from_aws_response(log_group_data)
                         log_groups.append(log_group)
                     except Exception as e:
-                        log_group_name = log_group_data.get('logGroupName', 'unknown')
+                        log_group_name = log_group_data.get("logGroupName", "unknown")
                         self.logger.error(
                             f"Error parsing log group {log_group_name}: {e}",
-                            exc_info=True
+                            exc_info=True,
                         )
 
         except ClientError as e:
-            error_code = e.response.get('Error', {}).get('Code', '')
-            if error_code in ['AccessDenied', 'UnauthorizedOperation']:
+            error_code = e.response.get("Error", {}).get("Code", "")
+            if error_code in ["AccessDenied", "UnauthorizedOperation"]:
                 self.logger.warning(
                     f"Permission denied for CloudWatch Logs: {error_code}"
                 )
             else:
-                self.logger.error(
-                    f"AWS error fetching log groups: {e}",
-                    exc_info=True
-                )
+                self.logger.error(f"AWS error fetching log groups: {e}", exc_info=True)
 
         except Exception as e:
-            self.logger.error(f"Failed to fetch CloudWatch log groups: {e}", exc_info=True)
+            self.logger.error(
+                f"Failed to fetch CloudWatch log groups: {e}", exc_info=True
+            )
 
         return log_groups
 
@@ -193,13 +197,13 @@ class CloudWatchFetcher(BaseServiceFetcher):
 
         try:
             # Use pagination to fetch all dashboards
-            dashboard_data_list = self._paginate('list_dashboards', 'DashboardEntries')
+            dashboard_data_list = self._paginate("list_dashboards", "DashboardEntries")
 
             self.logger.info(f"Found {len(dashboard_data_list)} CloudWatch dashboards")
 
             for dashboard_data in dashboard_data_list:
                 try:
-                    dashboard_name = dashboard_data['DashboardName']
+                    dashboard_name = dashboard_data["DashboardName"]
 
                     # Optionally fetch dashboard details (body)
                     # Note: This can be expensive for many dashboards
@@ -210,29 +214,29 @@ class CloudWatchFetcher(BaseServiceFetcher):
                         )
                         dashboard_details = details_response
                     except ClientError as e:
-                        error_code = e.response.get('Error', {}).get('Code', '')
-                        if error_code not in ['ResourceNotFound', 'DashboardNotFound']:
+                        error_code = e.response.get("Error", {}).get("Code", "")
+                        if error_code not in ["ResourceNotFound", "DashboardNotFound"]:
                             self.logger.warning(
                                 f"Could not fetch details for dashboard {dashboard_name}: {error_code}"
                             )
 
                     # Create Dashboard instance
                     dashboard = Dashboard.from_aws_response(
-                        dashboard_data,
-                        dashboard_details
+                        dashboard_data, dashboard_details
                     )
                     dashboards.append(dashboard)
 
                     self.logger.debug(f"Fetched dashboard: {dashboard_name}")
 
                 except Exception as e:
-                    dashboard_name = dashboard_data.get('DashboardName', 'unknown')
+                    dashboard_name = dashboard_data.get("DashboardName", "unknown")
                     self.logger.error(
-                        f"Error parsing dashboard {dashboard_name}: {e}",
-                        exc_info=True
+                        f"Error parsing dashboard {dashboard_name}: {e}", exc_info=True
                     )
 
         except Exception as e:
-            self.logger.error(f"Failed to fetch CloudWatch dashboards: {e}", exc_info=True)
+            self.logger.error(
+                f"Failed to fetch CloudWatch dashboards: {e}", exc_info=True
+            )
 
         return dashboards

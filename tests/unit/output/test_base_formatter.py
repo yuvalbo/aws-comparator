@@ -1,4 +1,5 @@
 """Tests for base output formatter module."""
+
 from io import StringIO
 
 import pytest
