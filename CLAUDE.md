@@ -251,7 +251,7 @@ dependencies = [
 ## Testing
 
 ### Coverage Requirements
-- Minimum 80% overall coverage
+- Minimum 85% overall coverage
 - 100% coverage for core business logic
 - Run: `pytest --cov=aws_comparator --cov-report=html`
 
