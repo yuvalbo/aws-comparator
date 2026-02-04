@@ -1,0 +1,234 @@
+# CI/CD Pipeline for AWS Comparator
+# Runs tests, linting, and coverage reporting on PRs and pushes to main
+#
+# Coverage Solution: Codecov (recommended)
+# - Free for open-source projects
+# - Beautiful HTML reports with drill-down to line level
+# - PR comments with coverage diff
+# - Badge support for README
+# - No self-hosted infrastructure required
+
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    # Manual trigger for ad-hoc runs
+
+# Cancel in-progress runs for the same branch/PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Prevent pip from warning about running as root in containers
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PIP_NO_WARN_SCRIPT_LOCATION: "1"
+  # Force color output for better readability
+  FORCE_COLOR: "1"
+  # Codecov token (optional for public repos, required for private)
+  # Set in repository secrets if needed: Settings > Secrets > Actions
+  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Lint job - runs quickly to provide fast feedback
+  # ---------------------------------------------------------------------------
+  lint:
+    name: Lint (Ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Run ruff linter
+        run: ruff check src/ tests/
+
+      - name: Run ruff formatter check
+        run: ruff format --check src/ tests/
+
+  # ---------------------------------------------------------------------------
+  # Test job - runs pytest with coverage across Python versions
+  # ---------------------------------------------------------------------------
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    needs: lint  # Run tests only after linting passes (fail fast)
+    strategy:
+      fail-fast: true  # Stop all jobs if one fails
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{ matrix.python-version }}-
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run tests with coverage
+        run: pytest
+        # Coverage options are already configured in pyproject.toml:
+        # --cov=aws_comparator --cov-report=term-missing --cov-report=html --cov-report=xml --cov-fail-under=80
+
+      - name: Upload coverage report (HTML)
+        if: matrix.python-version == '3.12'  # Upload only from latest Python
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-html
+          path: htmlcov/
+          retention-days: 14
+
+      - name: Upload coverage report (XML)
+        if: matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-xml
+          path: coverage.xml
+          retention-days: 14
+
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == '3.12'
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.xml
+          fail_ci_if_error: false  # Don't fail if Codecov is unavailable
+          verbose: true
+          flags: unittests
+          name: codecov-aws-comparator
+
+  # ---------------------------------------------------------------------------
+  # Type checking job (optional but recommended)
+  # ---------------------------------------------------------------------------
+  type-check:
+    name: Type Check (mypy)
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-3.12-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-3.12-
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run mypy
+        run: mypy src/
+        continue-on-error: true  # Don't fail the build on type errors (remove once all types are fixed)
+
+  # ---------------------------------------------------------------------------
+  # Build verification job - ensures package can be built
+  # ---------------------------------------------------------------------------
+  build:
+    name: Build Package
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tools
+        run: pip install build
+
+      - name: Build package
+        run: python -m build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7
+
+  # ---------------------------------------------------------------------------
+  # Docker build verification (optional - runs on main branch only)
+  # ---------------------------------------------------------------------------
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: aws-comparator:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ---------------------------------------------------------------------------
+  # Summary job - provides clear pass/fail status
+  # ---------------------------------------------------------------------------
+  ci-success:
+    name: CI Success
+    runs-on: ubuntu-latest
+    needs: [lint, test, type-check, build]
+    if: always()
+    steps:
+      - name: Check all jobs passed
+        run: |
+          if [[ "${{ needs.lint.result }}" != "success" ]] || \
+             [[ "${{ needs.test.result }}" != "success" ]] || \
+             [[ "${{ needs.build.result }}" != "success" ]]; then
+            echo "One or more required jobs failed"
+            exit 1
+          fi
+          echo "All required CI checks passed!"

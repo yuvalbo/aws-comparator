@@ -2,9 +2,11 @@
 
 A powerful Python CLI tool for comparing AWS resources across two accounts and generating detailed diff reports.
 
-[![Python Version](https://img.shields.io/badge/python-3.9%2B-blue)]
-[![License](https://img.shields.io/badge/license-MIT-green)]
-[![Version](https://img.shields.io/badge/version-0.1.0-blue)]
+[![CI](https://github.com/yuvalbo/aws-comparator/actions/workflows/ci.yml/badge.svg)](https://github.com/yuvalbo/aws-comparator/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/yuvalbo/aws-comparator/branch/main/graph/badge.svg)](https://codecov.io/gh/yuvalbo/aws-comparator)
+[![Python Version](https://img.shields.io/badge/python-3.9%2B-blue)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Version](https://img.shields.io/badge/version-0.2.0-blue)](https://github.com/yuvalbo/aws-comparator/releases)
 
 ## Overview
 
